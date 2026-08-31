@@ -14,7 +14,7 @@ from datetime import datetime
 from .api import FantasyClient
 from .sources.market_trends import market_trends
 from .strategy import flip, lineup as lineup_opt, needs as needs_mod
-from . import config, execute as execute_mod
+from . import config, execute as execute_mod, events
 
 
 DEFAULT_MODEL = "models/gemini-3.5-flash-lite"
@@ -176,6 +176,8 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         print("=" * 60)
         print(response)
         print("=" * 60)
+
+        events.emit("note", "🧠 Gemini Manager: Análisis estratégico y decisiones", detail={"analisis": response})
 
         # Parse JSON decision
         if "```json" in response:

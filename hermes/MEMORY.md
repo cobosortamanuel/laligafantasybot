@@ -1,13 +1,5 @@
 # MEMORY
 
-FantasyBot's working memory. The agent keeps it across sessions: the week's plan,
-decisions made and why, and results to learn from.
+Última actualización: 2026-08-31 17:19
 
-## Week's plan
-- (empty — filled in on the first review)
-
-## Recent decisions
-- (log of signings, sales, clause buyouts and lineups, with the reason)
-
-## Follow-up / learning
-- (did the flip I bought go up? did I get the starter right? tweaks to my criteria)
+Plantilla crítica con solo 4 jugadores (faltan POR y DEF). Presupuesto excelente (64.7M€). Prioridad máxima: fichar porteros y defensas titulares para poder alinear y competir.

@@ -1,0 +1,54 @@
+name: FantasyBot Autonomous Agent
+
+on:
+  schedule:
+    # 07:00 UTC (09:00 hora peninsular española)
+    - cron: '0 7 * * *'
+    # 18:15 UTC (20:15 hora peninsular española - antes del cierre de mercado)
+    - cron: '15 18 * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente con un botón desde GitHub
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Para guardar las actualizaciones de memoria del mánager en el repositorio
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Restore credentials
+        env:
+          LALIGA_TOKENS: ${{ secrets.LALIGA_TOKENS }}
+          GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "$LALIGA_TOKENS" > tokens.json
+          echo "GEMINI_API_KEY=$GEMINI_KEY" > .env
+
+      - name: Run Gemini Agent (Autonomous Review & Actions)
+        run: |
+          python -m fantasybot gemini --execute
+
+      - name: Commit updated memory
+        run: |
+          git config --global user.name "FantasyBot Agent"
+          git config --global user.email "fantasybot@users.noreply.github.com"
+          git add hermes/MEMORY.md || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(agent): update manager memory [skip ci]"
+            git push
+          fi

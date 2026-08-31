@@ -319,6 +319,11 @@ def cmd_agent(args):
         print(f"· Bids cancelled (no longer profitable): {bd['cancelled']}")
 
 
+def cmd_gemini(args):
+    from . import gemini_agent
+    gemini_agent.run_gemini_manager(execute=args.execute)
+
+
 def cmd_sell(args):
     fc = FantasyClient()
     lid, _ = fc.default_ids()
@@ -757,6 +762,10 @@ def build_parser():
     sr = sub.add_parser("bid-run", help="run the bid plan at close (for cron)")
     sr.add_argument("--dry-run", action="store_true")
     sr.set_defaults(func=cmd_bid_run)
+
+    gm = sub.add_parser("gemini", help="autonomous agent review powered by Gemini Flash Lite")
+    gm.add_argument("--execute", action="store_true", help="execute lineup and bids in LaLiga Fantasy")
+    gm.set_defaults(func=cmd_gemini)
 
     return p
 

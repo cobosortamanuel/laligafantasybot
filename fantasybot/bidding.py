@@ -20,7 +20,7 @@ from . import events, state
 
 CONTESTED_MARGIN_PCT = 0.03   # how far above value to bid if there's competition
 UNCONTESTED_CUSHION = 210     # minimum cushion if nobody else bids (+210 EUR rule)
-DEFAULT_FINAL = 15           # seconds before close for the finish
+DEFAULT_FINAL = 25           # seconds before close for the finish (safety margin for slow servers)
 DEFAULT_POLL = 3             # how often, in seconds, to poll in the final minute
 
 

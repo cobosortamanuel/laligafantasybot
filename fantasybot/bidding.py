@@ -19,7 +19,7 @@ from .api import FantasyClient
 from . import events, state
 
 CONTESTED_MARGIN_PCT = 0.03   # how far above value to bid if there's competition
-UNCONTESTED_CUSHION = 10      # minimum cushion if nobody else bids
+UNCONTESTED_CUSHION = 210     # minimum cushion if nobody else bids (+210 EUR rule)
 DEFAULT_FINAL = 15           # seconds before close for the finish
 DEFAULT_POLL = 3             # how often, in seconds, to poll in the final minute
 

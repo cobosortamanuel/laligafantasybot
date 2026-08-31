@@ -241,6 +241,8 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
             # Execute actions if requested
             if execute:
                 print("\n⚡ MODO EJECUCIÓN ACTIVO: Aplicando decisiones en LaLiga Fantasy...")
+                from . import bidding, state
+
                 if decision.get("aplicar_alineacion") and best_lineup and not best_lineup.get("incomplete"):
                     try:
                         current_ids = []
@@ -249,16 +251,32 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                     except Exception as e:
                         print(f"  ✗ No se pudo aplicar alineación: {e}")
 
+                # 1. Register recommended bids in the Last-Minute Sniping Bid Plan
                 for bid_item in decision.get("pujas_recomendadas", []):
                     m_id = bid_item.get("marketId")
                     max_bid = bid_item.get("puja_maxima")
+                    nombre = bid_item.get("nombre", str(m_id))
                     if m_id and max_bid:
-                        try:
-                            fc.make_bid(lid, m_id, int(max_bid))
-                            events.emit("bid", f"Puja enviada: {bid_item.get('nombre', m_id)} ({int(max_bid):,} €)")
-                            print(f"  ✓ Puja enviada por {bid_item.get('nombre', m_id)}: {int(max_bid):,} €")
-                        except Exception as e:
-                            print(f"  ✗ Error al pujar por {bid_item.get('nombre', m_id)}: {e}")
+                        state.add_bid_target(str(m_id), int(max_bid), nombre=nombre)
+                        print(f"  🎯 Objetivo añadido al Plan de Pujas de Último Minuto: {nombre} (Tope: {int(max_bid):,} €)")
+                
+                # 2. Execute last-minute bids using the bidding engine (respects +210 EUR rule and close timing)
+                try:
+                    bidding.run_bid_plan(lid, dry_run=False)
+                except Exception as e:
+                    print(f"  ✗ Aviso en el motor de pujas de último minuto: {e}")
+
+                # 3. Process recommended sales and ensure all owned players are listed for sale (User Guide rule)
+                for p in team.get("players", []):
+                    pm = p.get("playerMaster", {})
+                    pt = p.get("playerTeam", {})
+                    p_id = pm.get("id")
+                    m_val = pt.get("marketValue") or pm.get("marketValue") or 1000000
+                    p_name = pm.get("nickname") or pm.get("name")
+                    try:
+                        fc.sell_player(lid, p_id, int(m_val))
+                    except Exception:
+                        pass  # already on sale or not sellable
 
                 for sell_item in decision.get("ventas_recomendadas", []):
                     p_id = sell_item.get("playerId")

@@ -224,7 +224,7 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
             # Execute actions if requested
             if execute:
                 print("\n⚡ MODO EJECUCIÓN ACTIVO: Aplicando decisiones en LaLiga Fantasy...")
-                if decision.get("aplicar_alineacion") and best_lineup:
+                if decision.get("aplicar_alineacion") and best_lineup and not best_lineup.get("incomplete"):
                     try:
                         current_ids = []
                         execute_mod.apply_lineup(fc, tid, best_lineup, current_ids, dry_run=False)
@@ -237,10 +237,24 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                     max_bid = bid_item.get("puja_maxima")
                     if m_id and max_bid:
                         try:
-                            fc.bid(m_id, int(max_bid))
-                            print(f"  ✓ Puja enviada por {bid_item.get('nombre', m_id)}: {max_bid:,} €")
+                            fc.make_bid(lid, m_id, int(max_bid))
+                            events.emit("bid", f"Puja enviada: {bid_item.get('nombre', m_id)} ({int(max_bid):,} €)")
+                            print(f"  ✓ Puja enviada por {bid_item.get('nombre', m_id)}: {int(max_bid):,} €")
                         except Exception as e:
                             print(f"  ✗ Error al pujar por {bid_item.get('nombre', m_id)}: {e}")
+
+                for sell_item in decision.get("ventas_recomendadas", []):
+                    p_id = sell_item.get("playerId")
+                    price = sell_item.get("precio_venta")
+                    if p_id and price:
+                        try:
+                            fc.sell_player(lid, p_id, int(price))
+                            events.emit("sell", f"Puesto a la venta: {sell_item.get('nombre', p_id)} ({int(price):,} €)")
+                            print(f"  ✓ Puesto a la venta {sell_item.get('nombre', p_id)} por {int(price):,} €")
+                        except Exception as e:
+                            print(f"  ✗ Error al vender {sell_item.get('nombre', p_id)}: {e}")
+            else:
+                print("\n(Modo simulación: no se han enviado cambios a LaLiga Fantasy. Usa --execute para aplicarlos).")
             # Generate HTML Dashboard and GitHub Summary
             generate_dashboard(team, best_lineup, flips, gaps, response, decision, execute)
 

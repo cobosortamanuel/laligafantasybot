@@ -100,8 +100,9 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
 
     pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
 
-    # 2. Extract all available players on the market
+    # 2. Extract all available players on the market and received offers on own players
     market_players = []
+    my_received_offers = []
     for m in market:
         pm = m.get("playerMaster", {})
         pt = m.get("playerTeam", {})
@@ -110,7 +111,8 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         name = pm.get("nickname") or pm.get("name") or "Desconocido"
         price = m.get("salePrice") or pt.get("marketValue") or pm.get("marketValue") or 0
         mid = m.get("id")
-        owner = "SISTEMA" if m.get("discr") == "marketPlayerLeague" else "RIVAL"
+        is_mine = str(m.get("team", {}).get("id")) == str(tid) or str(pt.get("teamId")) == str(tid)
+        owner = "TU EQUIPO" if is_mine else ("SISTEMA" if m.get("discr") == "marketPlayerLeague" else "RIVAL")
         market_players.append({
             "marketId": mid,
             "nombre": name,
@@ -118,6 +120,22 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
             "precio_salida": price,
             "propietario": owner
         })
+
+        if is_mine:
+            bids_list = m.get("bids") or m.get("offers") or []
+            for b in bids_list:
+                bid_id = b.get("id") or b.get("bidId") or b.get("offerId")
+                amount = b.get("money") or b.get("offerMoney") or b.get("price") or 0
+                buyer = b.get("user", {}).get("username") or b.get("team", {}).get("teamName") or "Sistema (Mercado)"
+                my_received_offers.append({
+                    "marketId": mid,
+                    "offerId": bid_id,
+                    "jugador": name,
+                    "valor_mercado": price,
+                    "oferta_recibida": amount,
+                    "diferencia_pct": round(((amount - price) / price) * 100, 2) if price else 0,
+                    "comprador": buyer
+                })
 
     # Lineup optimization
     best_lineup = review_report.get("lineup") if review_report else None
@@ -145,7 +163,7 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         with open(memory_path, "r", encoding="utf-8") as f:
             existing_memory = f.read()
 
-    # Build prompt with rich context (100% of original project + full market)
+    # Build prompt with rich context (100% of original project + full market + received offers)
     situation = {
         "fecha_hora": datetime.now().isoformat(),
         "cambios_recientes_eventos": review_report.get("events", {}),
@@ -156,6 +174,7 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         "ventas_recomendadas": review_report.get("sells", []),
         "objetivos_clausulazo": review_report.get("clause_targets", []),
         "recordatorios_programados": review_report.get("reminders", []),
+        "ofertas_recibidas_por_mis_jugadores": my_received_offers,
         "jugadores_en_plantilla": [
             {
                 "id": p["playerMaster"]["id"],
@@ -200,6 +219,9 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         '  "aplicar_alineacion": true,\n'
         '  "pujas_recomendadas": [\n'
         '    {"marketId": 123888363, "nombre": "Dmitrovic", "puja_maxima": 43000000}\n'
+        "  ],\n"
+        '  "aceptar_ofertas": [\n'
+        '    {"marketId": 12345, "offerId": "xyz", "jugador": "Nombre", "cantidad": 6000000}\n'
         "  ],\n"
         '  "ventas_recomendadas": [\n'
         '    {"playerId": 12345, "nombre": "Jugador", "precio_venta": 5000000}\n'
@@ -266,7 +288,21 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                 except Exception as e:
                     print(f"  ✗ Aviso en el motor de pujas de último minuto: {e}")
 
-                # 3. Process recommended sales and ensure all owned players are listed for sale (User Guide rule)
+                # 3. Accept lucrative or requested offers received from the system/rivals
+                for accept_item in decision.get("aceptar_ofertas", []):
+                    m_id = accept_item.get("marketId")
+                    off_id = accept_item.get("offerId")
+                    money = accept_item.get("cantidad")
+                    j_name = accept_item.get("jugador", str(m_id))
+                    if m_id and off_id and money:
+                        try:
+                            fc.accept_offer(lid, m_id, off_id, int(money))
+                            events.emit("sell", f"Oferta ACEPTADA por {j_name}: {int(money):,} €")
+                            print(f"  ✓ Oferta ACEPTADA por {j_name}: {int(money):,} €")
+                        except Exception as e:
+                            print(f"  ✗ Error al aceptar oferta por {j_name}: {e}")
+
+                # 4. Process recommended sales and ensure all owned players are listed for sale (User Guide rule)
                 for p in team.get("players", []):
                     pm = p.get("playerMaster", {})
                     pt = p.get("playerTeam", {})

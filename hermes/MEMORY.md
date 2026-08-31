@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: 2026-08-31 15:51
+Última actualización: 2026-08-31 17:59
 
-Plantilla en cuadro (4 jugadores). Presupuesto excelente (64.7M€). Prioridad absoluta: fichar urgentemente al menos 1 POR y 3-4 DEF titulares en cuanto aparezcan en el mercado.
+Presupuesto invertido fuertemente en solucionar los huecos de POR y DEF con Dmitrovic, Germán, Arnau y Arguibide para poder completar la alineación.

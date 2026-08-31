@@ -35,7 +35,7 @@ def get_gemini_api_key():
     return key
 
 
-def call_gemini(prompt: str, system_prompt: str, api_key: str, model: str = DEFAULT_MODEL, thinking_budget: int = 1024) -> str:
+def call_gemini(prompt: str, system_prompt: str, api_key: str, model: str = DEFAULT_MODEL, thinking_budget: int = 3072) -> str:
     """Call Google Gemini generateContent with thinkingConfig enabled."""
     url = GEMINI_API_URL.format(model=model, key=api_key)
     
@@ -80,16 +80,37 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         return
 
     print("=" * 60)
-    print("🤖 INICIANDO AGENTE FANTASYBOT CON GEMINI FLASH LITE")
+    print("🤖 INICIANDO AGENTE FANTASYBOT CON GEMINI FLASH LITE (THINKING PRO)")
     print("=" * 60)
 
     fc = FantasyClient()
     lid, tid = fc.default_ids()
     
-    print("· Obteniendo estado del equipo y mercado...")
+    print("· Obteniendo estado del equipo y mercado completo...")
     team = fc.team(lid, tid)
     market = fc.market(lid)
     
+    pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
+
+    # Extract all available players on the market
+    market_players = []
+    for m in market:
+        pm = m.get("playerMaster", {})
+        pt = m.get("playerTeam", {})
+        pos_id = pm.get("positionId")
+        pos_str = pos_map.get(pos_id, "JUG")
+        name = pm.get("nickname") or pm.get("name") or "Desconocido"
+        price = m.get("salePrice") or pt.get("marketValue") or pm.get("marketValue") or 0
+        mid = m.get("id")
+        owner = "SISTEMA" if m.get("discr") == "marketPlayerLeague" else "RIVAL"
+        market_players.append({
+            "marketId": mid,
+            "nombre": name,
+            "posicion": pos_str,
+            "precio_salida": price,
+            "propietario": owner
+        })
+
     # Lineup optimization
     best_lineup = None
     try:
@@ -114,7 +135,7 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         with open(memory_path, "r", encoding="utf-8") as f:
             existing_memory = f.read()
 
-    # Build prompt
+    # Build prompt with rich context
     situation = {
         "fecha_hora": datetime.now().isoformat(),
         "presupuesto_disponible": team.get("teamMoney", 0),
@@ -124,16 +145,17 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
             {
                 "id": p["playerMaster"]["id"],
                 "nombre": p["playerMaster"].get("nickname") or p["playerMaster"].get("name"),
-                "posicion": p["playerMaster"].get("positionId"),
+                "posicion": pos_map.get(p["playerMaster"].get("positionId"), "-"),
                 "valor": p.get("playerTeam", {}).get("marketValue") or p["playerMaster"].get("marketValue")
             } for p in team.get("players", [])
         ],
+        "jugadores_disponibles_en_el_mercado": market_players,
         "alineacion_optima_calculada": {
             "formacion": best_lineup.get("formation") if best_lineup else None,
             "incompleta": best_lineup.get("incomplete") if best_lineup else True,
             "total_score": best_lineup.get("total") if best_lineup else 0
         },
-        "oportunidades_flip_mercado": [
+        "oportunidades_flip_especulacion": [
             {
                 "marketId": f.get("marketId"),
                 "nombre": f.get("nombre"),
@@ -146,16 +168,21 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
 
     system_prompt = (
         "Eres el Director Deportivo y Mánager de IA de un equipo en LALIGA Fantasy.\n"
-        "Tu misión es tomar las mejores decisiones para maximizar puntos y aumentar el valor del equipo.\n"
-        "Analiza la situación que te presentamos y responde con:\n"
-        "1. Un breve análisis estratégico en español (3-5 líneas).\n"
-        "2. Tus recomendaciones concretas (qué hacer con la alineación y qué pujas hacer).\n"
-        "3. Una sección final con formato JSON estricto con las acciones a realizar:\n"
+        "Tu misión es tomar las mejores decisiones para maximizar puntos, cubrir posiciones vacías y aumentar el valor del equipo.\n\n"
+        "INSTRUCCIONES CLAVE:\n"
+        "- Revisa detalladamente la lista de 'jugadores_disponibles_en_el_mercado' con sus 'marketId', nombres, posiciones y precios de salida.\n"
+        "- Si el equipo tiene huecos (como falta de portero POR o defensas DEF), debes SELECCIONAR candidatos del mercado para cubrir esas vacantes urgentemente.\n"
+        "- Para cada jugador que decidas fichar, añade una entrada a 'pujas_recomendadas' con su 'marketId' EXACTO, su 'nombre' y la 'puja_maxima' en euros (ajustando una cantidad competitiva sin sobrepasar el presupuesto).\n"
+        "- También puedes pujar por oportunidades de reventa (flips) para ganar dinero si te queda margen presupuestario.\n\n"
+        "ESTRUCTURA DE RESPUESTA:\n"
+        "1. Análisis Estratégico detallado en español.\n"
+        "2. Recomendaciones Concretas y desglose de fichajes.\n"
+        "3. Bloque JSON final estricto con las decisiones a ejecutar:\n"
         "```json\n"
         "{\n"
         '  "aplicar_alineacion": true,\n'
         '  "pujas_recomendadas": [\n'
-        '    {"marketId": 12345, "nombre": "Nombre", "puja_maxima": 1500000}\n'
+        '    {"marketId": 123888357, "nombre": "Germán", "puja_maxima": 650000}\n'
         "  ],\n"
         '  "nueva_memoria": "Breve nota actualizada para recordar en futuras revisiones."\n'
         "}\n"
@@ -164,8 +191,8 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
 
     user_prompt = (
         f"Memoria previa del mánager:\n{existing_memory}\n\n"
-        f"Estado actual de la liga y equipo:\n{json.dumps(situation, ensure_ascii=False, indent=2)}\n\n"
-        "Razona y decide qué movimientos debemos hacer hoy."
+        f"Estado actual de la liga, equipo y mercado completo:\n{json.dumps(situation, ensure_ascii=False, indent=2)}\n\n"
+        "Razona profundamente y decide qué fichajes y movimientos debemos realizar hoy."
     )
 
     print("· Consultando a Gemini 3.5 Flash Lite (Thinking activado)...")

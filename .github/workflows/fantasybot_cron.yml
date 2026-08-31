@@ -53,10 +53,11 @@ jobs:
         run: |
           git config --global user.name "FantasyBot Agent"
           git config --global user.email "fantasybot@users.noreply.github.com"
+          git pull --rebase origin main || true
           git add hermes/MEMORY.md || true
           if ! git diff --cached --quiet; then
             git commit -m "chore(agent): update manager memory [skip ci]"
-            git push
+            git push origin main || true
           fi
 
       - name: Setup Pages

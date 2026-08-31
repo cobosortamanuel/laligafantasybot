@@ -86,13 +86,21 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
     fc = FantasyClient()
     lid, tid = fc.default_ids()
     
-    print("· Obteniendo estado del equipo y mercado completo...")
+    print("· Obteniendo estado del equipo, informe del agente y mercado completo...")
     team = fc.team(lid, tid)
     market = fc.market(lid)
     
+    # 1. Full Review Report from original agent (includes events, diffs, matchday, clause targets, sells, needs)
+    review_report = {}
+    try:
+        from . import agent as agent_mod
+        review_report = agent_mod.review(fc)
+    except Exception as e:
+        print(f"· Aviso al obtener review del agente: {e}")
+
     pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
 
-    # Extract all available players on the market
+    # 2. Extract all available players on the market
     market_players = []
     for m in market:
         pm = m.get("playerMaster", {})
@@ -112,21 +120,23 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         })
 
     # Lineup optimization
-    best_lineup = None
-    try:
-        best_lineup = lineup_opt.optimize(team)
-    except Exception as e:
-        print(f"· Aviso al calcular alineación óptima: {e}")
+    best_lineup = review_report.get("lineup") if review_report else None
+    if not best_lineup:
+        try:
+            best_lineup = lineup_opt.optimize(team)
+        except Exception:
+            pass
 
     # Market opportunities (flips)
-    flips = []
-    try:
-        flips = [o for o in flip.opportunities(fc, lid) if o.get("margin_pct", 0) > 0][:8]
-    except Exception as e:
-        print(f"· Aviso al calcular flips: {e}")
+    flips = review_report.get("flips") if review_report else []
+    if not flips:
+        try:
+            flips = [o for o in flip.opportunities(fc, lid) if o.get("margin_pct", 0) > 0][:8]
+        except Exception:
+            pass
 
     # Squad gaps
-    gaps = needs_mod.gaps(team)
+    gaps = review_report.get("gaps") if review_report else needs_mod.gaps(team)
     
     # Read existing memory
     memory_path = os.path.join(config.ROOT, "hermes", "MEMORY.md")
@@ -135,12 +145,17 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         with open(memory_path, "r", encoding="utf-8") as f:
             existing_memory = f.read()
 
-    # Build prompt with rich context
+    # Build prompt with rich context (100% of original project + full market)
     situation = {
         "fecha_hora": datetime.now().isoformat(),
+        "cambios_recientes_eventos": review_report.get("events", {}),
+        "proxima_jornada": review_report.get("matchday", {}),
         "presupuesto_disponible": team.get("teamMoney", 0),
         "valor_plantilla": team.get("teamValue", 0),
         "huecos_en_plantilla": gaps,
+        "ventas_recomendadas": review_report.get("sells", []),
+        "objetivos_clausulazo": review_report.get("clause_targets", []),
+        "recordatorios_programados": review_report.get("reminders", []),
         "jugadores_en_plantilla": [
             {
                 "id": p["playerMaster"]["id"],
@@ -150,20 +165,8 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
             } for p in team.get("players", [])
         ],
         "jugadores_disponibles_en_el_mercado": market_players,
-        "alineacion_optima_calculada": {
-            "formacion": best_lineup.get("formation") if best_lineup else None,
-            "incompleta": best_lineup.get("incomplete") if best_lineup else True,
-            "total_score": best_lineup.get("total") if best_lineup else 0
-        },
-        "oportunidades_flip_especulacion": [
-            {
-                "marketId": f.get("marketId"),
-                "nombre": f.get("nombre"),
-                "precio": f.get("precio"),
-                "margen_pct": f.get("margin_pct"),
-                "subida_diaria": f.get("subida_diaria")
-            } for f in flips
-        ]
+        "alineacion_optima_calculada": best_lineup,
+        "oportunidades_flip_especulacion": flips
     }
 
     system_prompt = (

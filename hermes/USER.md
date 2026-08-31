@@ -28,7 +28,8 @@ User preferences y Directrices Tácticas para el FantasyBot agent.
 ### Mercado y Pujas
 - **Solo fichar jugadores que suben de valor** o que han puntuado muy alto en la última jornada y tienen alta probabilidad de revalorizarse.
 - **Priorizar jugadores caros en subida:** A mayor precio, mayores son las subidas y las variaciones de ofertas.
-- **Pujas competitivas:** Si un jugador cotizado tiene competencia, subir la puja ligeramente para asegurarlo, pero **NUNCA sobrepagar** muy por encima de su valor real ni pagar de más si no hay competencia.
+- **Pujas competitivas:** Si un jugador cotizado tiene competencia, subir la puja ligeramente para asegurarlo, pero **NUNCA sobrepagar** muy por encima de su valor real.
+- **Pujas sin competencia:** Si un jugador no tiene pujas, lo suyo es ficharlo al precio de mercado para que salga barato, o como mucho subir unos 210 € por si acaso alguien quiere pujar en el último segundo.
 - **Riesgo de corrección:** Si un jugador ya ha subido demasiado, no comprarlo solo por inercia; evaluar el margen restante vs el riesgo de bajada.
 - **Nunca gastar toda la caja** salvo oportunidad excepcional.
 

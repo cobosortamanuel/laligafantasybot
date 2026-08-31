@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: 2026-08-31 16:47
+Última actualización: 2026-08-31 18:22
 
-Jornada en curso (<24h, clausulazos cerrados). Mantenemos pujas activas en mercado libre para Dmitrovic, Arnau, Germán y Arguibide con el fin de cubrir huecos estructurales y blindar el valor de la plantilla.
+Jornada inminente (<24h). Clausulazos cerrados. Enfocados en asegurar portería (Germán y Dmitrovic) y defensas (Arnau y Arguibide) en el mercado libre para poder presentar alineación válida.

@@ -171,21 +171,37 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
 
     system_prompt = (
         "Eres el Director Deportivo y Mánager de IA de un equipo en LALIGA Fantasy.\n"
-        "Tu misión es tomar las mejores decisiones para maximizar puntos, cubrir posiciones vacías y aumentar el valor del equipo.\n\n"
-        "INSTRUCCIONES CLAVE:\n"
-        "- Revisa detalladamente la lista de 'jugadores_disponibles_en_el_mercado' con sus 'marketId', nombres, posiciones y precios de salida.\n"
-        "- Si el equipo tiene huecos (como falta de portero POR o defensas DEF), debes SELECCIONAR candidatos del mercado para cubrir esas vacantes urgentemente.\n"
-        "- Para cada jugador que decidas fichar, añade una entrada a 'pujas_recomendadas' con su 'marketId' EXACTO, su 'nombre' y la 'puja_maxima' en euros (ajustando una cantidad competitiva sin sobrepasar el presupuesto).\n"
-        "- También puedes pujar por oportunidades de reventa (flips) para ganar dinero si te queda margen presupuestario.\n\n"
+        "Debes gestionar el equipo siguiendo ESTRICTAMENTE la siguiente Guía y Filosofía de Juego del Usuario:\n\n"
+        "=== GUÍA FANTASY DEL USUARIO (FILOSOFÍA OBLIGATORIA) ===\n"
+        "1. PRIORIDAD AL DINERO SOBRE LOS PUNTOS: Priorizar el dinero a los puntos, ya que a más dinero mejores jugadores compraremos y a la larga más puntos conseguiremos.\n"
+        "2. VALOR ASCENDENTE: Priorizar siempre tener a toda la plantilla con valor de mercado en subida.\n"
+        "3. JUGADORES EN VENTA: Mantener a los jugadores en venta en el mercado para recibir ofertas diarias del sistema, evaluar ofertas interesantes y vigilar caídas de precio.\n"
+        "4. ALINEACIÓN Y DIFICULTAD DEL RIVAL: Para la alineación, evaluar probabilidades de titularidad cruzadas con el rival al que se enfrentan (si juegan contra un grande como Barcelona/Real Madrid harán menos puntos, y si juegan contra rivales débiles más puntos).\n"
+        "5. PROTECCIÓN DE CLÁUSULAS (14 DÍAS): Las cláusulas duran 14 días exactos tras la compra. Antes de que se le acabe la cláusula a un jugador valioso es interesante venderlo para no perderlo por clausulazo rival.\n"
+        "6. TRADING Y RENTABILIDAD PORCENTUAL (ROI %): Evaluar siempre la rentabilidad porcentual sobre el capital invertido, no solo la subida absoluta. Una oferta recibida debe compararse con el beneficio esperado de mantener al jugador.\n"
+        "7. MERCADO Y PUJAS:\n"
+        "   - Solo hacer ofertas a jugadores que estén subiendo o que hayan hecho muchos puntos en la última jornada por lo que pueden subir.\n"
+        "   - Priorizar los jugadores que estén subiendo y que sean caros (a mayor precio, mayor oscilación).\n"
+        "   - Si un jugador cotizado ya tiene puja, subirla un poco; si sube mucho, subirla algo más, pero NUNCA pujar mucho más de lo que vale ni pagar de más si no hay competencia.\n"
+        "   - Si un jugador ya ha subido mucho, no comprar por inercia; evaluar subida restante vs riesgo de corrección.\n"
+        "   - Nunca gastar toda la caja salvo oportunidad excepcional.\n"
+        "8. RIVALES Y CLAUSULAZOS:\n"
+        "   - Nunca hacer ofertas directas a rivales.\n"
+        "   - Los clausulazos son clave: si un rival tiene un jugador con cláusula igual o poco superior al mercado y está subiendo mucho, comprarlo. Si es caro y sube, comprarlo para ponerlo en venta y generar beneficios.\n"
+        "   - 24 horas antes del inicio de la jornada NO se pueden hacer clausulazos. Tener siempre la plantilla elegida antes de que empiece la jornada.\n"
+        "=======================================================\n\n"
         "ESTRUCTURA DE RESPUESTA:\n"
-        "1. Análisis Estratégico detallado en español.\n"
-        "2. Recomendaciones Concretas y desglose de fichajes.\n"
-        "3. Bloque JSON final estricto con las decisiones a ejecutar:\n"
+        "1. Análisis Estratégico aplicando la Guía del Usuario.\n"
+        "2. Recomendaciones Concretas y desglose de movimientos.\n"
+        "3. Bloque JSON final estricto:\n"
         "```json\n"
         "{\n"
         '  "aplicar_alineacion": true,\n'
         '  "pujas_recomendadas": [\n'
-        '    {"marketId": 123888357, "nombre": "Germán", "puja_maxima": 650000}\n'
+        '    {"marketId": 123888363, "nombre": "Dmitrovic", "puja_maxima": 43000000}\n'
+        "  ],\n"
+        '  "ventas_recomendadas": [\n'
+        '    {"playerId": 12345, "nombre": "Jugador", "precio_venta": 5000000}\n'
         "  ],\n"
         '  "nueva_memoria": "Breve nota actualizada para recordar en futuras revisiones."\n'
         "}\n"
@@ -195,7 +211,7 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
     user_prompt = (
         f"Memoria previa del mánager:\n{existing_memory}\n\n"
         f"Estado actual de la liga, equipo y mercado completo:\n{json.dumps(situation, ensure_ascii=False, indent=2)}\n\n"
-        "Razona profundamente y decide qué fichajes y movimientos debemos realizar hoy."
+        "Aplica estrictamente la Guía Fantasy del Usuario, razona profundamente y decide qué fichajes y movimientos debemos realizar hoy."
     )
 
     print("· Consultando a Gemini 3.5 Flash Lite (Thinking activado)...")

@@ -211,8 +211,177 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                             print(f"  ✓ Puja enviada por {bid_item.get('nombre', m_id)}: {max_bid:,} €")
                         except Exception as e:
                             print(f"  ✗ Error al pujar por {bid_item.get('nombre', m_id)}: {e}")
-            else:
-                print("\n(Modo simulación: no se han enviado cambios a LaLiga Fantasy. Usa --execute para aplicarlos).")
+            # Generate HTML Dashboard and GitHub Summary
+            generate_dashboard(team, best_lineup, flips, gaps, response, decision, execute)
 
     except Exception as e:
         print(f"[ERROR] Error al llamar a Gemini: {e}")
+
+
+def generate_dashboard(team, best_lineup, flips, gaps, response_text, decision, executed):
+    """Generates a responsive static HTML dashboard in public/index.html and writes to GITHUB_STEP_SUMMARY."""
+    now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+    money = team.get("teamMoney", 0)
+    value = team.get("teamValue", 0)
+    
+    players = team.get("players", [])
+    pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
+
+    players_rows = ""
+    for p in players:
+        pm = p.get("playerMaster", {})
+        pt = p.get("playerTeam", {})
+        p_name = pm.get("nickname") or pm.get("name") or "Desconocido"
+        p_pos = pos_map.get(pm.get("positionId"), "-")
+        p_val = pt.get("marketValue") or pm.get("marketValue") or 0
+        players_rows += f"""
+        <tr class="border-b border-gray-800 hover:bg-gray-800/40">
+            <td class="py-2 px-3 font-semibold text-emerald-400">{p_pos}</td>
+            <td class="py-2 px-3">{p_name}</td>
+            <td class="py-2 px-3 text-right text-gray-300">{p_val:,} €</td>
+        </tr>
+        """
+
+    flips_rows = ""
+    for f in flips:
+        flips_rows += f"""
+        <tr class="border-b border-gray-800 hover:bg-gray-800/40">
+            <td class="py-2 px-3 font-medium text-white">{f.get('nombre', '-')}</td>
+            <td class="py-2 px-3 text-right text-gray-300">{f.get('precio', 0):,} €</td>
+            <td class="py-2 px-3 text-right text-emerald-400 font-semibold">+{f.get('margen_pct', 0)}%</td>
+        </tr>
+        """
+
+    # Format reasoning markdown-like to HTML
+    clean_report = response_text.replace("\n", "<br>").replace("### ", "<h3 class='text-lg font-bold text-emerald-400 mt-3 mb-1'>").replace("## ", "<h2 class='text-xl font-bold text-white mt-4 mb-2'>").replace("**", "<strong class='text-white'>")
+
+    html = f"""<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FantasyBot - Panel de Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {{ font-family: 'Inter', sans-serif; }}
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+            <div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">⚽</span>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white">FantasyBot Manager</h1>
+                </div>
+                <p class="text-sm text-gray-400 mt-1">IA: Gemini 3.5 Flash Lite (Thinking) | Actualizado: {now_str}</p>
+            </div>
+            <div class="flex items-center space-x-2 mt-4 md:mt-0">
+                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full text-xs font-bold uppercase tracking-wider">
+                    {'⚡ Ejecutado en Juego' if executed else '🔍 Modo Análisis'}
+                </span>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Presupuesto Disponible</span>
+                <p class="text-2xl md:text-3xl font-bold text-emerald-400 mt-1">{money:,} €</p>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Valor de Plantilla</span>
+                <p class="text-2xl md:text-3xl font-bold text-blue-400 mt-1">{value:,} €</p>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Huecos Urgentes</span>
+                <p class="text-xl font-bold text-amber-400 mt-1">{', '.join(gaps) if gaps else 'Plantilla completa'}</p>
+            </div>
+        </div>
+
+        <!-- Gemini Tactical Analysis -->
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-lg">
+            <div class="flex items-center space-x-2 border-b border-gray-800 pb-3 mb-4">
+                <span class="text-2xl">🧠</span>
+                <h2 class="text-xl font-bold text-white">Informe Estratégico de Gemini</h2>
+            </div>
+            <div class="text-gray-300 leading-relaxed text-sm md:text-base space-y-2">
+                {clean_report}
+            </div>
+        </div>
+
+        <!-- Squad & Market Tables -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Plantilla -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-lg">
+                <h3 class="text-lg font-bold text-white mb-3 flex items-center justify-between">
+                    <span>👥 Tu Plantilla ({len(players)} jugadores)</span>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-gray-800 text-xs uppercase">
+                                <th class="py-2 px-3">Pos</th>
+                                <th class="py-2 px-3">Jugador</th>
+                                <th class="py-2 px-3 text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {players_rows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Flips -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-lg">
+                <h3 class="text-lg font-bold text-white mb-3 flex items-center justify-between">
+                    <span>📈 Oportunidades de Reventa (Flips)</span>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-gray-800 text-xs uppercase">
+                                <th class="py-2 px-3">Jugador</th>
+                                <th class="py-2 px-3 text-right">Precio</th>
+                                <th class="py-2 px-3 text-right">Margen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {flips_rows or '<tr><td colspan="3" class="py-4 text-center text-gray-500">Sin flips claros</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center text-xs text-gray-500 py-4">
+            FantasyBot Autonomous Cloud Agent • Desplegado automáticamente en GitHub Pages
+        </footer>
+    </div>
+</body>
+</html>
+    """
+    
+    # Write to public/index.html
+    public_dir = os.path.join(config.ROOT, "public")
+    os.makedirs(public_dir, exist_ok=True)
+    with open(os.path.join(public_dir, "index.html"), "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"\n[OK] Panel web generado en public/index.html")
+
+    # Write to GitHub Step Summary if running in GitHub Actions
+    gh_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if gh_summary:
+        try:
+            with open(gh_summary, "a", encoding="utf-8") as f:
+                f.write(f"## ⚽ FantasyBot - Informe de Mánager ({now_str})\n\n")
+                f.write(f"- **Presupuesto disponible:** {money:,} €\n")
+                f.write(f"- **Valor de plantilla:** {value:,} €\n")
+                f.write(f"- **Huecos:** {', '.join(gaps) if gaps else 'Ninguno'}\n\n")
+                f.write(f"### 🧠 Análisis de Gemini Flash Lite\n\n{response_text}\n")
+        except Exception as e:
+            print(f"Error escribiendo en GITHUB_STEP_SUMMARY: {e}")
+

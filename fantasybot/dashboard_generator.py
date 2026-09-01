@@ -425,6 +425,67 @@ def generate_apple_dashboard(
             """
 
     # 3b. RIVAL BUYOUT CLAUSES RADAR
+    # Calculate exact countdowns for all rival players from league_teams
+    if league_teams:
+        rival_clause_targets = []
+        now_utc = datetime.now(timezone.utc)
+        for lt in league_teams:
+            if str(lt.get("id")) == str(team.get("id")):
+                continue
+            manager_name = lt.get("manager", {}).get("managerName") or lt.get("teamName") or "Rival"
+            for p in lt.get("players", []):
+                pm = p.get("playerMaster", {})
+                p_id = pm.get("id")
+                name = pm.get("nickname") or pm.get("name") or "Desconocido"
+                pos_id = pm.get("positionId")
+                pos_str = pos_map.get(pos_id, "JUG")
+                val = pm.get("marketValue") or 0
+                clause = p.get("buyoutClause") or (val * 1.67)
+                locked_until = p.get("buyoutClauseLockedEndTime")
+                
+                is_open = True
+                shield_status = "Abierta"
+                seconds_to_open = 0
+                if locked_until:
+                    try:
+                        exp_dt = datetime.fromisoformat(locked_until)
+                        if exp_dt.tzinfo is None:
+                            exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+                        diff = (exp_dt - now_utc).total_seconds()
+                        if diff > 0:
+                            is_open = False
+                            seconds_to_open = int(diff)
+                            hours = int(diff // 3600)
+                            mins = int((diff % 3600) // 60)
+                            if hours >= 24:
+                                d = diff / 86400
+                                shield_status = f"En {d:.1f} días ({exp_dt.astimezone(SPAIN_TZ).strftime('%d/%m %H:%M')})"
+                            else:
+                                shield_status = f"En {hours}h {mins}m ({exp_dt.astimezone(SPAIN_TZ).strftime('%H:%M')})"
+                    except Exception:
+                        pass
+
+                prob = None
+                if prob_index:
+                    from .matching import match_name
+                    minfo = match_name(pm.get("nickname", ""), pm.get("name", ""), prob_index)
+                    if minfo and minfo.get("prob") is not None:
+                        prob = minfo.get("prob")
+
+                rival_clause_targets.append({
+                    "playerId": p_id,
+                    "nombre": name,
+                    "posicion": pos_str,
+                    "equipo_rival": manager_name,
+                    "valor_mercado": val,
+                    "clausula": int(clause),
+                    "ratio_clausula_valor": round(clause / val, 2) if val else 0,
+                    "clausula_abierta": is_open,
+                    "segundos_para_abrir": seconds_to_open,
+                    "estado_escudo": shield_status,
+                    "prob_titular": prob
+                })
+
     rival_clauses_html = ""
     if rival_clause_targets:
         # Sort by open first, then ratio
@@ -465,11 +526,79 @@ def generate_apple_dashboard(
         """
 
     # 4. TAB: GAMEWEEK POINTS CHART
-    # Fallback or sample gameweek structure
     gw_labels = ["J1", "J2", "J3", "J4"]
     gw_points = [0, 0, 0, 0]
 
-    # 5. TAB: HISTORICAL REASONINGS ARCHIVE
+    # 5. TAB: SCHEDULED ACTIONS & SNIPING PLAN
+    scheduled_bids = state.load_bid_plan()
+    scheduled_reminders = state.load_reminders()
+    scheduled_items = []
+
+    # Bids planned for last-minute close
+    for b in scheduled_bids:
+        m_id = b.get("market_id")
+        max_b = b.get("max_bid")
+        n = b.get("nombre", f"Jugador #{m_id}")
+        scheduled_items.append({
+            "icon": ICONS['market'],
+            "tipo": "Puja de Último Minuto Programada",
+            "titulo": f"Puja tope por {n}: {_format_money(max_b)}",
+            "hora": "22:10 - 22:18 (Hora España)",
+            "badge": "Mercado",
+            "badge_class": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+        })
+
+    # Scheduled Buyouts
+    for c in ((decision or {}).get("clausulazos_programados") or []):
+        p_name = c.get("nombre", "Jugador")
+        cl = c.get("clausula", 0)
+        ap = c.get("apertura_iso", "")
+        ap_str = _format_spain_time(ap) if ap else "Próxima apertura"
+        scheduled_items.append({
+            "icon": ICONS['zap'],
+            "tipo": "Clausulazo Programado",
+            "titulo": f"Compra por cláusula de {p_name}: {_format_money(cl)}",
+            "hora": f"Al abrir escudo: {ap_str}",
+            "badge": "Clausulazo",
+            "badge_class": "bg-amber-500/10 text-amber-400 border-amber-500/20"
+        })
+
+    # Reminders
+    for r in scheduled_reminders:
+        scheduled_items.append({
+            "icon": ICONS['clock'],
+            "tipo": "Recordatorio Programado",
+            "titulo": r.get("message", "Alarma"),
+            "hora": _format_spain_time(r.get("fire_at")),
+            "badge": "Recordatorio",
+            "badge_class": "bg-zinc-800 text-zinc-300 border-zinc-700"
+        })
+
+    scheduled_actions_html = ""
+    if scheduled_items:
+        for s in scheduled_items:
+            scheduled_actions_html += f"""
+            <div class="flex items-center justify-between p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-all mb-2">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-zinc-300 flex-shrink-0">{s['icon']}</span>
+                    <div class="min-w-0">
+                        <div class="font-medium text-zinc-200 text-xs truncate">{s['titulo']}</div>
+                        <div class="text-[10px] text-zinc-500 font-mono mt-0.5">{s['tipo']} • {s['hora']}</div>
+                    </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold border {s['badge_class']} flex-shrink-0 ml-2">
+                    {s['badge']}
+                </span>
+            </div>
+            """
+    else:
+        scheduled_actions_html = """
+        <div class="p-4 text-center text-zinc-500 text-xs bg-zinc-900/30 border border-zinc-800/60 rounded-xl">
+            No hay acciones programadas pendientes en este momento. Las nuevas compras de último minuto y clausulazos se programarán en el pase de las 17:00 / 22:10.
+        </div>
+        """
+
+    # 5b. TAB: HISTORICAL REASONINGS ARCHIVE
     history_file = os.path.join(config.ROOT, ".state", "reasoning_history.json")
     r_history = []
     if os.path.exists(history_file):
@@ -511,7 +640,7 @@ def generate_apple_dashboard(
         </div>
         """
 
-    # 5b. ACTION AUDIT TIMELINE
+    # 5c. ACTION AUDIT TIMELINE
     recent_events = events.load(limit=30)
     timeline_html = ""
     for ev in reversed(recent_events):
@@ -894,8 +1023,22 @@ def generate_apple_dashboard(
                 </div>
             </section>
 
-            <!-- TAB 5: REASONING ARCHIVE & AUDIT TIMELINE -->
+            <!-- TAB 5: SCHEDULED ACTIONS, REASONING ARCHIVE & AUDIT TIMELINE -->
             <section id="tab-history" class="tab-content hidden space-y-4">
+                <!-- Scheduled Actions & Sniping Plan -->
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-zinc-400">{ICONS['clock']}</span>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Acciones Programadas & Sniping</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">{len(scheduled_items)} activa(s)</span>
+                    </div>
+                    <div class="mt-3">
+                        {scheduled_actions_html}
+                    </div>
+                </div>
+
                 <!-- Gemini Reasoning Archive -->
                 <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
                     <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">

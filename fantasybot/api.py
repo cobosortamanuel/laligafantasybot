@@ -171,20 +171,20 @@ class FantasyClient:
     def accept_offer(self, league_id, target_id, offer_id, money):
         try:
             return self.post(self._cmp(
-                f"/league/{league_id}/playerTeam/{target_id}/offer/{offer_id}/accept?x-lang=es"),
+                f"/league/{league_id}/market/{target_id}/offer/{offer_id}/accept?x-lang=es"),
                 {"offerMoney": money})
         except Exception:
             return self.post(self._cmp(
-                f"/league/{league_id}/market/{target_id}/offer/{offer_id}/accept?x-lang=es"),
+                f"/league/{league_id}/playerTeam/{target_id}/offer/{offer_id}/accept?x-lang=es"),
                 {"offerMoney": money})
 
     def decline_offer(self, league_id, target_id, offer_id):
         try:
             return self.post(self._cmp(
-                f"/league/{league_id}/playerTeam/{target_id}/offer/{offer_id}/reject?x-lang=es"))
+                f"/league/{league_id}/market/{target_id}/offer/{offer_id}/reject?x-lang=es"))
         except Exception:
             return self.post(self._cmp(
-                f"/league/{league_id}/market/{target_id}/offer/{offer_id}/reject?x-lang=es"))
+                f"/league/{league_id}/playerTeam/{target_id}/offer/{offer_id}/reject?x-lang=es"))
 
     # --- writes: buyout clauses ---
     def pay_buyout_clause(self, league_id, player_id, amount):

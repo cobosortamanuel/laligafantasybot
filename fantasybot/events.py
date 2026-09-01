@@ -12,7 +12,13 @@ stable and reproducible: what you see is what the CLI actually did.
 import json
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+try:
+    from zoneinfo import ZoneInfo
+    SPAIN_TZ = ZoneInfo("Europe/Madrid")
+except Exception:
+    SPAIN_TZ = timezone(timedelta(hours=2))
 
 from . import config
 
@@ -59,7 +65,7 @@ def emit(kind: str, title: str, detail=None, status: str = "ok") -> dict:
     """
     ev = {
         "ts": time.time(),
-        "iso": datetime.now(timezone.utc).isoformat(),
+        "iso": datetime.now(SPAIN_TZ).isoformat(),
         "run": _run_id(),
         "kind": kind,
         "title": title,

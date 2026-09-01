@@ -17,9 +17,29 @@ import html as html_lib
 import json
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+try:
+    from zoneinfo import ZoneInfo
+    SPAIN_TZ = ZoneInfo("Europe/Madrid")
+except Exception:
+    SPAIN_TZ = timezone(timedelta(hours=2))
 
 from . import config, events, state
+
+
+def _format_spain_time(iso_str):
+    """Converts any ISO timestamp to clean DD/MM/YYYY HH:MM in Spain local time."""
+    if not iso_str:
+        return ""
+    try:
+        dt = datetime.fromisoformat(iso_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        dt_spain = dt.astimezone(SPAIN_TZ)
+        return dt_spain.strftime("%d/%m/%Y %H:%M")
+    except Exception:
+        return str(iso_str)[:16].replace("T", " ")
 
 
 def _format_money(amount):
@@ -462,7 +482,7 @@ def generate_apple_dashboard(
     reasoning_archive_html = ""
     if r_history:
         for idx, item in enumerate(reversed(r_history)):
-            ts = item.get("date_str") or item.get("timestamp", "")
+            ts = _format_spain_time(item.get("timestamp") or item.get("date_str"))
             resp = item.get("response", "")
             fmt_resp = _format_markdown_report(resp)
             is_first = (idx == 0)
@@ -474,7 +494,7 @@ def generate_apple_dashboard(
                         <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-zinc-300">{ICONS['cpu']}</span>
                         <div>
                             <span class="font-semibold text-zinc-200 text-xs">Informe Táctico Gemini</span>
-                            <span class="text-[10px] text-zinc-500 font-mono ml-2">{ts}</span>
+                            <span class="text-[10px] text-zinc-500 font-mono ml-2">{ts} (Hora España)</span>
                         </div>
                     </div>
                     <span class="text-zinc-500 text-xs font-mono group-open:rotate-180 transition-transform">▼</span>
@@ -497,7 +517,7 @@ def generate_apple_dashboard(
     for ev in reversed(recent_events):
         k = ev.get("kind", "note")
         title = ev.get("title", "")
-        ts = ev.get("iso", "")[:16].replace("T", " ")
+        ts = _format_spain_time(ev.get("iso"))
         detail_obj = ev.get("detail")
         detail_json = ""
         if detail_obj:

@@ -27,10 +27,11 @@ except Exception:
     SPAIN_TZ = timezone(timedelta(hours=2))
 
 
-def call_gemini(prompt: str, system_instruction: str, api_key: str, model: str = "gemini-2.5-flash-lite") -> str:
-    """Calls Gemini REST API with thinking config enabled."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-    
+def call_gemini(prompt: str, system_instruction: str, api_key: str, model: str = "gemini-flash-lite-latest") -> str:
+    """Calls Gemini REST API with automatic model fallback."""
+    candidate_models = [model, "gemini-flash-lite-latest", "gemini-flash-latest"]
+    last_err = None
+
     payload = {
         "contents": [
             {
@@ -49,26 +50,30 @@ def call_gemini(prompt: str, system_instruction: str, api_key: str, model: str =
             "maxOutputTokens": 8192
         }
     }
-    
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"}
-    )
-    
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-        
-    candidates = data.get("candidates", [])
-    if not candidates:
-        raise ValueError(f"No response candidates from Gemini: {data}")
-    
-    parts = candidates[0].get("content", {}).get("parts", [])
-    text_parts = [p.get("text", "") for p in parts if "text" in p]
-    return "".join(text_parts)
+
+    for m in candidate_models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            candidates = data.get("candidates", [])
+            if candidates:
+                parts = candidates[0].get("content", {}).get("parts", [])
+                text_parts = [p.get("text", "") for p in parts if "text" in p]
+                return "".join(text_parts)
+        except Exception as e:
+            last_err = e
+            continue
+
+    raise last_err or ValueError("Failed to call Gemini API with candidate models.")
 
 
-def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"):
+def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-latest"):
     """Runs the full Gemini AI manager review and execution cycle."""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -114,13 +119,13 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
     print("· Comprobando estado de venta de la plantilla en el mercado...")
     for p in team.get("players", []):
         pm = p.get("playerMaster", {})
-        pt = p.get("playerTeam", {})
-        p_id = pm.get("id")
+        pt_id = p.get("playerTeamId")
         p_name = pm.get("nickname") or pm.get("name") or "Desconocido"
-        m_val = pt.get("marketValue") or pm.get("marketValue") or 0
-        if p_id and str(p_id) not in market_player_ids and m_val > 0:
+        m_val = pm.get("marketValue") or 0
+        already_listed = p.get("playerMarket") is not None
+        if pt_id and not already_listed and m_val > 0:
             try:
-                fc.sell_player(lid, p_id, int(m_val))
+                fc.sell_player(lid, pt_id, int(m_val))
                 print(f"  ✓ Auto-listado en mercado: {p_name} por {int(m_val):,} € (Precio de mercado)")
                 events.emit("sell", f"Puesto a la venta: {p_name} ({int(m_val):,} €)")
             except Exception as e:
@@ -262,7 +267,7 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
 
     # Lineup optimization
     best_lineup = review_report.get("lineup") if review_report else None
-    if not best_lineup:
+    if not best_lineup or "payload" not in best_lineup:
         try:
             best_lineup = lineup_opt.optimize(team)
         except Exception:
@@ -434,7 +439,7 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
             # Execute actions if requested
             if execute:
                 print("\n⚡ MODO EJECUCIÓN ACTIVO: Aplicando decisiones en LaLiga Fantasy...")
-                from . import bidding, state
+                from . import bidding
 
                 if decision.get("aplicar_alineacion") and best_lineup and not best_lineup.get("incomplete"):
                     try:

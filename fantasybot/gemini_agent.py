@@ -14,9 +14,9 @@ from datetime import datetime, timezone, timedelta
 import urllib.request
 import urllib.error
 
-from . import config, events, execute as execute_mod, flip, lineup_opt, state
+from . import config, events, execute as execute_mod, state
+from .strategy import flip, lineup as lineup_opt, needs as needs_mod
 from .api import FantasyClient
-from .sources import needs as needs_mod
 from .sources.lineups import probable_lineups
 from .sources.market_trends import market_trends
 
@@ -274,11 +274,19 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
         with open(memory_path, "r", encoding="utf-8") as f:
             existing_memory = f.read()
 
+    # Calculate projected budget taking into account scheduled last-minute bids
+    current_money = team.get("teamMoney", 0)
+    scheduled_bids = state.load_bid_plan()
+    dinero_comprometido_en_pujas = sum(int(t.get("max_bid", 0)) for t in scheduled_bids)
+    presupuesto_proyectado = current_money - dinero_comprometido_en_pujas
+
     # Build prompt situation
     situation = {
         "fecha_hora_actual_espana": now_spain_str,
         "proxima_jornada": review_report.get("matchday", {}),
-        "presupuesto_disponible": team.get("teamMoney", 0),
+        "presupuesto_actual_en_caja": current_money,
+        "dinero_comprometido_en_pujas_programadas": dinero_comprometido_en_pujas,
+        "presupuesto_disponible_proyectado": presupuesto_proyectado,
         "valor_plantilla": team.get("teamValue", 0),
         "huecos_en_plantilla": gaps,
         "mi_plantilla": [
@@ -293,7 +301,7 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
         "ofertas_recibidas_por_mis_jugadores": my_received_offers,
         "mercado_libre_sistema": mercado_libre_sistema,
         "jugadores_rivales_y_clausulazos": rival_clause_targets,
-        "acciones_programadas_activas": state.load_bid_plan(),
+        "acciones_programadas_activas": scheduled_bids,
         "recordatorios_activos": state.load_reminders(),
         "alineacion_optima_calculada": best_lineup,
         "oportunidades_flip_especulacion": flips
@@ -305,28 +313,31 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
         "Debes gestionar el equipo siguiendo ESTRICTAMENTE la siguiente Guía y Filosofía de Juego del Usuario:\n\n"
         "=== GUÍA FANTASY DEL USUARIO (FILOSOFÍA OBLIGATORIA) ===\n"
         "1. PRIORIDAD AL DINERO SOBRE LOS PUNTOS: Priorizar el dinero a los puntos en el corto/medio plazo para construir un gran patrimonio.\n"
-        "2. VALOR ASCENDENTE: Priorizar tener a toda la plantilla con valor de mercado en subida.\n"
-        "3. JUGADORES EN VENTA: Todos los jugadores están siempre en el mercado para recibir ofertas diarias de la máquina y monetizar picos de valor.\n"
-        "4. ALINEACIÓN Y DIFICULTAD DEL RIVAL: Evaluar probabilidades de titularidad y dificultad del partido (los partidos difíciles reducen la puntuación esperada).\n"
-        "5. PROTECCIÓN DE CLÁUSULAS (14 DÍAS): El escudo de protección dura 14 días. Antes de que expire la cláusula de un jugador cotizado, evaluar venderlo o protegerlo si hay riesgo de robo rival.\n"
-        "6. TRADING Y RENTABILIDAD PORCENTUAL (ROI %): Evaluar siempre la rentabilidad porcentual sobre el capital invertido.\n"
-        "7. MERCADO LIBRE Y PUJAS:\n"
+        "2. CONTROL DE PRESUPUESTO ACTUAL Y PROYECTADO:\n"
+        "   - Tienes el presupuesto en caja (`presupuesto_actual_en_caja`), el dinero ya reservado para compras de mercado (`dinero_comprometido_en_pujas_programadas`) y el saldo neto restante (`presupuesto_disponible_proyectado`).\n"
+        "   - Al decidir nuevas compras o clausulazos, evalúa siempre el `presupuesto_disponible_proyectado` para no exceder los fondos reales.\n"
+        "3. VALOR ASCENDENTE: Priorizar tener a toda la plantilla con valor de mercado en subida.\n"
+        "4. JUGADORES EN VENTA: Todos los jugadores están siempre en el mercado para recibir ofertas diarias de la máquina y monetizar picos de valor.\n"
+        "5. ALINEACIÓN Y DIFICULTAD DEL RIVAL: Evaluar probabilidades de titularidad y dificultad del partido (los partidos difíciles reducen la puntuación esperada).\n"
+        "6. PROTECCIÓN DE CLÁUSULAS (14 DÍAS): El escudo de protección dura 14 días. Antes de que expire la cláusula de un jugador cotizado, evaluar venderlo o protegerlo si hay riesgo de robo rival.\n"
+        "7. TRADING Y RENTABILIDAD PORCENTUAL (ROI %): Evaluar siempre la rentabilidad porcentual sobre el capital invertido.\n"
+        "8. MERCADO LIBRE Y PUJAS:\n"
         "   - Solo pujar por jugadores que estén subiendo o rindan de forma sobresaliente.\n"
         "   - Si un jugador NO tiene pujas, pujar a su PRECIO DE MERCADO o sumar exactamente +210 € como margen de seguridad.\n"
         "   - Si ya tiene pujas rivales, subir de forma moderada sin sobrepagar.\n"
         "   - NUNCA gastar toda la caja salvo oportunidad irrepetible.\n"
-        "8. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE):\n"
+        "9. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE):\n"
         "   - NUNCA hacer pujas normales a jugadores de rivales.\n"
         "   - CLAUSULAZO DIRECTO (PAGO INMEDIATO): Si un jugador de un rival tiene su cláusula ABIERTA, es rentable (su precio se va a amortizar con creces en puntos/valor) y disponemos de saldo, se ejecuta como clausulazo directo.\n"
         "   - CLAUSULAZO PROGRAMADO: Si la cláusula de un jugador estrella rival vence su escudo pronto (pocas horas/días), planificar su compra en el segundo exacto de apertura.\n"
         "   - NUNCA pagar cláusulas desproporcionadas que no se amorticen.\n"
         "   - REGLA DE LAS 24H: 24 horas antes del inicio de la jornada NO se pueden pagar cláusulas.\n"
-        "9. GESTIÓN Y CANCELACIÓN DE ACCIONES PROGRAMADAS:\n"
+        "10. GESTIÓN Y CANCELACIÓN DE ACCIONES PROGRAMADAS:\n"
         "   - Puedes ver el plan actual en `acciones_programadas_activas`.\n"
         "   - Si una puja programada anteriormente ya no es conveniente (ej. el jugador se lesionó, su valor empezó a desplomarse o ha surgido una oportunidad superior), puedes cancelarla en `cancelar_pujas_programadas`.\n"
         "=======================================================\n\n"
         "ESTRUCTURA DE RESPUESTA:\n"
-        "1. Análisis Estratégico aplicando la Guía del Usuario.\n"
+        "1. Análisis Estratégico aplicando la Guía del Usuario (incluyendo análisis de presupuesto actual y proyectado).\n"
         "2. Decisiones de Mercado Libre, Clausulazos y Cancelaciones.\n"
         "3. Bloque JSON final estricto:\n"
         "```json\n"

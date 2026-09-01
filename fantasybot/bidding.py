@@ -66,7 +66,7 @@ def _find(market, market_id):
 
 
 def last_minute_bid(league_id, market_id, max_bid, value=None, final=DEFAULT_FINAL,
-                    poll=DEFAULT_POLL, dry_run=False, log=print):
+                    poll=DEFAULT_POLL, dry_run=False, log=print, nombre=None):
     """Watches until close and places the bid at the optimal moment."""
     fc = FantasyClient()
     fixed_value = value
@@ -75,7 +75,8 @@ def last_minute_bid(league_id, market_id, max_bid, value=None, final=DEFAULT_FIN
         log(f"[bid] marketId {market_id} is not in the market (already closed?).")
         return None
     close_iso = el.get("expirationDate")
-    nombre = el["playerMaster"].get("nickname", market_id)
+    pm = el.get("playerMaster") or {}
+    nombre = nombre or pm.get("nickname") or pm.get("name") or f"Jugador #{market_id}"
     if not close_iso:
         log(f"[bid] {nombre}: no close date; can't time it. Done.")
         return None
@@ -110,7 +111,7 @@ def last_minute_bid(league_id, market_id, max_bid, value=None, final=DEFAULT_FIN
                 resp = fc.make_bid(league_id, market_id, amount)
                 log(f"[bid] {nombre}: BID {amount:,} placed "
                     f"(value {value:,}, other_bids={other_bids}, {int(left)}s left)")
-                events.emit("bid", f"Last-minute bid: {amount:,} for {nombre}",
+                events.emit("bid", f"Puja de último minuto: {amount:,} € por {nombre}",
                             detail={"rival_bids": other_bids, "time_left": f"{int(left)}s"})
                 return resp
             except Exception as e:
@@ -138,7 +139,7 @@ def run_bid_plan(league_id, dry_run=False, log=print):
     for t in plan:
         th = threading.Thread(target=last_minute_bid, kwargs=dict(
             league_id=league_id, market_id=t["market_id"], max_bid=t["max_bid"],
-            dry_run=dry_run, log=log))
+            dry_run=dry_run, log=log, nombre=t.get("nombre")))
         th.start()
         threads.append(th)
     for th in threads:

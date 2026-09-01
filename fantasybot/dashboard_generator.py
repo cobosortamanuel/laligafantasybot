@@ -775,7 +775,7 @@ def generate_apple_dashboard(
                 </div>
                 <div class="mt-1">
                     <div class="text-lg sm:text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(money)}</div>
-                    <p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">En caja disponible</p>
+                    {f'<p class="text-[10px] sm:text-[11px] text-amber-400 font-mono mt-0.5 font-medium">Proy: {_format_money(money - sum(int(t.get("max_bid", 0)) for t in scheduled_bids))}</p>' if scheduled_bids and sum(int(t.get("max_bid", 0)) for t in scheduled_bids) > 0 else '<p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">En caja disponible</p>'}
                 </div>
             </div>
 

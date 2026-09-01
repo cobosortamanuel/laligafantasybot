@@ -32,6 +32,9 @@
             background: #27272a;
             border-radius: 4px;
         }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
     </style>
 </head>
 <body class="min-h-screen antialiased selection:bg-zinc-800 selection:text-white">
@@ -61,54 +64,54 @@
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <!-- Main Container with Generous Spacing -->
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
         
         <!-- Metrics Bento Grid -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
             <!-- Box 1: Presupuesto -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Presupuesto</span>
                     <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></span>
                 </div>
-                <div class="mt-1.5">
+                <div class="mt-2">
                     <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">63.81M €</div>
                     <p class="text-[11px] text-zinc-500 mt-0.5">Disponible en caja</p>
                 </div>
             </div>
 
             <!-- Box 2: Valor Plantilla -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Plantilla</span>
                     <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
                 </div>
-                <div class="mt-1.5">
+                <div class="mt-2">
                     <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">162.99M €</div>
                     <p class="text-[11px] text-zinc-500 mt-0.5">5 jugadores en nómina</p>
                 </div>
             </div>
 
             <!-- Box 3: Total Club -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Patrimonio Total</span>
                     <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></span>
                 </div>
-                <div class="mt-1.5">
+                <div class="mt-2">
                     <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">226.81M €</div>
                     <p class="text-[11px] text-zinc-500 mt-0.5">Activos netos</p>
                 </div>
             </div>
 
             <!-- Box 4: Próxima Jornada -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Próxima Jornada</span>
                     <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span>
                 </div>
-                <div class="mt-1.5">
+                <div class="mt-2">
                     <div class="text-xs font-semibold text-zinc-200 truncate">Por confirmar</div>
                     <p class="text-[11px] text-emerald-400 font-mono mt-0.5 font-medium">Próximamente</p>
                 </div>
@@ -116,7 +119,7 @@
         </section>
 
         <!-- Chart Section: Evolución Financiera -->
-        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-5">
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-5 md:p-6">
             <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                 <div>
                     <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Evolución Financiera</h2>
@@ -128,57 +131,89 @@
                     <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-500"></span><span>Plantilla</span></span>
                 </div>
             </div>
-            <div class="h-56 mt-4">
+            <div class="h-60 mt-4">
                 <canvas id="patrimonyChart"></canvas>
             </div>
         </section>
 
-        <!-- AI Tactical Brain Analysis -->
-        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-5">
-            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                <div class="flex items-center space-x-2">
-                    <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></span>
-                    <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Informe Táctico de Gemini</h2>
+        <!-- AI Tactical Brain Analysis (Full Report, Never Truncated) -->
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-5 md:p-6">
+            <div class="flex items-center justify-between pb-3.5 border-b border-zinc-800/60">
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-zinc-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></span>
+                    <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-200">Informe Táctico de Gemini</h2>
                 </div>
-                <span class="text-[10px] text-zinc-500 font-mono">01/09/2026 a las 02:55</span>
+                <span class="text-[10px] text-zinc-500 font-mono">01/09/2026 a las 03:02</span>
             </div>
-            <div class="mt-3 text-xs text-zinc-300 leading-relaxed space-y-2">
-                <h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-3 mb-1'>1. Análisis Estratégico<br>Disponemos de un excelente presupuesto (64.7M€) con la plantilla en cuadro (4 jugadores). Nuestro objetivo prioritario es cubrir portería y defensa fichando activos seguros y económicos con subida de valor constante.<br><br><h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-3 mb-1'>2. Decisiones y Plan de Acción<br>- <strong class='font-semibold text-zinc-200'>Dmitrovic (POR):<strong class='font-semibold text-zinc-200'> Guardameta titular de plenas garantías.<br>- <strong class='font-semibold text-zinc-200'>Arnau (DEF):<strong class='font-semibold text-zinc-200'> Defensa clave con gran rendimiento.<br>- <strong class='font-semibold text-zinc-200'>Arguibide & Germán:<strong class='font-semibold text-zinc-200'> Opciones de revalorización con excelente rentabilidad porcentual (ROI).<br>
+            <div class="mt-4 text-xs text-zinc-300 leading-relaxed space-y-2.5">
+                <h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-5 mb-2'>1. Análisis Estratégico aplicando la Guía del Usuario</h3>
+<li class='ml-4 list-disc text-xs text-zinc-300 my-1 leading-relaxed'><strong class="font-semibold text-zinc-200">Emergencia en la Portería y Alineación:</strong> Actualmente tenemos un hándicap crítico: <strong class="font-semibold text-zinc-200">no hay ningún portero en la plantilla</strong>, lo que impide presentar una alineación válida. La regla de oro es cubrir los huecos indispensables manteniendo una gestión estricta del presupuesto.</li>
+<li class='ml-4 list-disc text-xs text-zinc-300 my-1 leading-relaxed'><strong class="font-semibold text-zinc-200">Mercado y Pujas (Regla del Precio Base):</strong> Tenemos disponible en el mercado a <strong class="font-semibold text-zinc-200">D. Cárdenas</strong> (POR) con un precio de salida de 987.564 € y a <strong class="font-semibold text-zinc-200">Yoel Lago</strong> (DEF) a 1.192.173 €, ambos con proyecciones excelentes de subida de valor (ROI positivo y tendencia alcista). Siguiendo la guía, al ser jugadores sin competencia aparente en este tramo, pujaremos al precio de mercado o sumando una cantidad mínima simbólica (210 €) para asegurar la puja sin sobrepagar.</li>
+<li class='ml-4 list-disc text-xs text-zinc-300 my-1 leading-relaxed'><strong class="font-semibold text-zinc-200">Gestión de Caja:</strong> Disponemos de 63,8M € en caja. Debemos ser cautelosos y <strong class="font-semibold text-zinc-200">nunca gastar toda la caja</strong>, reservando músculo financiero para futuras oportunidades de especulación y clausulazos clave. Fichar a Cárdenas y Yoel Lago apenas supone una fracción menor de nuestro capital, solucionando los huecos prioritarios sin comprometer la liquidez.</li>
+<p class='text-xs text-zinc-300 leading-relaxed my-2'>---</p>
+<h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-5 mb-2'>2. Recomendaciones Concretas y Desglose de Movimientos</h3>
+<p class='text-xs text-zinc-300 leading-relaxed my-1.5 pl-2 border-l border-zinc-800'><strong class="font-semibold text-zinc-200">Fichaje de Urgencia (Portería):</strong> Lanzar puja por <strong class="font-semibold text-zinc-200">D. Cárdenas</strong> (`marketId: 25061177`) ajustada al precio de salida más un margen mínimo de seguridad (210 €).</p>
+<p class='text-xs text-zinc-300 leading-relaxed my-1.5 pl-2 border-l border-zinc-800'><strong class="font-semibold text-zinc-200">Refuerzo Defensivo y Especulación (Flip):</strong> Lanzar puja por <strong class="font-semibold text-zinc-200">Yoel Lago</strong> (`marketId: 25063273`) para cubrir hueco en defensa y asegurar un activo con valor en clara subida.</p>
+<p class='text-xs text-zinc-300 leading-relaxed my-1.5 pl-2 border-l border-zinc-800'><strong class="font-semibold text-zinc-200">Control de Plantilla:</strong> Mantener el resto de la liquidez intacta a la espera de que se abran nuevas ventanas de clausulazos o aparezcan chollos de alta gama en el mercado de sistemas.</p>
+<p class='text-xs text-zinc-300 leading-relaxed my-2'>---</p>
+<h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-5 mb-2'>3. Bloque JSON Final</h3>
+<pre class='bg-zinc-950 border border-zinc-800/90 rounded-xl p-3.5 my-3 text-[11px] font-mono text-zinc-300 overflow-x-auto leading-relaxed'><code>{
+  &quot;aplicar_alineacion&quot;: false,
+  &quot;pujas_recomendadas&quot;: [
+    {
+      &quot;marketId&quot;: 25061177,
+      &quot;nombre&quot;: &quot;D. Cárdenas&quot;,
+      &quot;puja_maxima&quot;: 987774
+    },
+    {
+      &quot;marketId&quot;: 25063273,
+      &quot;nombre&quot;: &quot;Yoel Lago&quot;,
+      &quot;puja_maxima&quot;: 1192383
+    }
+  ],
+  &quot;aceptar_ofertas&quot;: [],
+  &quot;ventas_recomendadas&quot;: [],
+  &quot;nueva_memoria&quot;: &quot;Urgencia de portero atendida con puja ajustada por D. Cárdenas. Reforzando defensa con Yoel Lago para cubrir huecos y mantener valor al alza sin comprometer la caja.&quot;
+}</code></pre>
             </div>
         </section>
 
-        <!-- Navigation Tabs -->
-        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 border-b border-zinc-800/80 text-xs font-medium">
-            <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5">
-                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
-                <span>Plantilla (5)</span>
-            </button>
-            <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
-                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>
-                <span>Mercado (34)</span>
-            </button>
-            <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
-                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></span>
-                <span>Tendencias</span>
-            </button>
-            <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
-                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
-                <span>Plan de Pujas</span>
-            </button>
-            <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
-                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0zM3.055 11H5a7.978 7.978 0 0115.89 0h1.945"/></svg></span>
-                <span>Historial</span>
-            </button>
-        </div>
-
-        <!-- TAB 1: SQUAD -->
-        <section id="tab-squad" class="tab-content space-y-4">
-            <div class="flex items-center justify-between">
-                <span class="text-xs text-zinc-400">Todos los futbolistas están a la venta para recibir ofertas diarias.</span>
-                <span class="text-[11px] text-zinc-500 font-mono">Huecos: POR, DEF</span>
+        <!-- Navigation Tabs with Clean Spacing -->
+        <nav class="pt-4 pb-2 border-b border-zinc-800/80">
+            <div class="flex items-center space-x-2 overflow-x-auto pb-2 text-xs font-medium">
+                <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3.5 py-2 rounded-xl border border-transparent transition-all flex items-center space-x-2">
+                    <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
+                    <span>Plantilla (5)</span>
+                </button>
+                <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                    <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>
+                    <span>Mercado (34)</span>
+                </button>
+                <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                    <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></span>
+                    <span>Tendencias</span>
+                </button>
+                <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                    <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+                    <span>Plan de Pujas</span>
+                </button>
+                <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                    <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0zM3.055 11H5a7.978 7.978 0 0115.89 0h1.945"/></svg></span>
+                    <span>Historial</span>
+                </button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                
+        </nav>
+
+        <!-- Tab Content Container with Proper Top Spacing -->
+        <div class="pt-2">
+            <!-- TAB 1: SQUAD -->
+            <section id="tab-squad" class="tab-content space-y-4">
+                <div class="flex items-center justify-between pb-1">
+                    <span class="text-xs text-zinc-400">Todos los futbolistas están a la venta para recibir ofertas diarias.</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">Huecos: POR, DEF</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    
         <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
             <div class="flex items-start justify-between">
                 <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
@@ -324,43 +359,43 @@
             </div>
         </div>
         
-            </div>
-        </section>
-
-        <!-- TAB 2: MARKET -->
-        <section id="tab-market" class="tab-content hidden space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                <span class="text-xs text-zinc-400">Listado en tiempo real de jugadores disponibles.</span>
-                <div class="flex items-center space-x-2">
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none"><svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
-                        <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs pl-7 pr-3 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700 w-44">
-                    </div>
-                    <select id="posFilter" onchange="filterMarket()" class="bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700">
-                        <option value="ALL">Todas las pos.</option>
-                        <option value="POR">POR</option>
-                        <option value="DEF">DEF</option>
-                        <option value="MED">MED</option>
-                        <option value="DEL">DEL</option>
-                    </select>
                 </div>
-            </div>
+            </section>
 
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs" id="marketTable">
-                        <thead>
-                            <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
-                                <th class="py-2.5 px-3">Jugador</th>
-                                <th class="py-2.5 px-3">Pos</th>
-                                <th class="py-2.5 px-3">Origen</th>
-                                <th class="py-2.5 px-3 text-right">Precio Salida</th>
-                                <th class="py-2.5 px-3 text-center">Pujas</th>
-                                <th class="py-2.5 px-3 text-right">Cierre</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            
+            <!-- TAB 2: MARKET -->
+            <section id="tab-market" class="tab-content hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+                    <span class="text-xs text-zinc-400">Listado en tiempo real de jugadores disponibles.</span>
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none"><svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                            <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs pl-7 pr-3 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700 w-48">
+                        </div>
+                        <select id="posFilter" onchange="filterMarket()" class="bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700">
+                            <option value="ALL">Todas las pos.</option>
+                            <option value="POR">POR</option>
+                            <option value="DEF">DEF</option>
+                            <option value="MED">MED</option>
+                            <option value="DEL">DEL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs" id="marketTable">
+                            <thead>
+                                <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
+                                    <th class="py-3 px-3.5">Jugador</th>
+                                    <th class="py-3 px-3.5">Pos</th>
+                                    <th class="py-3 px-3.5">Origen</th>
+                                    <th class="py-3 px-3.5 text-right">Precio Salida</th>
+                                    <th class="py-3 px-3.5 text-center">Pujas</th>
+                                    <th class="py-3 px-3.5 text-right">Cierre</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="ENT" data-name="simeone">
             <td class="py-2.5 px-3">
                 <div class="flex items-center space-x-2.5">
@@ -377,7 +412,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.57M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="h. rincón">
@@ -396,7 +431,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">2.34M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="cancelo">
@@ -415,7 +450,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">41.22M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="febas">
@@ -434,7 +469,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">23.23M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="v. rosier">
@@ -453,7 +488,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.53M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="gudelj">
@@ -472,7 +507,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">7.03M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="pau navarro">
@@ -491,7 +526,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">6.01M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="pedrosa">
@@ -510,7 +545,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.31M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="alfon">
@@ -529,7 +564,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.75M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="santos">
@@ -548,7 +583,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">554.5k €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="javi rueda">
@@ -567,7 +602,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.74M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="saliba">
@@ -586,7 +621,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">7.50M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="ibra">
@@ -605,7 +640,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">615.3k €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="martim neto">
@@ -624,7 +659,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.50M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 23m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 16m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="ferran jutglà">
@@ -643,7 +678,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">8.73M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 33m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="carmona">
@@ -662,7 +697,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.20M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 39m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 32m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="jorge salinas">
@@ -681,7 +716,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">7.05M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="mikautadze">
@@ -700,7 +735,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">72.59M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 23m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 16m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="noubi">
@@ -719,7 +754,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">12.53M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 33m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="mario soriano">
@@ -738,7 +773,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">27.00M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 33m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="POR" data-name="vlachodimos">
@@ -757,7 +792,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">25.65M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 39m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 32m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="konaté">
@@ -776,7 +811,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">51.62M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 39m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 32m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="edu expósito">
@@ -795,7 +830,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">31.24M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 33m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="r. mendoza">
@@ -814,7 +849,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.16M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 33m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="manu sánchez">
@@ -833,7 +868,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">4.94M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 22m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 15m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="pablo garcía">
@@ -852,7 +887,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">2.56M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 23m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 16m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="a. abqar">
@@ -871,7 +906,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">6.28M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 20m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 13m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="llorente ">
@@ -890,7 +925,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">12.17M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 20m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 13m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="g. puerta">
@@ -909,7 +944,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">13.89M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 23m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 16m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="guido rodríguez">
@@ -928,7 +963,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">23.79M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">62h 54m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">62h 47m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="POR" data-name="d. cárdenas">
@@ -947,7 +982,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">987.6k €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 44m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 37m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="j. vázquez">
@@ -966,7 +1001,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.99M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 45m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 38m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="yoel lago">
@@ -985,7 +1020,7 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.19M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 45m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 38m</td>
         </tr>
         
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="sergio">
@@ -1004,29 +1039,29 @@
             <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.77M €</td>
             <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
-            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">71h 55m</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">71h 48m</td>
         </tr>
         
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB 3: TRENDS -->
-        <section id="tab-trends" class="tab-content hidden space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Top Gainers -->
-                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
-                        <div class="flex items-center space-x-1.5">
-                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                            <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Subidas</h3>
-                        </div>
-                        <span class="text-[10px] text-zinc-500 font-mono">En alza</span>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="space-y-2">
-                        
+                </div>
+            </section>
+
+            <!-- TAB 3: TRENDS -->
+            <section id="tab-trends" class="tab-content hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Top Gainers -->
+                    <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Subidas</h3>
+                            </div>
+                            <span class="text-[10px] text-zinc-500 font-mono">En alza</span>
+                        </div>
+                        <div class="space-y-2">
+                            
             <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
                     <span class="font-semibold text-zinc-200 text-xs block">Antonio Sivera</span>
@@ -1093,20 +1128,20 @@
                 </div>
             </div>
             
-                    </div>
-                </div>
-
-                <!-- Top Losers -->
-                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
-                        <div class="flex items-center space-x-1.5">
-                            <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
-                            <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Caídas</h3>
                         </div>
-                        <span class="text-[10px] text-zinc-500 font-mono">Depreciación</span>
                     </div>
-                    <div class="space-y-2">
-                        
+
+                    <!-- Top Losers -->
+                    <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+                                <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Caídas</h3>
+                            </div>
+                            <span class="text-[10px] text-zinc-500 font-mono">Depreciación</span>
+                        </div>
+                        <div class="space-y-2">
+                            
             <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
                     <span class="font-semibold text-zinc-200 text-xs block">Nico Serrano</span>
@@ -1173,75 +1208,102 @@
                 </div>
             </div>
             
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- TAB 4: SCHEDULED PLAN -->
-        <section id="tab-plan" class="tab-content hidden space-y-4">
-            <div>
-                <h3 class="text-xs uppercase font-bold text-zinc-200">Plan de Sniping de Último Minuto</h3>
-                <p class="text-[11px] text-zinc-500 mt-0.5">Pujas programadas para ejecutarse a 25 segundos del cierre.</p>
-            </div>
-            <div class="space-y-2">
-                
+            <!-- TAB 4: SCHEDULED PLAN -->
+            <section id="tab-plan" class="tab-content hidden space-y-4">
+                <div>
+                    <h3 class="text-xs uppercase font-bold text-zinc-200">Plan de Sniping de Último Minuto</h3>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Pujas programadas para ejecutarse a 25 segundos del cierre.</p>
+                </div>
+                <div class="space-y-2.5">
+                    
         <div class="p-4 text-center text-zinc-500 text-xs bg-zinc-900/40 border border-zinc-800/60 rounded-lg">
             No hay pujas pendientes en cola. El agente programará nuevos objetivos en el próximo pase.
         </div>
         
-            </div>
+                </div>
 
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 mt-4">
-                <h4 class="text-xs uppercase font-bold text-zinc-300 mb-2.5">Horarios de Automatización</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-400">
-                    <div class="bg-zinc-950/60 p-3 rounded-lg border border-zinc-800/60">
-                        <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">09:00 (Hora España) • Matinal</span>
-                        Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación del día.
-                    </div>
-                    <div class="bg-zinc-950/60 p-3 rounded-lg border border-zinc-800/60">
-                        <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">20:15 (Hora España) • Cierre</span>
-                        Disparo de pujas de último minuto (+210€ o competitivas) y confirmación de alineación.
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 mt-6">
+                    <h4 class="text-xs uppercase font-bold text-zinc-300 mb-2.5">Horarios de Automatización</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-400">
+                        <div class="bg-zinc-950/60 p-3.5 rounded-lg border border-zinc-800/60">
+                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">09:00 (Hora España) • Matinal</span>
+                            Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación del día.
+                        </div>
+                        <div class="bg-zinc-950/60 p-3.5 rounded-lg border border-zinc-800/60">
+                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">20:15 (Hora España) • Cierre</span>
+                            Disparo de pujas de último minuto (+210€ o competitivas) y confirmación de alineación.
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- TAB 5: TIMELINE / AUDIT -->
-        <section id="tab-history" class="tab-content hidden space-y-4">
-            <div>
-                <h3 class="text-xs uppercase font-bold text-zinc-200">Registro de Actividad</h3>
-                <p class="text-[11px] text-zinc-500 mt-0.5">Historial cronológico de acciones ejecutadas por el bot.</p>
-            </div>
-            <div class="space-y-1.5">
-                
-        <div class="flex items-start space-x-3 p-2.5 bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/80 rounded-lg transition-colors">
-            <span class="p-1.5 bg-zinc-800 rounded border border-zinc-700 text-zinc-300 mt-0.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between">
-                    <span class="font-medium text-zinc-200 text-xs truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</span>
-                    <span class="text-[10px] text-zinc-500 font-mono">2026-09-01 00:42</span>
+            <!-- TAB 5: TIMELINE / AUDIT (Clickable & Expandable) -->
+            <section id="tab-history" class="tab-content hidden space-y-4">
+                <div>
+                    <h3 class="text-xs uppercase font-bold text-zinc-200">Registro de Actividad</h3>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Haz clic en cualquier evento para desplegar sus detalles completos y datos técnicos.</p>
                 </div>
-                <p class="text-[10px] text-zinc-500 font-mono uppercase mt-0.5">Tipo: note</p>
-            </div>
-        </div>
-        
-        <div class="flex items-start space-x-3 p-2.5 bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/80 rounded-lg transition-colors">
-            <span class="p-1.5 bg-zinc-800 rounded border border-zinc-700 text-zinc-300 mt-0.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between">
-                    <span class="font-medium text-zinc-200 text-xs truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</span>
-                    <span class="text-[10px] text-zinc-500 font-mono">2026-08-31 15:59</span>
+                <div class="space-y-2">
+                    
+        <details class="group bg-zinc-900/50 hover:bg-zinc-900/80 border border-zinc-800/80 rounded-xl transition-all overflow-hidden">
+            <summary class="flex items-center justify-between p-3 cursor-pointer list-none select-none">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-zinc-300 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+                    <div class="min-w-0">
+                        <div class="font-medium text-zinc-200 text-xs truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</div>
+                        <div class="text-[10px] text-zinc-500 font-mono mt-0.5 uppercase tracking-wider">note • 2026-09-01 00:42</div>
+                    </div>
                 </div>
-                <p class="text-[10px] text-zinc-500 font-mono uppercase mt-0.5">Tipo: note</p>
+                <div class="flex items-center space-x-2 text-zinc-500 text-xs font-mono group-open:rotate-180 transition-transform">
+                    <span>▼</span>
+                </div>
+            </summary>
+            <div class="px-3.5 pb-3.5 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 text-xs text-zinc-400 space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                    <span>ID Ejecución: run_20260901_004223</span>
+                    <span>Estado: ok</span>
+                </div>
+                <pre class="bg-zinc-950 border border-zinc-800/80 rounded-lg p-2.5 text-[11px] font-mono text-emerald-400 overflow-x-auto"><code>{
+  &quot;analisis&quot;: &quot;### 1. Análisis Estratégico aplicando la Guía del Usuario\n\n* **Emergencia en la Portería y Alineación:** Actualmente tenemos un hándicap crítico: **no hay ningún portero en la plantilla**, lo que impide presentar una alineación válida. La regla de oro es cubrir los huecos indispensables manteniendo una gestión estricta del presupuesto.\n* **Mercado y Pujas (Regla del Precio Base):** Tenemos disponible en el mercado a **D. Cárdenas** (POR) con un precio de salida de 987.564 € y a **Yoel Lago** (DEF) a 1.192.173 €, ambos con proyecciones excelentes de subida de valor (ROI positivo y tendencia alcista). Siguiendo la guía, al ser jugadores sin competencia aparente en este tramo, pujaremos al precio de mercado o sumando una cantidad mínima simbólica (210 €) para asegurar la puja sin sobrepagar.\n* **Gestión de Caja:** Disponemos de 63,8M € en caja. Debemos ser cautelosos y **nunca gastar toda la caja**, reservando músculo financiero para futuras oportunidades de especulación y clausulazos clave. Fichar a Cárdenas y Yoel Lago apenas supone una fracción menor de nuestro capital, solucionando los huecos prioritarios sin comprometer la liquidez.\n\n---\n\n### 2. Recomendaciones Concretas y Desglose de Movimientos\n\n1. **Fichaje de Urgencia (Portería):** Lanzar puja por **D. Cárdenas** (`marketId: \&quot;25061177\&quot;`) ajustada al precio de salida más un margen mínimo de seguridad (210 €).\n2. **Refuerzo Defensivo y Especulación (Flip):** Lanzar puja por **Yoel Lago** (`marketId: \&quot;25063273\&quot;`) para cubrir hueco en defensa y asegurar un activo con valor en clara subida.\n3. **Control de Plantilla:** Mantener el resto de la liquidez intacta a la espera de que se abran nuevas ventanas de clausulazos o aparezcan chollos de alta gama en el mercado de sistemas.\n\n---\n\n### 3. Bloque JSON Final\n\n```json\n{\n  \&quot;aplicar_alineacion\&quot;: false,\n  \&quot;pujas_recomendadas\&quot;: [\n    {\n      \&quot;marketId\&quot;: 25061177,\n      \&quot;nombre\&quot;: \&quot;D. Cárdenas\&quot;,\n      \&quot;puja_maxima\&quot;: 987774\n    },\n    {\n      \&quot;marketId\&quot;: 25063273,\n      \&quot;nombre\&quot;: \&quot;Yoel Lago\&quot;,\n      \&quot;puja_maxima\&quot;: 1192383\n    }\n  ],\n  \&quot;aceptar_ofertas\&quot;: [],\n  \&quot;ventas_recomendadas\&quot;: [],\n  \&quot;nueva_memoria\&quot;: \&quot;Urgencia de portero atendida con puja ajustada por D. Cárdenas. Reforzando defensa con Yoel Lago para cubrir huecos y mantener valor al alza sin comprometer la caja.\&quot;\n}\n```&quot;
+}</code></pre>
             </div>
-        </div>
+        </details>
         
+        <details class="group bg-zinc-900/50 hover:bg-zinc-900/80 border border-zinc-800/80 rounded-xl transition-all overflow-hidden">
+            <summary class="flex items-center justify-between p-3 cursor-pointer list-none select-none">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-zinc-300 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+                    <div class="min-w-0">
+                        <div class="font-medium text-zinc-200 text-xs truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</div>
+                        <div class="text-[10px] text-zinc-500 font-mono mt-0.5 uppercase tracking-wider">note • 2026-08-31 15:59</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 text-zinc-500 text-xs font-mono group-open:rotate-180 transition-transform">
+                    <span>▼</span>
+                </div>
+            </summary>
+            <div class="px-3.5 pb-3.5 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 text-xs text-zinc-400 space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                    <span>ID Ejecución: run_20260831_155920</span>
+                    <span>Estado: ok</span>
+                </div>
+                <pre class="bg-zinc-950 border border-zinc-800/80 rounded-lg p-2.5 text-[11px] font-mono text-emerald-400 overflow-x-auto"><code>{
+  &quot;analisis&quot;: &quot;### 1. Análisis Estratégico\n\nNos encontramos en una situación crítica pero manejable. Contamos con un excelente presupuesto de **64,7M€**, pero nuestra plantilla cojea seriamente al carecer por completo de porteros y defensas titulares (faltan 2 POR y 5 DEF). Actualmente solo podemos alinear a 4 jugadores (Kang-In Lee, Guido Rodríguez, Antony y Guruzeta), lo que nos deja con una alineación incompleta y cero opciones de competir en la jornada.\n\n**Plan de Acción Inmediato:**\n1. **Fichar Guardametas:** Necesitamos asegurar la portería con urgencia. Iremos a por **Dmitrovic** (41,4M€) como portero titular indiscutible de alto rendimiento, y complementaremos con **Germán** (507k€) para tener profundidad y cubrir el hueco secundario.\n2. **Blindar la Defensa:** Incorporaremos a **Arnau** (15,3M€) como defensa de garantías y al joven económico **Arguibide** (821k€) para empezar a sumar efectivos atrás sin descuidar el fair play financiero.\n3. **Control Presupuestario:** Con estas 4 pujas invertiremos aproximadamente 60,5M€, consumiendo la mayor parte de nuestra caja pero resolviendo de un plumazo los huecos críticos de la alineación.\n\n---\n\n### 2. Recomendaciones Concretas y Desglose de Fichajes\n\nPara solventar las urgencias y cumplir con la normativa de alineación, realizaremos las siguientes pujas al mercado:\n\n* **Dmitrovic (POR)** - *MarketID: 123888363*: Puja recomendada de **43.000.000 €** (Precio salida: 41.4M€). Portero top para asegurar puntos bajo palos.\n* **Germán (POR)** - *MarketID: 123888357*: Puja recomendada de **600.000 €** (Precio salida: 507k€). Opción económica para doblar posición.\n* **Arnau (DEF)** - *MarketID: 123888369*: Puja recomendada de **16.000.000 €** (Precio salida: 15,3M€). Defensa titular clave para la zaga.\n* **Arguibide (DEF)** - *MarketID: 123888367*: Puja recomendada de **900.000 €** (Precio salida: 821k€). Oportunidad económica para rellenar la defensa.\n\n---\n\n### 3. Bloque JSON de Decisiones\n\n```json\n{\n  \&quot;aplicar_alineacion\&quot;: true,\n  \&quot;pujas_recomendadas\&quot;: [\n    {\&quot;marketId\&quot;: 123888363, \&quot;nombre\&quot;: \&quot;Dmitrovic\&quot;, \&quot;puja_maxima\&quot;: 43000000},\n    {\&quot;marketId\&quot;: 123888357, \&quot;nombre\&quot;: \&quot;Germán\&quot;, \&quot;puja_maxima\&quot;: 600000},\n    {\&quot;marketId\&quot;: 123888369, \&quot;nombre\&quot;: \&quot;Arnau\&quot;, \&quot;puja_maxima\&quot;: 16000000},\n    {\&quot;marketId\&quot;: 123888367, \&quot;nombre\&quot;: \&quot;Arguibide\&quot;, \&quot;puja_maxima\&quot;: 900000}\n  ],\n  \&quot;nueva_memoria\&quot;: \&quot;Presupuesto invertido fuertemente en solucionar los huecos de POR y DEF con Dmitrovic, Germán, Arnau y Arguibide para poder completar la alineación.\&quot;\n}\n```&quot;
+}</code></pre>
             </div>
-        </section>
+        </details>
+        
+                </div>
+            </section>
+        </div>
 
         <!-- Footer -->
-        <footer class="pt-6 border-t border-zinc-800/60 text-center text-[11px] text-zinc-600 font-mono">
+        <footer class="pt-8 pb-4 border-t border-zinc-800/60 text-center text-[11px] text-zinc-600 font-mono">
             FantasyBot OS • Gemini 3.5 Flash Lite • GitHub Pages
         </footer>
     </main>
@@ -1249,10 +1311,10 @@
     <!-- Scripts for Chart.js and Interactivity -->
     <script>
         const ctx = document.getElementById('patrimonyChart').getContext('2d');
-        const labels = ["01/09 02:39", "01/09 02:42", "01/09 02:55"];
-        const moneyData = [63813322, 63813322, 63813322];
-        const valueData = [162994430, 162994430, 162994430];
-        const totalData = [226807752, 226807752, 226807752];
+        const labels = ["01/09 02:39", "01/09 02:42", "01/09 02:55", "01/09 03:01", "01/09 03:02"];
+        const moneyData = [63813322, 63813322, 63813322, 63813322, 63813322];
+        const valueData = [162994430, 162994430, 162994430, 162994430, 162994430];
+        const totalData = [226807752, 226807752, 226807752, 226807752, 226807752];
 
         new Chart(ctx, {
             type: 'line',

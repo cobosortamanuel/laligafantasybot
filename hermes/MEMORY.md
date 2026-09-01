@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: 2026-09-01 15:09
+Última actualización: 2026-09-01 20:21
 
-Urgencia absoluta de portero atendida mediante objetivo Vlachodimos. Reforzando también con Saliba en el mercado de sistema manteniendo margen de caja.
+Urgencia de portero resuelta con la puja/clausulazo por Vlachodimos. Refuerzo defensivo especulativo en marcha con Koski en el mercado de sistema (+27.7% margen). Caja protegida con más de 34M restantes de cara a la próxima jornada.

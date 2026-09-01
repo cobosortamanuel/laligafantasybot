@@ -68,17 +68,41 @@ def _compute_next_kickoff():
     return (min(future) if future else min(times)).isoformat()
 
 
-def next_kickoff():
+def next_kickoff(client=None):
     """datetime (ISO) of the first match of the next matchday, or None."""
+    if client:
+        try:
+            cal = client.calendar()
+            now = datetime.now(timezone.utc)
+            times = []
+            for m in cal:
+                m_date = m.get("matchDate") or m.get("date") or m.get("time")
+                if m_date:
+                    try:
+                        dt = datetime.fromisoformat(m_date)
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                        times.append(dt)
+                    except Exception:
+                        pass
+            if times:
+                future = [t for t in times if t > now]
+                if future:
+                    return min(future).isoformat()
+                return min(times).isoformat()
+        except Exception:
+            pass
     return cache.cached("next_kickoff", CACHE_TTL, _compute_next_kickoff)
 
 
-def days_until_matchday():
+def days_until_matchday(client=None):
     """Days (float) until the first match, or None if it couldn't be obtained."""
-    iso = next_kickoff()
+    iso = next_kickoff(client)
     if not iso:
         return None
     dt = datetime.fromisoformat(iso)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
     return (dt - datetime.now(timezone.utc)).total_seconds() / 86400
 
 

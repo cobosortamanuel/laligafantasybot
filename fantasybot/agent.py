@@ -222,9 +222,9 @@ def review(client, days_to_matchday=None):
     prob_index = probable_lineups()
 
     # date of the next matchday (for urgency and final lineup)
-    kickoff = matchday.next_kickoff()
+    kickoff = matchday.next_kickoff(client)
     if days_to_matchday is None:
-        days_to_matchday = matchday.days_until_matchday()
+        days_to_matchday = matchday.days_until_matchday(client)
 
     # 1) what has changed
     prev = state.load_snapshot()

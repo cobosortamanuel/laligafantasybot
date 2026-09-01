@@ -142,6 +142,10 @@ class FantasyClient:
         """Fetches master list of all players in the competition with past season points and valuations."""
         return self.get(self._cmp("/players?x-lang=es"))
 
+    def calendar(self):
+        """Fetches official competition calendar and upcoming matches directly from LaLiga Fantasy API."""
+        return self.get(self._cmp("/calendar?x-lang=es"))
+
     # --- writes: market ---
     def make_bid(self, league_id, market_id, money):
         return self.post(self._cmp(

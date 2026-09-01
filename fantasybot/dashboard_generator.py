@@ -67,13 +67,26 @@ def update_history_state(money, value):
     return history
 
 
-def _format_kickoff(review_report):
+def _format_kickoff(review_report=None):
     """Formats matchday info cleanly without raw ISOs or negative countdowns."""
     md = review_report.get("matchday", {}) if review_report else {}
     iso = md.get("kickoff")
 
     if not iso:
-        return "Por confirmar", "Próximamente"
+        try:
+            from .sources import matchday
+            from .api import FantasyClient
+            fc = FantasyClient()
+            iso = matchday.next_kickoff(fc)
+        except Exception:
+            try:
+                from .sources import matchday
+                iso = matchday.next_kickoff()
+            except Exception:
+                pass
+
+    if not iso:
+        return "Próxima Jornada", "Pendiente de fecha"
 
     try:
         dt = datetime.fromisoformat(iso)
@@ -95,7 +108,7 @@ def _format_kickoff(review_report):
             d = diff_sec / 86400
             return date_str, f"En {d:.1f} días"
     except Exception:
-        return "Por confirmar", "Próximamente"
+        return "Próxima Jornada", "Pendiente de fecha"
 
 
 def _format_markdown_report(text):

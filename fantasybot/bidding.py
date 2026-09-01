@@ -24,13 +24,16 @@ DEFAULT_FINAL = 25           # seconds before close for the finish (safety margi
 DEFAULT_POLL = 3             # how often, in seconds, to poll in the final minute
 
 
-def decide(value, other_bids, seconds_left, max_bid, final=DEFAULT_FINAL):
+def decide(value, other_bids, seconds_left, max_bid, final=DEFAULT_FINAL, close_window=300):
     """How much to bid NOW, or None to wait.
 
-    - other_bids > 0  → competition: value + margin, capped at max_bid.
+    - seconds_left > close_window (5 min) → always wait; never leak bid early!
+    - other_bids > 0 and <= close_window → competition: value + margin, capped at max_bid.
     - no competition and <= final s left → value + minimum cushion.
     - otherwise, wait.
     """
+    if seconds_left > close_window:
+        return None
     min_required = value + UNCONTESTED_CUSHION
     if other_bids > 0:
         competitive = value + max(UNCONTESTED_CUSHION, round(value * CONTESTED_MARGIN_PCT))

@@ -166,7 +166,11 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         name = pm.get("nickname") or pm.get("name") or "Desconocido"
         price = m.get("salePrice") or pt.get("marketValue") or pm.get("marketValue") or 0
         mid = m.get("id")
-        is_mine = str(m.get("team", {}).get("id")) == str(tid) or str(pt.get("teamId")) == str(tid)
+        is_mine = (
+            str(m.get("sellerTeam", {}).get("id")) == str(tid)
+            or str(m.get("team", {}).get("id")) == str(tid)
+            or str(pt.get("teamId")) == str(tid)
+        )
         is_system = (m.get("discr") == "marketPlayerLeague")
 
         # Starting probability
@@ -209,7 +213,15 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
 
     # 5. Extract Full Rival Rosters with Buyout Clauses & Shield Status
     rival_clause_targets = []
+    player_to_team_id = {}
     for lt in league_teams:
+        for p in lt.get("players", []):
+            pm = p.get("playerMaster", {})
+            ptid = p.get("playerTeamId")
+            if ptid:
+                player_to_team_id[str(ptid)] = ptid
+                if pm.get("id"):
+                    player_to_team_id[str(pm.get("id"))] = ptid
         if str(lt.get("id")) == str(tid):
             continue
         manager_name = lt.get("manager", {}).get("managerName") or lt.get("teamName") or "Rival"
@@ -451,12 +463,13 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
 
                 # 1. Execute Immediate Buyouts (Clausulazos directos)
                 for c_item in decision.get("clausulazos_inmediatos", []):
-                    p_id = c_item.get("playerId")
+                    raw_id = c_item.get("playerId")
                     clause_amt = c_item.get("clausula")
-                    p_name = c_item.get("nombre") or f"Jugador #{p_id}"
-                    if p_id and clause_amt:
+                    p_name = c_item.get("nombre") or f"Jugador #{raw_id}"
+                    resolved_id = player_to_team_id.get(str(raw_id), raw_id)
+                    if resolved_id and clause_amt:
                         try:
-                            fc.pay_buyout_clause(lid, p_id, int(clause_amt))
+                            fc.pay_buyout_clause(lid, resolved_id, int(clause_amt))
                             print(f"  ⚡ ¡CLAUSULAZO PAGADO! Fichado {p_name} por {int(clause_amt):,} €")
                             events.emit("buyout", f"¡Clausulazo pagado! Fichado {p_name} ({int(clause_amt):,} €)")
                         except Exception as e:

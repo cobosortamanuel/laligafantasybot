@@ -536,7 +536,14 @@ def generate_apple_dashboard(
 
     # 5. TAB: SCHEDULED ACTIONS & SNIPING PLAN
     scheduled_bids = state.load_bid_plan()
+    scheduled_buyouts = ((decision or {}).get("clausulazos_programados") or [])
     scheduled_reminders = state.load_reminders()
+
+    dinero_pujas = sum(int(b.get("max_bid", 0)) for b in scheduled_bids)
+    dinero_clausulas = sum(int(c.get("clausula", 0)) for c in scheduled_buyouts)
+    total_comprometido = dinero_pujas + dinero_clausulas
+    presupuesto_proyectado = money - total_comprometido
+
     scheduled_items = []
 
     # Bids planned for last-minute close
@@ -554,7 +561,7 @@ def generate_apple_dashboard(
         })
 
     # Scheduled Buyouts
-    for c in ((decision or {}).get("clausulazos_programados") or []):
+    for c in scheduled_buyouts:
         p_name = c.get("nombre", "Jugador")
         cl = c.get("clausula", 0)
         ap = c.get("apertura_iso", "")
@@ -579,8 +586,26 @@ def generate_apple_dashboard(
             "badge_class": "bg-zinc-800 text-zinc-300 border-zinc-700"
         })
 
+    budget_summary_bar = f"""
+    <div class="grid grid-cols-3 gap-2 p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-xl mb-3 text-center text-xs font-mono">
+        <div>
+            <div class="text-[10px] text-zinc-500 uppercase font-semibold">Caja Actual</div>
+            <div class="font-bold text-zinc-200 text-xs sm:text-sm mt-0.5">{_format_money(money)}</div>
+        </div>
+        <div>
+            <div class="text-[10px] text-amber-400 uppercase font-semibold">En Plan</div>
+            <div class="font-bold text-amber-400 text-xs sm:text-sm mt-0.5">-{_format_money(total_comprometido)}</div>
+        </div>
+        <div>
+            <div class="text-[10px] text-emerald-400 uppercase font-semibold">Proyectado</div>
+            <div class="font-bold text-emerald-400 text-xs sm:text-sm mt-0.5">{_format_money(presupuesto_proyectado)}</div>
+        </div>
+    </div>
+    """
+
     scheduled_actions_html = ""
     if scheduled_items:
+        scheduled_actions_html += budget_summary_bar
         for s in scheduled_items:
             scheduled_actions_html += f"""
             <div class="flex items-center justify-between p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-all mb-2">
@@ -780,7 +805,7 @@ def generate_apple_dashboard(
                 </div>
                 <div class="mt-1">
                     <div class="text-lg sm:text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(money)}</div>
-                    {f'<p class="text-[10px] sm:text-[11px] text-amber-400 font-mono mt-0.5 font-medium">Proy: {_format_money(money - sum(int(t.get("max_bid", 0)) for t in scheduled_bids))}</p>' if scheduled_bids and sum(int(t.get("max_bid", 0)) for t in scheduled_bids) > 0 else '<p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">En caja disponible</p>'}
+                    {f'<p class="text-[10px] sm:text-[11px] text-amber-400 font-mono mt-0.5 font-medium">Proy: {_format_money(presupuesto_proyectado)} (-{_format_money(total_comprometido)})</p>' if total_comprometido > 0 else '<p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">En caja disponible</p>'}
                 </div>
             </div>
 

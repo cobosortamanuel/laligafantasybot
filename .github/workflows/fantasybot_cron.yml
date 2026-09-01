@@ -57,9 +57,9 @@ jobs:
           git stash || true
           git pull --rebase origin main || true
           git stash pop || true
-          git add hermes/MEMORY.md || true
+          git add hermes/MEMORY.md public/index.html .state/chart_history.json || true
           if ! git diff --cached --quiet; then
-            git commit -m "chore(agent): update manager memory [skip ci]" || true
+            git commit -m "chore(agent): update manager memory and dashboard [skip ci]" || true
             git push origin main || true
           fi
 

@@ -50,10 +50,24 @@ def jwt_exp(token: str):
 
 # --- token persistence ---
 def load_tokens() -> dict:
+    # 1. Environment variable support (CI / Serverless)
+    env_tok = os.environ.get("LALIGA_TOKENS")
+    if env_tok:
+        try:
+            return json.loads(env_tok.strip(), strict=False)
+        except Exception:
+            pass
+
     if not os.path.exists(config.TOKENS_PATH):
         raise AuthError("tokens.json does not exist. Log in (fantasybot login).")
-    with open(config.TOKENS_PATH, encoding="utf-8") as f:
-        return json.load(f)
+    with open(config.TOKENS_PATH, "r", encoding="utf-8", errors="replace") as f:
+        content = f.read()
+    try:
+        return json.loads(content, strict=False)
+    except Exception:
+        import re
+        cleaned = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', content)
+        return json.loads(cleaned, strict=False)
 
 
 def save_tokens(tokens: dict):

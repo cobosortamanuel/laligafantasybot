@@ -293,6 +293,8 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
         "ofertas_recibidas_por_mis_jugadores": my_received_offers,
         "mercado_libre_sistema": mercado_libre_sistema,
         "jugadores_rivales_y_clausulazos": rival_clause_targets,
+        "acciones_programadas_activas": state.load_bid_plan(),
+        "recordatorios_activos": state.load_reminders(),
         "alineacion_optima_calculada": best_lineup,
         "oportunidades_flip_especulacion": flips
     }
@@ -319,10 +321,13 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
         "   - CLAUSULAZO PROGRAMADO: Si la cláusula de un jugador estrella rival vence su escudo pronto (pocas horas/días), planificar su compra en el segundo exacto de apertura.\n"
         "   - NUNCA pagar cláusulas desproporcionadas que no se amorticen.\n"
         "   - REGLA DE LAS 24H: 24 horas antes del inicio de la jornada NO se pueden pagar cláusulas.\n"
+        "9. GESTIÓN Y CANCELACIÓN DE ACCIONES PROGRAMADAS:\n"
+        "   - Puedes ver el plan actual en `acciones_programadas_activas`.\n"
+        "   - Si una puja programada anteriormente ya no es conveniente (ej. el jugador se lesionó, su valor empezó a desplomarse o ha surgido una oportunidad superior), puedes cancelarla en `cancelar_pujas_programadas`.\n"
         "=======================================================\n\n"
         "ESTRUCTURA DE RESPUESTA:\n"
         "1. Análisis Estratégico aplicando la Guía del Usuario.\n"
-        "2. Decisiones de Mercado Libre y Clausulazos.\n"
+        "2. Decisiones de Mercado Libre, Clausulazos y Cancelaciones.\n"
         "3. Bloque JSON final estricto:\n"
         "```json\n"
         "{\n"
@@ -335,6 +340,9 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
         "  ],\n"
         '  "clausulazos_programados": [\n'
         '    {"playerId": 98765, "nombre": "Nombre Rival", "clausula": 4200000, "apertura_iso": "2026-09-02T15:30:00+02:00"}\n'
+        "  ],\n"
+        '  "cancelar_pujas_programadas": [\n'
+        '    {"marketId": 12345, "nombre": "Jugador", "motivo": "Precio cayendo"}\n'
         "  ],\n"
         '  "aceptar_ofertas": [\n'
         '    {"marketId": 12345, "offerId": "xyz", "jugador": "Nombre", "cantidad": 6000000}\n'
@@ -426,7 +434,17 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
                         except Exception as e:
                             print(f"  ✗ Error al pagar cláusula de {p_name}: {e}")
 
-                # 2. Register free agent market bids in Last-Minute Sniping Bid Plan
+                # 2. Cancel requested scheduled bids
+                for canc in decision.get("cancelar_pujas_programadas", []):
+                    m_id = canc.get("marketId")
+                    c_name = canc.get("nombre", str(m_id))
+                    c_motivo = canc.get("motivo", "Decisión del mánager")
+                    if m_id:
+                        state.remove_bid_target(str(m_id))
+                        print(f"  ✗ Puja programada CANCELADA: {c_name} (Motivo: {c_motivo})")
+                        events.emit("cancel", f"Puja programada cancelada: {c_name}", detail={"motivo": c_motivo})
+
+                # 3. Register free agent market bids in Last-Minute Sniping Bid Plan
                 free_bids = decision.get("pujas_mercado_libre") or decision.get("pujas_recomendadas") or []
                 for bid_item in free_bids:
                     m_id = bid_item.get("marketId")

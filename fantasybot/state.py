@@ -65,6 +65,11 @@ def clear_bid_plan():
     _write(BID_PLAN_PATH, [])
 
 
+def remove_bid_target(market_id: str):
+    plan = [t for t in load_bid_plan() if str(t.get("market_id")) != str(market_id)]
+    _write(BID_PLAN_PATH, plan)
+
+
 def _read(path, default):
     if not os.path.exists(path):
         return default

@@ -211,7 +211,12 @@ def generate_apple_dashboard(
     money = team.get("teamMoney", 0)
     value = team.get("teamValue", 0)
     total_patrimony = money + value
-    manager_name = team.get("managerName") or (team.get("manager", {}).get("managerName")) or "Real Betis Frigopie"
+    manager_name = (
+        ((team.get("manager") or {}).get("managerName") if isinstance(team.get("manager"), dict) else None)
+        or team.get("managerName")
+        or team.get("teamName")
+        or "Real Betis Frigopie"
+    )
     total_points = team.get("teamPoints", 0)
     
     # Save & fetch chart history (Strictly 1 point per day)
@@ -432,7 +437,7 @@ def generate_apple_dashboard(
         for lt in league_teams:
             if str(lt.get("id")) == str(team.get("id")):
                 continue
-            manager_name = lt.get("manager", {}).get("managerName") or lt.get("teamName") or "Rival"
+            rival_mgr_name = lt.get("manager", {}).get("managerName") or lt.get("teamName") or "Rival"
             for p in lt.get("players", []):
                 pm = p.get("playerMaster", {})
                 p_id = pm.get("id")
@@ -476,7 +481,7 @@ def generate_apple_dashboard(
                     "playerId": p_id,
                     "nombre": name,
                     "posicion": pos_str,
-                    "equipo_rival": manager_name,
+                    "equipo_rival": rival_mgr_name,
                     "valor_mercado": val,
                     "clausula": int(clause),
                     "ratio_clausula_valor": round(clause / val, 2) if val else 0,

@@ -49,12 +49,25 @@ def jwt_exp(token: str):
 
 
 # --- token persistence ---
+def _sanitize_tokens(data: dict) -> dict:
+    if not isinstance(data, dict):
+        return data
+    cleaned = {}
+    for k, v in data.items():
+        if isinstance(v, str):
+            # Strip internal newlines/spaces for JWT and token strings
+            cleaned[k] = "".join(v.split()) if k in ("id_token", "access_token", "refresh_token", "token_type") else v.strip()
+        else:
+            cleaned[k] = v
+    return cleaned
+
+
 def load_tokens() -> dict:
     # 1. Environment variable support (CI / Serverless)
     env_tok = os.environ.get("LALIGA_TOKENS")
     if env_tok:
         try:
-            return json.loads(env_tok.strip(), strict=False)
+            return _sanitize_tokens(json.loads(env_tok.strip(), strict=False))
         except Exception:
             pass
 
@@ -63,11 +76,12 @@ def load_tokens() -> dict:
     with open(config.TOKENS_PATH, "r", encoding="utf-8", errors="replace") as f:
         content = f.read()
     try:
-        return json.loads(content, strict=False)
+        data = json.loads(content, strict=False)
     except Exception:
         import re
         cleaned = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', content)
-        return json.loads(cleaned, strict=False)
+        data = json.loads(cleaned, strict=False)
+    return _sanitize_tokens(data)
 
 
 def save_tokens(tokens: dict):
@@ -79,7 +93,7 @@ def bearer_token(tokens: dict) -> str:
     token = tokens.get("access_token") or tokens.get("id_token")
     if not token:
         raise AuthError("tokens.json has neither access_token nor id_token.")
-    return token
+    return "".join(token.split())
 
 
 # --- interactive flow ---

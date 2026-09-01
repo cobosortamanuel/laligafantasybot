@@ -105,7 +105,7 @@ def _format_markdown_report(text):
         if stripped.startswith("```"):
             if in_code:
                 code_str = html_lib.escape("\n".join(code_buf))
-                out.append(f"<pre class='bg-zinc-950 border border-zinc-800/90 rounded-xl p-3.5 my-3 text-[11px] font-mono text-zinc-300 overflow-x-auto leading-relaxed'><code>{code_str}</code></pre>")
+                out.append(f"<pre class='bg-zinc-950 border border-zinc-800/90 rounded-xl p-3 my-2 text-[11px] font-mono text-zinc-300 overflow-x-auto leading-relaxed'><code>{code_str}</code></pre>")
                 code_buf = []
                 in_code = False
             else:
@@ -114,26 +114,26 @@ def _format_markdown_report(text):
         elif in_code:
             code_buf.append(line)
         elif line.startswith("### "):
-            out.append(f"<h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-5 mb-2'>{html_lib.escape(line[4:])}</h3>")
+            out.append(f"<h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-3 mb-1'>{html_lib.escape(line[4:])}</h3>")
         elif line.startswith("## "):
-            out.append(f"<h2 class='text-sm font-semibold text-zinc-100 mt-6 mb-2'>{html_lib.escape(line[3:])}</h2>")
+            out.append(f"<h2 class='text-sm font-semibold text-zinc-100 mt-3.5 mb-1'>{html_lib.escape(line[3:])}</h2>")
         elif line.startswith("# "):
-            out.append(f"<h1 class='text-base font-bold text-zinc-100 mt-6 mb-2.5'>{html_lib.escape(line[2:])}</h1>")
+            out.append(f"<h1 class='text-base font-bold text-zinc-100 mt-4 mb-1.5'>{html_lib.escape(line[2:])}</h1>")
         elif stripped.startswith(("* ", "- ", "• ")):
             content = stripped[2:]
             content = re.sub(r'\*\*(.*?)\*\*', r'<strong class="font-semibold text-zinc-200">\1</strong>', content)
-            out.append(f"<li class='ml-4 list-disc text-xs text-zinc-300 my-1 leading-relaxed'>{content}</li>")
+            out.append(f"<li class='ml-4 list-disc text-xs text-zinc-300 my-0.5 leading-relaxed'>{content}</li>")
         elif re.match(r'^\d+\.\s', stripped):
             content = re.sub(r'^\d+\.\s', '', stripped)
             content = re.sub(r'\*\*(.*?)\*\*', r'<strong class="font-semibold text-zinc-200">\1</strong>', content)
-            out.append(f"<p class='text-xs text-zinc-300 leading-relaxed my-1.5 pl-2 border-l border-zinc-800'>{content}</p>")
+            out.append(f"<p class='text-xs text-zinc-300 leading-relaxed my-1 pl-2 border-l border-zinc-800'>{content}</p>")
         elif stripped:
             content = re.sub(r'\*\*(.*?)\*\*', r'<strong class="font-semibold text-zinc-200">\1</strong>', line)
-            out.append(f"<p class='text-xs text-zinc-300 leading-relaxed my-2'>{content}</p>")
+            out.append(f"<p class='text-xs text-zinc-300 leading-relaxed my-1'>{content}</p>")
     
     if in_code and code_buf:
         code_str = html_lib.escape("\n".join(code_buf))
-        out.append(f"<pre class='bg-zinc-950 border border-zinc-800/90 rounded-xl p-3.5 my-3 text-[11px] font-mono text-zinc-300 overflow-x-auto leading-relaxed'><code>{code_str}</code></pre>")
+        out.append(f"<pre class='bg-zinc-950 border border-zinc-800/90 rounded-xl p-3 my-2 text-[11px] font-mono text-zinc-300 overflow-x-auto leading-relaxed'><code>{code_str}</code></pre>")
     
     return "\n".join(out)
 
@@ -494,54 +494,54 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         </div>
     </header>
 
-    <!-- Main Container with Generous Spacing -->
-    <main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <!-- Main Container with Balanced Spacing -->
+    <main class="max-w-6xl mx-auto px-4 py-5 space-y-4">
         
         <!-- Metrics Bento Grid -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <!-- Box 1: Presupuesto -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Presupuesto</span>
                     <span class="text-zinc-400">{ICONS['wallet']}</span>
                 </div>
-                <div class="mt-2">
+                <div class="mt-1.5">
                     <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(money)}</div>
                     <p class="text-[11px] text-zinc-500 mt-0.5">Disponible en caja</p>
                 </div>
             </div>
 
             <!-- Box 2: Valor Plantilla -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Plantilla</span>
                     <span class="text-zinc-400">{ICONS['users']}</span>
                 </div>
-                <div class="mt-2">
+                <div class="mt-1.5">
                     <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(value)}</div>
                     <p class="text-[11px] text-zinc-500 mt-0.5">{len(players)} jugadores en nómina</p>
                 </div>
             </div>
 
             <!-- Box 3: Total Club -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Patrimonio Total</span>
                     <span class="text-zinc-400">{ICONS['chart']}</span>
                 </div>
-                <div class="mt-2">
+                <div class="mt-1.5">
                     <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(total_patrimony)}</div>
                     <p class="text-[11px] text-zinc-500 mt-0.5">Activos netos</p>
                 </div>
             </div>
 
             <!-- Box 4: Próxima Jornada -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
                 <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Próxima Jornada</span>
                     <span class="text-zinc-400">{ICONS['calendar']}</span>
                 </div>
-                <div class="mt-2">
+                <div class="mt-1.5">
                     <div class="text-xs font-semibold text-zinc-200 truncate">{kickoff_text}</div>
                     <p class="text-[11px] text-emerald-400 font-mono mt-0.5 font-medium">{countdown_text}</p>
                 </div>
@@ -549,7 +549,7 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         </section>
 
         <!-- Chart Section: Evolución Financiera -->
-        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-5 md:p-6">
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-4.5">
             <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                 <div>
                     <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Evolución Financiera</h2>
@@ -561,52 +561,52 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                     <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-500"></span><span>Plantilla</span></span>
                 </div>
             </div>
-            <div class="h-60 mt-4">
+            <div class="h-52 mt-3">
                 <canvas id="patrimonyChart"></canvas>
             </div>
         </section>
 
         <!-- AI Tactical Brain Analysis (Full Report, Never Truncated) -->
-        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-5 md:p-6">
-            <div class="flex items-center justify-between pb-3.5 border-b border-zinc-800/60">
-                <div class="flex items-center space-x-2.5">
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-4.5">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div class="flex items-center space-x-2">
                     <span class="text-zinc-300">{ICONS['cpu']}</span>
                     <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-200">Informe Táctico de Gemini</h2>
                 </div>
                 <span class="text-[10px] text-zinc-500 font-mono">{now_str}</span>
             </div>
-            <div class="mt-4 text-xs text-zinc-300 leading-relaxed space-y-2.5">
+            <div class="mt-3 text-xs text-zinc-300 leading-relaxed space-y-1.5">
                 {formatted_gemini}
             </div>
         </section>
 
-        <!-- Navigation Tabs with Clean Spacing -->
-        <nav class="pt-4 pb-2 border-b border-zinc-800/80">
-            <div class="flex items-center space-x-2 overflow-x-auto pb-2 text-xs font-medium">
-                <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3.5 py-2 rounded-xl border border-transparent transition-all flex items-center space-x-2">
+        <!-- Navigation Tabs with Balanced Spacing -->
+        <nav class="pt-2 pb-1.5 border-b border-zinc-800/80">
+            <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs font-medium">
+                <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5">
                     <span>{ICONS['users']}</span>
                     <span>Plantilla ({len(players)})</span>
                 </button>
-                <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
                     <span>{ICONS['market']}</span>
                     <span>Mercado ({len(market)})</span>
                 </button>
-                <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
                     <span>{ICONS['chart']}</span>
                     <span>Tendencias</span>
                 </button>
-                <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
                     <span>{ICONS['clock']}</span>
                     <span>Plan de Pujas</span>
                 </button>
-                <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3.5 py-2 rounded-xl text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-2">
+                <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
                     <span>{ICONS['history']}</span>
                     <span>Historial</span>
                 </button>
             </div>
         </nav>
 
-        <!-- Tab Content Container with Proper Top Spacing -->
+        <!-- Tab Content Container -->
         <div class="pt-2">
             <!-- TAB 1: SQUAD -->
             <section id="tab-squad" class="tab-content space-y-4">

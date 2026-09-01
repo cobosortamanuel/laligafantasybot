@@ -83,6 +83,13 @@ class ReviewResilience(unittest.TestCase):
             p = mock.patch.object(agent_mod, target, val)
             p.start()
             self.addCleanup(p.stop)
+        for target, val in [
+            ("probable_lineups", lambda *a, **k: {}),
+            ("trends_index", lambda *a, **k: {}),
+        ]:
+            p = mock.patch.object(agent_mod, target, val)
+            p.start()
+            self.addCleanup(p.stop)
         for mod, name, val in [
             (agent_mod.matchday, "next_kickoff", lambda: None),
             (agent_mod.matchday, "days_until_matchday", lambda: None),

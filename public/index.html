@@ -3,369 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FantasyBot OS • Control Center</title>
+    <title>FantasyBot OS • Panel de Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                    },
-                    colors: {
-                        apple: {
-                            gray: '#1c1c1e',
-                            dark: '#000000',
-                            card: '#121214',
-                            border: '#27272a',
-                            accent: '#10b981',
-                            blue: '#0a84ff',
-                            purple: '#bf5af2',
-                            amber: '#ffd60a',
-                            rose: '#ff453a'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #000000;
+            background-color: #09090b;
             color: #f4f4f5;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(10, 132, 255, 0.08) 0px, transparent 50%);
-            background-attachment: fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
-        .glass {
-            background: rgba(18, 18, 20, 0.75);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .glass-card {
-            background: rgba(24, 24, 27, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
         }
         .tab-active {
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.2);
+            background: #27272a;
+            color: #fafafa;
+            border-color: #3f3f46;
         }
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         ::-webkit-scrollbar-track {
             background: #09090b;
         }
         ::-webkit-scrollbar-thumb {
             background: #27272a;
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3f3f46;
+            border-radius: 4px;
         }
     </style>
 </head>
-<body class="min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
-    <!-- Top Floating Apple Bar -->
-    <nav class="sticky top-4 z-50 max-w-7xl mx-auto px-4">
-        <div class="glass rounded-full px-5 py-3 flex items-center justify-between shadow-2xl">
+<body class="min-h-screen antialiased selection:bg-zinc-800 selection:text-white">
+    <!-- Apple Minimalist Top Header -->
+    <header class="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="font-semibold text-zinc-100 text-sm tracking-tight">Real Betis Frigopie</span>
+                    <span class="text-zinc-600 text-xs">•</span>
+                    <span class="text-xs text-zinc-400 font-mono">FantasyBot OS</span>
+                </div>
+            </div>
+
             <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black font-black text-sm shadow-lg shadow-emerald-500/20">
-                    ⚡
+                <div class="flex items-center space-x-1.5 text-xs text-zinc-400 font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Activo (09:00 / 20:15)</span>
                 </div>
-                <div>
-                    <span class="font-extrabold text-white text-sm tracking-tight">Real Betis Frigopie</span>
-                    <span class="text-[11px] text-neutral-400 block font-mono">FantasyBot OS • Gemini 3.5 Flash Lite</span>
-                </div>
-            </div>
-
-            <!-- Live Status Indicator -->
-            <div class="hidden md:flex items-center space-x-2 bg-neutral-900/80 border border-neutral-800 px-3.5 py-1.5 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="text-xs font-semibold text-neutral-300">Nube Activa • 09:00 & 20:15</span>
-            </div>
-
-            <!-- Header Action Pill -->
-            <div class="flex items-center space-x-2">
-                <span class="px-3 py-1 rounded-full text-xs font-bold border bg-blue-500/10 text-blue-400 border-blue-500/30">
-                    🔍 Modo Análisis
+                <span class="text-[11px] font-mono px-2 py-0.5 rounded border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                    Ejecutado
                 </span>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 pt-8 pb-16 space-y-8">
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
         
-        <!-- Hero Bento Grid -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Card 1: Presupuesto -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
-                    <span>Caja / Presupuesto</span>
-                    <span class="text-emerald-400 text-lg">💰</span>
+        <!-- Metrics Bento Grid -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <!-- Box 1: Presupuesto -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+                    <span>Presupuesto</span>
+                    <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-3xl font-extrabold text-white tracking-tight">63.81M €</div>
-                    <p class="text-xs text-neutral-400 mt-1">Disponible para compras y flips</p>
+                <div class="mt-1.5">
+                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">63.81M €</div>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Disponible en caja</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
             </div>
 
-            <!-- Card 2: Valor Plantilla -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
-                    <span>Valor Plantilla</span>
-                    <span class="text-blue-400 text-lg">🛡️</span>
+            <!-- Box 2: Valor Plantilla -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+                    <span>Plantilla</span>
+                    <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-3xl font-extrabold text-white tracking-tight">162.99M €</div>
-                    <p class="text-xs text-neutral-400 mt-1">5 jugadores en nómina</p>
+                <div class="mt-1.5">
+                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">162.99M €</div>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">5 jugadores en nómina</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
             </div>
 
-            <!-- Card 3: Patrimonio Total -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
+            <!-- Box 3: Total Club -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Patrimonio Total</span>
-                    <span class="text-purple-400 text-lg">📈</span>
+                    <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-3xl font-extrabold text-white tracking-tight">226.81M €</div>
-                    <p class="text-xs text-emerald-400 mt-1">Valor neto de club</p>
+                <div class="mt-1.5">
+                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">226.81M €</div>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Activos netos</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
             </div>
 
-            <!-- Card 4: Próxima Jornada -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
+            <!-- Box 4: Próxima Jornada -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Próxima Jornada</span>
-                    <span class="text-amber-400 text-lg">⏱️</span>
+                    <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-lg font-bold text-white truncate">2026-08-28T19:00:00+02:00</div>
-                    <p class="text-xs font-bold text-amber-400 mt-1">-3.3 días restantes</p>
+                <div class="mt-1.5">
+                    <div class="text-xs font-semibold text-zinc-200 truncate">Por confirmar</div>
+                    <p class="text-[11px] text-emerald-400 font-mono mt-0.5 font-medium">Próximamente</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
             </div>
         </section>
 
-        <!-- Chart Section: Evolución Patrimonial -->
-        <section class="glass-card rounded-3xl p-6 md:p-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-neutral-800/80 gap-4">
+        <!-- Chart Section: Evolución Financiera -->
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                 <div>
-                    <h2 class="text-xl font-bold text-white tracking-tight">Evolución Financiera del Club</h2>
-                    <p class="text-xs text-neutral-400 mt-0.5">Historial en tiempo real de presupuesto vs valor de plantilla</p>
+                    <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Evolución Financiera</h2>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Historial acumulado de presupuesto y plantilla</p>
                 </div>
-                <div class="flex items-center space-x-4 text-xs font-semibold">
-                    <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span><span class="text-neutral-300">Presupuesto</span></span>
-                    <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-blue-400"></span><span class="text-neutral-300">Valor Plantilla</span></span>
-                    <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-purple-400"></span><span class="text-neutral-300">Total</span></span>
+                <div class="flex items-center space-x-3 text-[11px] font-mono text-zinc-400">
+                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-100"></span><span>Patrimonio</span></span>
+                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Caja</span></span>
+                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-500"></span><span>Plantilla</span></span>
                 </div>
             </div>
-            <div class="h-72 mt-6">
+            <div class="h-56 mt-4">
                 <canvas id="patrimonyChart"></canvas>
             </div>
         </section>
 
-        <!-- AI Brain & Strategy Section -->
-        <section class="relative overflow-hidden rounded-3xl p-6 md:p-8 border border-emerald-500/20 bg-gradient-to-b from-emerald-950/20 to-neutral-900/60 backdrop-blur-2xl shadow-2xl">
-            <div class="flex items-center justify-between pb-6 border-b border-neutral-800">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
-                        🧠
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-extrabold text-white tracking-tight">Informe Táctico de Gemini Flash Lite</h2>
-                        <p class="text-xs text-neutral-400">Thinking Pro (3.072 tokens de razonamiento) • 01/09/2026 a las 02:42</p>
-                    </div>
+        <!-- AI Tactical Brain Analysis -->
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div class="flex items-center space-x-2">
+                    <span class="text-zinc-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg></span>
+                    <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Informe Táctico de Gemini</h2>
                 </div>
-                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-mono font-bold">
-                    AI Director
-                </span>
+                <span class="text-[10px] text-zinc-500 font-mono">01/09/2026 a las 02:55</span>
             </div>
-
-            <!-- Strategy Report Content -->
-            <div class="mt-6 text-sm text-neutral-300 leading-relaxed space-y-3 font-normal">
-                <h3 class='text-base font-bold text-emerald-400 mt-4 mb-1'>1. Análisis Estratégico aplicando la Guía del Usuario<br><br>* <strong class='text-white'>Emergencia en la Portería y Alineación:<strong class='text-white'> Actualmente tenemos un hándicap crítico: <strong class='text-white'>no hay ningún portero en la plantilla<strong class='text-white'>, lo que impide presentar una alineación válida. La regla de oro es cubrir los huecos indispensables manteniendo una gestión estricta del presupuesto.<br>* <strong class='text-white'>Mercado y Pujas (Regla del Precio Base):<strong class='text-white'> Tenemos disponible en el mercado a <strong class='text-white'>D. Cárdenas<strong class='text-white'> (POR) con un precio de salida de 987.564 € y a <strong class='text-white'>Yoel Lago<strong class='text-white'> (DEF) a 1.192.173 €, ambos con proyecciones excelentes de subida de valor (ROI positivo y tendencia alcista). Siguiendo la guía, al ser jugadores sin competencia aparente en este tramo, pujaremos al precio de mercado o sumando una cantidad mínima simbólica (210 €) para asegurar la puja sin sobrepagar.<br>* <strong class='text-white'>Gestión de Caja:<strong class='text-white'> Disponemos de 63,8M € en caja. Debemos ser cautelosos y <strong class='text-white'>nunca gastar toda la caja<strong class='text-white'>, reservando músculo financiero para futuras oportunidades de especulación y clausulazos clave. Fichar a Cárdenas y Yoel Lago apenas supone una fracción menor de nuestro capital, solucionando los huecos prioritarios sin comprometer la liquidez.<br><br>---<br><br><h3 class='text-base font-bold text-emerald-400 mt-4 mb-1'>2. Recomendaciones Concretas y Desglose de Movimientos<br><br>1. <strong class='text-white'>Fichaje de Urgencia (Portería):<strong class='text-white'> Lanzar puja por <strong class='text-white'>D. Cárdenas<strong class='text-white'> (`marketId: "25061177"`) ajustada al precio de salida más un margen mínimo de seguridad (210 €).<br>2. <strong class='text-white'>Refuerzo Defensivo y Especulación (Flip):<strong class='text-white'> Lanzar puja por <strong class='text-white'>Yoel Lago<strong class='text-white'> (`marketId: "25063273"`) para cubrir hueco en defensa y asegurar un activo con valor en clara subida.<br>3. <strong class='text-white'>Control de Plantilla:<strong class='text-white'> Mantener el resto de la liquidez intacta a la espera de que se abran nuevas ventanas de clausulazos o aparezcan chollos de alta gama en el mercado de sistemas.<br><br>---<br><br><h3 class='text-base font-bold text-emerald-400 mt-4 mb-1'>3. Bloque JSON Final<br><br>```json<br>{<br>  "aplicar_alineacion": false,<br>  "pujas_recomendadas": [<br>    {<br>      "marketId": 25061177,<br>      "nombre": "D. Cárdenas",<br>      "puja_maxima": 987774<br>    },<br>    {<br>      "marketId": 25063273,<br>      "nombre": "Yoel Lago",<br>      "puja_maxima": 1192383<br>    }<br>  ],<br>  "aceptar_ofertas": [],<br>  "ventas_recomendadas": [],<br>  "nueva_memoria": "Urgencia de portero atendida con puja ajustada por D. Cárdenas. Reforzando defensa con Yoel Lago para cubrir huecos y mantener valor al alza sin comprometer la caja."<br>}<br>```
+            <div class="mt-3 text-xs text-zinc-300 leading-relaxed space-y-2">
+                <h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-3 mb-1'>1. Análisis Estratégico<br>Disponemos de un excelente presupuesto (64.7M€) con la plantilla en cuadro (4 jugadores). Nuestro objetivo prioritario es cubrir portería y defensa fichando activos seguros y económicos con subida de valor constante.<br><br><h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-3 mb-1'>2. Decisiones y Plan de Acción<br>- <strong class='font-semibold text-zinc-200'>Dmitrovic (POR):<strong class='font-semibold text-zinc-200'> Guardameta titular de plenas garantías.<br>- <strong class='font-semibold text-zinc-200'>Arnau (DEF):<strong class='font-semibold text-zinc-200'> Defensa clave con gran rendimiento.<br>- <strong class='font-semibold text-zinc-200'>Arguibide & Germán:<strong class='font-semibold text-zinc-200'> Opciones de revalorización con excelente rentabilidad porcentual (ROI).<br>
             </div>
         </section>
 
-        <!-- Navigation Tabs for Deep Dive -->
-        <div class="flex items-center space-x-2 overflow-x-auto pb-2 border-b border-neutral-800 text-sm font-bold">
-            <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-5 py-2.5 rounded-2xl border border-transparent transition-all">👥 Mi Plantilla (5)</button>
-            <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">🛒 Mercado Completo (34)</button>
-            <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">📈 Tendencias & Chollos</button>
-            <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">⏱️ Plan & Automatizaciones</button>
-            <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">📜 Historial de Acciones</button>
+        <!-- Navigation Tabs -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 border-b border-zinc-800/80 text-xs font-medium">
+            <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5">
+                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
+                <span>Plantilla (5)</span>
+            </button>
+            <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>
+                <span>Mercado (34)</span>
+            </button>
+            <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></span>
+                <span>Tendencias</span>
+            </button>
+            <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+                <span>Plan de Pujas</span>
+            </button>
+            <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0zM3.055 11H5a7.978 7.978 0 0115.89 0h1.945"/></svg></span>
+                <span>Historial</span>
+            </button>
         </div>
 
         <!-- TAB 1: SQUAD -->
-        <section id="tab-squad" class="tab-content space-y-6">
+        <section id="tab-squad" class="tab-content space-y-4">
             <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-bold text-white">Jugadores en Nómina</h3>
-                    <p class="text-xs text-neutral-400">Todos los futbolistas están listados en el mercado para recibir ofertas</p>
-                </div>
-                <div class="text-xs text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-xl font-mono">
-                    Huecos: POR, DEF, MED, DEL
-                </div>
+                <span class="text-xs text-zinc-400">Todos los futbolistas están a la venta para recibir ofertas diarias.</span>
+                <span class="text-[11px] text-zinc-500 font-mono">Huecos: POR, DEF</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 
-        <div class="group relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-800/80 hover:border-neutral-700 rounded-3xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/5">
+        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
             <div class="flex items-start justify-between">
-                <span class="px-2.5 py-1 rounded-xl text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Disponible</span>
+                <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
+                <span class="inline-flex items-center text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Disponible</span>
             </div>
-            <div class="flex items-center space-x-4 my-4">
-                <img src="https://assets-fantasy.llt-services.com/players/t450/p2846/256x256/p2846_t450_1_001_000.png" alt="Arguibide" class="w-16 h-16 rounded-2xl object-cover bg-neutral-800/80 p-1 border border-neutral-700/50 group-hover:scale-105 transition-transform" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
-                <div>
-                    <h4 class="font-bold text-white text-base leading-tight">Arguibide</h4>
-                    <p class="text-xs text-neutral-400 mt-0.5">Cláusula: 1.67M €</p>
-                    <p class="text-xs font-semibold text-emerald-400 mt-1">999.7k €</p>
+            <div class="flex items-center space-x-3 my-3">
+                <img src="https://assets-fantasy.llt-services.com/players/t450/p2846/256x256/p2846_t450_1_001_000.png" alt="Arguibide" class="w-12 h-12 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+                <div class="min-w-0 flex-1">
+                    <h4 class="font-semibold text-zinc-100 text-sm truncate">Arguibide</h4>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: 1.67M €</p>
+                    <p class="text-xs font-semibold text-zinc-200 mt-0.5">999.7k €</p>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-neutral-800 text-center text-xs">
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Puntos</span>
-                    <span class="font-bold text-white">18</span>
+            <div class="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-zinc-800/60 text-center text-xs">
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Puntos</span>
+                    <span class="font-semibold text-zinc-200 text-xs">18</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Media</span>
-                    <span class="font-bold text-white">6.0</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Media</span>
+                    <span class="font-semibold text-zinc-200 text-xs">6.0</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Titularidad</span>
-                    <span class="font-bold text-emerald-400">100%</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Titular</span>
+                    <span class="font-semibold text-emerald-400 text-xs">100%</span>
                 </div>
             </div>
         </div>
         
-        <div class="group relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-800/80 hover:border-neutral-700 rounded-3xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/5">
+        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
             <div class="flex items-start justify-between">
-                <span class="px-2.5 py-1 rounded-xl text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Disponible</span>
+                <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
+                <span class="inline-flex items-center text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Disponible</span>
             </div>
-            <div class="flex items-center space-x-4 my-4">
-                <img src="https://assets-fantasy.llt-services.com/players/t175/p3193/256x256/p3193_t175_1_001_000.png" alt="Kang-In Lee" class="w-16 h-16 rounded-2xl object-cover bg-neutral-800/80 p-1 border border-neutral-700/50 group-hover:scale-105 transition-transform" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
-                <div>
-                    <h4 class="font-bold text-white text-base leading-tight">Kang-In Lee</h4>
-                    <p class="text-xs text-neutral-400 mt-0.5">Cláusula: 96.50M €</p>
-                    <p class="text-xs font-semibold text-emerald-400 mt-1">57.78M €</p>
+            <div class="flex items-center space-x-3 my-3">
+                <img src="https://assets-fantasy.llt-services.com/players/t175/p3193/256x256/p3193_t175_1_001_000.png" alt="Kang-In Lee" class="w-12 h-12 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+                <div class="min-w-0 flex-1">
+                    <h4 class="font-semibold text-zinc-100 text-sm truncate">Kang-In Lee</h4>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: 96.50M €</p>
+                    <p class="text-xs font-semibold text-zinc-200 mt-0.5">57.78M €</p>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-neutral-800 text-center text-xs">
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Puntos</span>
-                    <span class="font-bold text-white">26</span>
+            <div class="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-zinc-800/60 text-center text-xs">
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Puntos</span>
+                    <span class="font-semibold text-zinc-200 text-xs">26</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Media</span>
-                    <span class="font-bold text-white">8.7</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Media</span>
+                    <span class="font-semibold text-zinc-200 text-xs">8.7</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Titularidad</span>
-                    <span class="font-bold text-emerald-400">100%</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Titular</span>
+                    <span class="font-semibold text-emerald-400 text-xs">100%</span>
                 </div>
             </div>
         </div>
         
-        <div class="group relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-800/80 hover:border-neutral-700 rounded-3xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/5">
+        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
             <div class="flex items-start justify-between">
-                <span class="px-2.5 py-1 rounded-xl text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">Lesionado</span>
+                <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
+                <span class="inline-flex items-center text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Baja / Lesión</span>
             </div>
-            <div class="flex items-center space-x-4 my-4">
-                <img src="https://assets-fantasy.llt-services.com/players/t191/p3128/256x256/p3128_t191_1_001_000.png" alt="Guido Rodríguez" class="w-16 h-16 rounded-2xl object-cover bg-neutral-800/80 p-1 border border-neutral-700/50 group-hover:scale-105 transition-transform" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
-                <div>
-                    <h4 class="font-bold text-white text-base leading-tight">Guido Rodríguez</h4>
-                    <p class="text-xs text-neutral-400 mt-0.5">Cláusula: 38.49M €</p>
-                    <p class="text-xs font-semibold text-emerald-400 mt-1">23.05M €</p>
+            <div class="flex items-center space-x-3 my-3">
+                <img src="https://assets-fantasy.llt-services.com/players/t191/p3128/256x256/p3128_t191_1_001_000.png" alt="Guido Rodríguez" class="w-12 h-12 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+                <div class="min-w-0 flex-1">
+                    <h4 class="font-semibold text-zinc-100 text-sm truncate">Guido Rodríguez</h4>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: 38.49M €</p>
+                    <p class="text-xs font-semibold text-zinc-200 mt-0.5">23.05M €</p>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-neutral-800 text-center text-xs">
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Puntos</span>
-                    <span class="font-bold text-white">14</span>
+            <div class="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-zinc-800/60 text-center text-xs">
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Puntos</span>
+                    <span class="font-semibold text-zinc-200 text-xs">14</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Media</span>
-                    <span class="font-bold text-white">7.0</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Media</span>
+                    <span class="font-semibold text-zinc-200 text-xs">7.0</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Titularidad</span>
-                    <span class="font-bold text-emerald-400">100%</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Titular</span>
+                    <span class="font-semibold text-emerald-400 text-xs">100%</span>
                 </div>
             </div>
         </div>
         
-        <div class="group relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-800/80 hover:border-neutral-700 rounded-3xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/5">
+        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
             <div class="flex items-start justify-between">
-                <span class="px-2.5 py-1 rounded-xl text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Disponible</span>
+                <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEL</span>
+                <span class="inline-flex items-center text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Disponible</span>
             </div>
-            <div class="flex items-center space-x-4 my-4">
-                <img src="https://assets-fantasy.llt-services.com/players/t185/p2770/256x256/p2770_t185_1_001_000.png" alt="Antony" class="w-16 h-16 rounded-2xl object-cover bg-neutral-800/80 p-1 border border-neutral-700/50 group-hover:scale-105 transition-transform" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
-                <div>
-                    <h4 class="font-bold text-white text-base leading-tight">Antony</h4>
-                    <p class="text-xs text-neutral-400 mt-0.5">Cláusula: 114.42M €</p>
-                    <p class="text-xs font-semibold text-emerald-400 mt-1">68.52M €</p>
+            <div class="flex items-center space-x-3 my-3">
+                <img src="https://assets-fantasy.llt-services.com/players/t185/p2770/256x256/p2770_t185_1_001_000.png" alt="Antony" class="w-12 h-12 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+                <div class="min-w-0 flex-1">
+                    <h4 class="font-semibold text-zinc-100 text-sm truncate">Antony</h4>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: 114.42M €</p>
+                    <p class="text-xs font-semibold text-zinc-200 mt-0.5">68.52M €</p>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-neutral-800 text-center text-xs">
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Puntos</span>
-                    <span class="font-bold text-white">19</span>
+            <div class="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-zinc-800/60 text-center text-xs">
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Puntos</span>
+                    <span class="font-semibold text-zinc-200 text-xs">19</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Media</span>
-                    <span class="font-bold text-white">6.3</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Media</span>
+                    <span class="font-semibold text-zinc-200 text-xs">6.3</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Titularidad</span>
-                    <span class="font-bold text-emerald-400">100%</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Titular</span>
+                    <span class="font-semibold text-emerald-400 text-xs">100%</span>
                 </div>
             </div>
         </div>
         
-        <div class="group relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-800/80 hover:border-neutral-700 rounded-3xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/5">
+        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
             <div class="flex items-start justify-between">
-                <span class="px-2.5 py-1 rounded-xl text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Disponible</span>
+                <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEL</span>
+                <span class="inline-flex items-center text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Disponible</span>
             </div>
-            <div class="flex items-center space-x-4 my-4">
-                <img src="https://assets-fantasy.llt-services.com/players/t174/p1484/256x256/p1484_t174_1_001_000 (1).png" alt="Guruzeta" class="w-16 h-16 rounded-2xl object-cover bg-neutral-800/80 p-1 border border-neutral-700/50 group-hover:scale-105 transition-transform" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
-                <div>
-                    <h4 class="font-bold text-white text-base leading-tight">Guruzeta</h4>
-                    <p class="text-xs text-neutral-400 mt-0.5">Cláusula: 21.13M €</p>
-                    <p class="text-xs font-semibold text-emerald-400 mt-1">12.65M €</p>
+            <div class="flex items-center space-x-3 my-3">
+                <img src="https://assets-fantasy.llt-services.com/players/t174/p1484/256x256/p1484_t174_1_001_000 (1).png" alt="Guruzeta" class="w-12 h-12 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+                <div class="min-w-0 flex-1">
+                    <h4 class="font-semibold text-zinc-100 text-sm truncate">Guruzeta</h4>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: 21.13M €</p>
+                    <p class="text-xs font-semibold text-zinc-200 mt-0.5">12.65M €</p>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-neutral-800 text-center text-xs">
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Puntos</span>
-                    <span class="font-bold text-white">3</span>
+            <div class="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-zinc-800/60 text-center text-xs">
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Puntos</span>
+                    <span class="font-semibold text-zinc-200 text-xs">3</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Media</span>
-                    <span class="font-bold text-white">1.0</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Media</span>
+                    <span class="font-semibold text-zinc-200 text-xs">1.0</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Titularidad</span>
-                    <span class="font-bold text-emerald-400">100%</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Titular</span>
+                    <span class="font-semibold text-emerald-400 text-xs">100%</span>
                 </div>
             </div>
         </div>
@@ -373,684 +327,684 @@
             </div>
         </section>
 
-        <!-- TAB 2: FULL MARKET -->
-        <section id="tab-market" class="tab-content hidden space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-white">Mercado de Fichajes de la Liga</h3>
-                    <p class="text-xs text-neutral-400">Jugadores a la venta en tiempo real (Sistema y Rivales)</p>
-                </div>
+        <!-- TAB 2: MARKET -->
+        <section id="tab-market" class="tab-content hidden space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <span class="text-xs text-zinc-400">Listado en tiempo real de jugadores disponibles.</span>
                 <div class="flex items-center space-x-2">
-                    <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-neutral-900 border border-neutral-800 text-white text-xs px-4 py-2 rounded-xl focus:outline-none focus:border-emerald-500 w-48">
-                    <select id="posFilter" onchange="filterMarket()" class="bg-neutral-900 border border-neutral-800 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-emerald-500">
-                        <option value="ALL">Todas las posiciones</option>
-                        <option value="POR">Porteros (POR)</option>
-                        <option value="DEF">Defensas (DEF)</option>
-                        <option value="MED">Centrocampistas (MED)</option>
-                        <option value="DEL">Delanteros (DEL)</option>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none"><svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                        <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs pl-7 pr-3 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700 w-44">
+                    </div>
+                    <select id="posFilter" onchange="filterMarket()" class="bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700">
+                        <option value="ALL">Todas las pos.</option>
+                        <option value="POR">POR</option>
+                        <option value="DEF">DEF</option>
+                        <option value="MED">MED</option>
+                        <option value="DEL">DEL</option>
                     </select>
                 </div>
             </div>
 
-            <div class="glass-card rounded-3xl overflow-hidden">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm" id="marketTable">
+                    <table class="w-full text-left text-xs" id="marketTable">
                         <thead>
-                            <tr class="text-neutral-400 border-b border-neutral-800 text-xs uppercase font-bold tracking-wider">
-                                <th class="py-3.5 px-4">Jugador</th>
-                                <th class="py-3.5 px-4">Posición</th>
-                                <th class="py-3.5 px-4">Vendedor</th>
-                                <th class="py-3.5 px-4 text-right">Precio Salida</th>
-                                <th class="py-3.5 px-4 text-center">Pujas</th>
-                                <th class="py-3.5 px-4 text-right">Cierre</th>
+                            <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
+                                <th class="py-2.5 px-3">Jugador</th>
+                                <th class="py-2.5 px-3">Pos</th>
+                                <th class="py-2.5 px-3">Origen</th>
+                                <th class="py-2.5 px-3 text-right">Precio Salida</th>
+                                <th class="py-2.5 px-3 text-center">Pujas</th>
+                                <th class="py-2.5 px-3 text-right">Cierre</th>
                             </tr>
                         </thead>
                         <tbody>
                             
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="ENT" data-name="simeone">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t175/man2527/256x256/man2527_t175_1_001_000 (1).png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="ENT" data-name="simeone">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t175/man2527/256x256/man2527_t175_1_001_000 (1).png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Simeone</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229712</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Simeone</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229712</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-purple-500/20 text-purple-300 border-purple-500/30">ENT</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">ENT</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">3.57M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.57M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="h. rincón">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t174/p3184/256x256/p3184_t174_1_001_000 (1).png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="h. rincón">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t174/p3184/256x256/p3184_t174_1_001_000 (1).png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">H. Rincón</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229734</div>
+                        <div class="font-semibold text-zinc-200 text-xs">H. Rincón</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229734</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">2.34M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">2.34M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="cancelo">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t178/p2906/256x256/p2906_t178_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="cancelo">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t178/p2906/256x256/p2906_t178_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Cancelo</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229747</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Cancelo</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229747</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">41.22M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">41.22M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="febas">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t954/p2295/256x256/p2295_t954_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="febas">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t954/p2295/256x256/p2295_t954_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Febas</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229757</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Febas</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229757</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">23.23M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">23.23M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="v. rosier">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t450/p2559/256x256/p2559_t450_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="v. rosier">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t450/p2559/256x256/p2559_t450_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">V. Rosier</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229769</div>
+                        <div class="font-semibold text-zinc-200 text-xs">V. Rosier</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229769</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">3.53M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.53M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="gudelj">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t179/p2452/256x256/p2452_t179_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="gudelj">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t179/p2452/256x256/p2452_t179_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Gudelj</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229778</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Gudelj</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229778</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">7.03M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">7.03M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="pau navarro">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t449/p2698/256x256/p2698_t449_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="pau navarro">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t449/p2698/256x256/p2698_t449_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Pau Navarro</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229790</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Pau Navarro</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229790</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">6.01M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">6.01M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="pedrosa">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t954/p1056/256x256/p1056_t954_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="pedrosa">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t954/p1056/256x256/p1056_t954_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Pedrosa</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229799</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Pedrosa</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229799</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">3.31M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.31M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEL" data-name="alfon">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t449/p2754/256x256/p2754_t449_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="alfon">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t449/p2754/256x256/p2754_t449_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Alfon</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229810</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Alfon</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229810</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEL</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">3.75M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.75M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="santos">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t450/p2873/256x256/p2873_t450_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="santos">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t450/p2873/256x256/p2873_t450_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Santos</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229818</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Santos</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229818</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">554.5k €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">554.5k €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="javi rueda">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t176/p2714/256x256/p2714_t176_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="javi rueda">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t176/p2714/256x256/p2714_t176_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Javi Rueda</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229828</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Javi Rueda</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229828</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">3.74M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.74M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="saliba">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/no-player/no-player-sq_256.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="saliba">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/no-player/no-player-sq_256.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Saliba</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229841</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Saliba</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229841</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">7.50M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">7.50M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEL" data-name="ibra">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/no-player/no-player-sq_256.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="ibra">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/no-player/no-player-sq_256.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Ibra</div>
-                        <div class="text-[11px] text-neutral-400">ID: 129229852</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Ibra</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#129229852</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEL</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">615.3k €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 19h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">615.3k €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">19h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="martim neto">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t954/p2601/256x256/p2601_t954_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="martim neto">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t954/p2601/256x256/p2601_t954_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Martim Neto</div>
-                        <div class="text-[11px] text-neutral-400">ID: 4533751</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Martim Neto</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#4533751</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">1.50M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 57h 36m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.50M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 23m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEL" data-name="ferran jutglà">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t176/p2603/256x256/p2603_t176_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="ferran jutglà">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t176/p2603/256x256/p2603_t176_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Ferran Jutglà</div>
-                        <div class="text-[11px] text-neutral-400">ID: 17818075</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Ferran Jutglà</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#17818075</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEL</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">8.73M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 53m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">8.73M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="carmona">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t179/p1251/256x256/p1251_t179_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="carmona">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t179/p1251/256x256/p1251_t179_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Carmona</div>
-                        <div class="text-[11px] text-neutral-400">ID: 17818316</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Carmona</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#17818316</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">3.20M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 52m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">3.20M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 39m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="jorge salinas">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/no-player/no-player-sq_256.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="jorge salinas">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/no-player/no-player-sq_256.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Jorge Salinas</div>
-                        <div class="text-[11px] text-neutral-400">ID: 18803339</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Jorge Salinas</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#18803339</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">7.05M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 48h 35m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">7.05M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEL" data-name="mikautadze">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t449/p2771/256x256/p2771_t449_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="mikautadze">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t449/p2771/256x256/p2771_t449_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Mikautadze</div>
-                        <div class="text-[11px] text-neutral-400">ID: 18805100</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Mikautadze</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#18805100</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEL</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">72.59M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 48h 36m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">72.59M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 23m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="noubi">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t180/p2985/256x256/p2985_t180_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="noubi">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t180/p2985/256x256/p2985_t180_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Noubi</div>
-                        <div class="text-[11px] text-neutral-400">ID: 20281755</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Noubi</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#20281755</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">12.53M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 52m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">12.53M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="mario soriano">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t180/p2995/256x256/p2995_t180_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="mario soriano">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t180/p2995/256x256/p2995_t180_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Mario Soriano</div>
-                        <div class="text-[11px] text-neutral-400">ID: 20281986</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Mario Soriano</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#20281986</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">27.00M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 53m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">27.00M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="POR" data-name="vlachodimos">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t179/p2759/256x256/p2759_t179_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="POR" data-name="vlachodimos">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t179/p2759/256x256/p2759_t179_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Vlachodimos</div>
-                        <div class="text-[11px] text-neutral-400">ID: 20282486</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Vlachodimos</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#20282486</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-amber-500/20 text-amber-300 border-amber-500/30">POR</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">POR</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">25.65M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 52m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">25.65M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 39m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="konaté">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t186/p3107/256x256/p3107_t186_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="konaté">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t186/p3107/256x256/p3107_t186_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Konaté</div>
-                        <div class="text-[11px] text-neutral-400">ID: 23570158</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Konaté</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#23570158</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">51.62M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 52m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">51.62M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 39m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="edu expósito">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t177/p3077/256x256/p3077_t177_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="edu expósito">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t177/p3077/256x256/p3077_t177_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Edu Expósito</div>
-                        <div class="text-[11px] text-neutral-400">ID: 23571152</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Edu Expósito</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#23571152</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">31.24M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 52m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">31.24M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="r. mendoza">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t175/p2717/256x256/p2717_t175_1_001_000 (1).png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="r. mendoza">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t175/p2717/256x256/p2717_t175_1_001_000 (1).png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">R. Mendoza</div>
-                        <div class="text-[11px] text-neutral-400">ID: 23571860</div>
+                        <div class="font-semibold text-zinc-200 text-xs">R. Mendoza</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#23571860</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">1.16M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 38h 53m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.16M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">38h 40m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="manu sánchez">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t855/p2624/256x256/p2624_t855_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="manu sánchez">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t855/p2624/256x256/p2624_t855_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Manu Sánchez</div>
-                        <div class="text-[11px] text-neutral-400">ID: 24190394</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Manu Sánchez</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#24190394</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">4.94M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 48h 34m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">4.94M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 22m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEL" data-name="pablo garcía">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t185/p2712/256x256/p2712_t185_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEL" data-name="pablo garcía">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t185/p2712/256x256/p2712_t185_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Pablo García</div>
-                        <div class="text-[11px] text-neutral-400">ID: 24190718</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Pablo García</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#24190718</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEL</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">2.56M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 48h 36m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">2.56M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">48h 23m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="a. abqar">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t1450/p2776/256x256/p2776_t1450_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="a. abqar">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t1450/p2776/256x256/p2776_t1450_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">A. Abqar</div>
-                        <div class="text-[11px] text-neutral-400">ID: 24346903</div>
+                        <div class="font-semibold text-zinc-200 text-xs">A. Abqar</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#24346903</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">6.28M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 57h 33m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">6.28M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 20m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="llorente ">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t185/p2415/256x256/p2415_t185_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="llorente ">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t185/p2415/256x256/p2415_t185_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Llorente </div>
-                        <div class="text-[11px] text-neutral-400">ID: 24347004</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Llorente </div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#24347004</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">12.17M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 57h 33m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">12.17M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 20m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="g. puerta">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t189/p3028/256x256/p3028_t189_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="g. puerta">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t189/p3028/256x256/p3028_t189_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">G. Puerta</div>
-                        <div class="text-[11px] text-neutral-400">ID: 24348713</div>
+                        <div class="font-semibold text-zinc-200 text-xs">G. Puerta</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#24348713</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">13.89M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 57h 36m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">13.89M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">57h 23m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="MED" data-name="guido rodríguez">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t191/p3128/256x256/p3128_t191_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="guido rodríguez">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t191/p3128/256x256/p3128_t191_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Guido Rodríguez</div>
-                        <div class="text-[11px] text-neutral-400">ID: 24633174</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Guido Rodríguez</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#24633174</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">MED</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">23.79M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 63h 7m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">23.79M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">62h 54m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEL" data-name="raúl moro">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t450/p2923/256x256/p2923_t450_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="POR" data-name="d. cárdenas">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t184/p2378/256x256/p2378_t184_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Raúl Moro</div>
-                        <div class="text-[11px] text-neutral-400">ID: 24932969</div>
+                        <div class="font-semibold text-zinc-200 text-xs">D. Cárdenas</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#25061177</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">DEL</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">POR</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">12.75M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 67h 41m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">987.6k €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 44m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="POR" data-name="d. cárdenas">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t184/p2378/256x256/p2378_t184_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="j. vázquez">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t191/p2461/256x256/p2461_t191_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">D. Cárdenas</div>
-                        <div class="text-[11px] text-neutral-400">ID: 25061177</div>
+                        <div class="font-semibold text-zinc-200 text-xs">J. Vázquez</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#25062769</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-amber-500/20 text-amber-300 border-amber-500/30">POR</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">987.6k €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 68h 57m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.99M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 45m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="j. vázquez">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t191/p2461/256x256/p2461_t191_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="DEF" data-name="yoel lago">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/t176/p2206/256x256/p2206_t176_1_001_000.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">J. Vázquez</div>
-                        <div class="text-[11px] text-neutral-400">ID: 25062769</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Yoel Lago</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#25063273</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">DEF</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">1.99M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 68h 57m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.19M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">68h 45m</td>
         </tr>
         
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="DEF" data-name="yoel lago">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="https://assets-fantasy.llt-services.com/players/t176/p2206/256x256/p2206_t176_1_001_000.png" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="MED" data-name="sergio">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="https://assets-fantasy.llt-services.com/players/no-player/no-player-sq_256.png" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">Yoel Lago</div>
-                        <div class="text-[11px] text-neutral-400">ID: 25063273</div>
+                        <div class="font-semibold text-zinc-200 text-xs">Sergio</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#25233098</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border bg-blue-500/20 text-blue-300 border-blue-500/30">DEF</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border bg-zinc-800/90 text-zinc-300 border-zinc-700/60">MED</span>
             </td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span></td>
-            <td class="py-3 px-4 text-right font-semibold text-white">1.19M €</td>
-            <td class="py-3 px-4 text-center"><span class="text-xs text-neutral-400">0 puja(s)</span></td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">en 68h 58m</td>
+            <td class="py-2.5 px-3"><span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span></td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">1.77M €</td>
+            <td class="py-2.5 px-3 text-center"><span class="text-xs text-zinc-400">0</span></td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">71h 55m</td>
         </tr>
         
                         </tbody>
@@ -1060,79 +1014,82 @@
         </section>
 
         <!-- TAB 3: TRENDS -->
-        <section id="tab-trends" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section id="tab-trends" class="tab-content hidden space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Top Gainers -->
-                <div class="glass-card rounded-3xl p-6">
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center justify-between">
-                        <span>🚀 Mayores Subidas del Día</span>
-                        <span class="text-xs text-emerald-400 font-mono">En alza</span>
-                    </h3>
-                    <div class="space-y-3">
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-1.5">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Subidas</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">En alza</span>
+                    </div>
+                    <div class="space-y-2">
                         
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Antonio Sivera</span>
-                    <span class="text-xs text-neutral-400">40.47M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Antonio Sivera</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">40.47M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">+55%</span>
-                    <span class="text-[10px] text-emerald-400 block mt-0.5">+118.5k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+55%</span>
+                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+118.5k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Omar El Hilali</span>
-                    <span class="text-xs text-neutral-400">12.32M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Omar El Hilali</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">12.32M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">+41%</span>
-                    <span class="text-[10px] text-emerald-400 block mt-0.5">+66.7k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+41%</span>
+                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+66.7k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Pierre-Emerick Aubameyang</span>
-                    <span class="text-xs text-neutral-400">60.74M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Pierre-Emerick Aubameyang</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">60.74M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">+33%</span>
-                    <span class="text-[10px] text-emerald-400 block mt-0.5">+894.1k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+33%</span>
+                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+894.1k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Alex Calatrava</span>
-                    <span class="text-xs text-neutral-400">5.82M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Alex Calatrava</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">5.82M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">+32%</span>
-                    <span class="text-[10px] text-emerald-400 block mt-0.5">+-4.2k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+32%</span>
+                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+-4.2k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Pathe Ciss</span>
-                    <span class="text-xs text-neutral-400">18.97M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Pathe Ciss</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">18.97M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">+31%</span>
-                    <span class="text-[10px] text-emerald-400 block mt-0.5">+-35.5k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+31%</span>
+                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+-35.5k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Marc Bernal</span>
-                    <span class="text-xs text-neutral-400">11.03M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Marc Bernal</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">11.03M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">+31%</span>
-                    <span class="text-[10px] text-emerald-400 block mt-0.5">+28.4k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+31%</span>
+                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+28.4k €</span>
                 </div>
             </div>
             
@@ -1140,76 +1097,79 @@
                 </div>
 
                 <!-- Top Losers -->
-                <div class="glass-card rounded-3xl p-6">
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center justify-between">
-                        <span>📉 Mayores Caídas del Día</span>
-                        <span class="text-xs text-rose-400 font-mono">Ventas urgentes</span>
-                    </h3>
-                    <div class="space-y-3">
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-1.5">
+                            <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Caídas</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">Depreciación</span>
+                    </div>
+                    <div class="space-y-2">
                         
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Nico Serrano</span>
-                    <span class="text-xs text-neutral-400">650.7k €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Nico Serrano</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">650.7k €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">-58%</span>
-                    <span class="text-[10px] text-rose-400 block mt-0.5">-2.7k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">-58%</span>
+                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">-2.7k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Arnau Comas</span>
-                    <span class="text-xs text-neutral-400">560.6k €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Arnau Comas</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">560.6k €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">-57%</span>
-                    <span class="text-[10px] text-rose-400 block mt-0.5">-3.0k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">-57%</span>
+                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">-3.0k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Dani Barcia</span>
-                    <span class="text-xs text-neutral-400">887.1k €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Dani Barcia</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">887.1k €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">-57%</span>
-                    <span class="text-[10px] text-rose-400 block mt-0.5">-2.1k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">-57%</span>
+                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">-2.1k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Alex Freeman</span>
-                    <span class="text-xs text-neutral-400">1.67M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Alex Freeman</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">1.67M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">-57%</span>
-                    <span class="text-[10px] text-rose-400 block mt-0.5">1.3k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">-57%</span>
+                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">1.3k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Obed Vargas</span>
-                    <span class="text-xs text-neutral-400">627.1k €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Obed Vargas</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">627.1k €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">-57%</span>
-                    <span class="text-[10px] text-rose-400 block mt-0.5">-2.8k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">-57%</span>
+                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">-2.8k €</span>
                 </div>
             </div>
             
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">Diego Villares</span>
-                    <span class="text-xs text-neutral-400">1.76M €</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">Diego Villares</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">1.76M €</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">-57%</span>
-                    <span class="text-[10px] text-rose-400 block mt-0.5">-9.3k €</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">-57%</span>
+                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">-9.3k €</span>
                 </div>
             </div>
             
@@ -1219,61 +1179,61 @@
         </section>
 
         <!-- TAB 4: SCHEDULED PLAN -->
-        <section id="tab-plan" class="tab-content hidden space-y-6">
+        <section id="tab-plan" class="tab-content hidden space-y-4">
             <div>
-                <h3 class="text-lg font-bold text-white">Objetivos Programados (Sniping a 25s)</h3>
-                <p class="text-xs text-neutral-400">Pujas preparadas para lanzarse exactamente 25 segundos antes del cierre de mercado</p>
+                <h3 class="text-xs uppercase font-bold text-zinc-200">Plan de Sniping de Último Minuto</h3>
+                <p class="text-[11px] text-zinc-500 mt-0.5">Pujas programadas para ejecutarse a 25 segundos del cierre.</p>
             </div>
-            <div class="space-y-3">
+            <div class="space-y-2">
                 
-        <div class="p-6 text-center text-neutral-500 text-sm bg-neutral-900/40 border border-neutral-800/60 rounded-2xl">
-            ✨ No hay pujas pendientes en cola. El agente programará nuevos objetivos en el próximo pase.
+        <div class="p-4 text-center text-zinc-500 text-xs bg-zinc-900/40 border border-zinc-800/60 rounded-lg">
+            No hay pujas pendientes en cola. El agente programará nuevos objetivos en el próximo pase.
         </div>
         
             </div>
 
-            <div class="glass-card rounded-3xl p-6 mt-6">
-                <h4 class="text-base font-bold text-white mb-3">⏰ Rutina Autónoma en la Nube</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-neutral-300">
-                    <div class="bg-neutral-900/60 p-4 rounded-2xl border border-neutral-800">
-                        <span class="font-bold text-emerald-400 block text-sm mb-1">09:00 (Hora España) • Revisión Matinal</span>
-                        Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación estratégica del día.
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 mt-4">
+                <h4 class="text-xs uppercase font-bold text-zinc-300 mb-2.5">Horarios de Automatización</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-400">
+                    <div class="bg-zinc-950/60 p-3 rounded-lg border border-zinc-800/60">
+                        <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">09:00 (Hora España) • Matinal</span>
+                        Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación del día.
                     </div>
-                    <div class="bg-neutral-900/60 p-4 rounded-2xl border border-neutral-800">
-                        <span class="font-bold text-blue-400 block text-sm mb-1">20:15 (Hora España) • Cierre & Alineación</span>
-                        Disparo de pujas de último minuto (+210€ o competitivas), aseguramiento del 11 inicial y actualización web.
+                    <div class="bg-zinc-950/60 p-3 rounded-lg border border-zinc-800/60">
+                        <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">20:15 (Hora España) • Cierre</span>
+                        Disparo de pujas de último minuto (+210€ o competitivas) y confirmación de alineación.
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- TAB 5: TIMELINE / AUDIT -->
-        <section id="tab-history" class="tab-content hidden space-y-6">
+        <section id="tab-history" class="tab-content hidden space-y-4">
             <div>
-                <h3 class="text-lg font-bold text-white">Registro de Actividad y Decisiones</h3>
-                <p class="text-xs text-neutral-400">Historial completo de auditoría con cada acción del agente</p>
+                <h3 class="text-xs uppercase font-bold text-zinc-200">Registro de Actividad</h3>
+                <p class="text-[11px] text-zinc-500 mt-0.5">Historial cronológico de acciones ejecutadas por el bot.</p>
             </div>
-            <div class="space-y-2">
+            <div class="space-y-1.5">
                 
-        <div class="flex items-start space-x-4 p-3.5 bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/80 rounded-2xl transition-colors">
-            <span class="text-xl p-2 bg-neutral-800/80 rounded-xl border border-neutral-700/50">📝</span>
+        <div class="flex items-start space-x-3 p-2.5 bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/80 rounded-lg transition-colors">
+            <span class="p-1.5 bg-zinc-800 rounded border border-zinc-700 text-zinc-300 mt-0.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-white text-sm truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</span>
-                    <span class="text-[11px] text-neutral-500 font-mono">2026-09-01 00:42</span>
+                    <span class="font-medium text-zinc-200 text-xs truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</span>
+                    <span class="text-[10px] text-zinc-500 font-mono">2026-09-01 00:42</span>
                 </div>
-                <p class="text-xs text-neutral-400 mt-0.5 capitalize">Tipo: note</p>
+                <p class="text-[10px] text-zinc-500 font-mono uppercase mt-0.5">Tipo: note</p>
             </div>
         </div>
         
-        <div class="flex items-start space-x-4 p-3.5 bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/80 rounded-2xl transition-colors">
-            <span class="text-xl p-2 bg-neutral-800/80 rounded-xl border border-neutral-700/50">📝</span>
+        <div class="flex items-start space-x-3 p-2.5 bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/80 rounded-lg transition-colors">
+            <span class="p-1.5 bg-zinc-800 rounded border border-zinc-700 text-zinc-300 mt-0.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-white text-sm truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</span>
-                    <span class="text-[11px] text-neutral-500 font-mono">2026-08-31 15:59</span>
+                    <span class="font-medium text-zinc-200 text-xs truncate">🧠 Gemini Manager: Análisis estratégico y decisiones</span>
+                    <span class="text-[10px] text-zinc-500 font-mono">2026-08-31 15:59</span>
                 </div>
-                <p class="text-xs text-neutral-400 mt-0.5 capitalize">Tipo: note</p>
+                <p class="text-[10px] text-zinc-500 font-mono uppercase mt-0.5">Tipo: note</p>
             </div>
         </div>
         
@@ -1281,19 +1241,18 @@
         </section>
 
         <!-- Footer -->
-        <footer class="pt-8 border-t border-neutral-900 text-center text-xs text-neutral-500 font-mono">
-            FantasyBot OS • Powered by Google Gemini Flash Lite (Thinking Pro) • Desplegado en GitHub Pages
+        <footer class="pt-6 border-t border-zinc-800/60 text-center text-[11px] text-zinc-600 font-mono">
+            FantasyBot OS • Gemini 3.5 Flash Lite • GitHub Pages
         </footer>
     </main>
 
-    <!-- Scripts for Interactivity & Chart.js -->
+    <!-- Scripts for Chart.js and Interactivity -->
     <script>
-        // Chart.js Setup
         const ctx = document.getElementById('patrimonyChart').getContext('2d');
-        const labels = ["01/09 02:39", "01/09 02:42"];
-        const moneyData = [63813322, 63813322];
-        const valueData = [162994430, 162994430];
-        const totalData = [226807752, 226807752];
+        const labels = ["01/09 02:39", "01/09 02:42", "01/09 02:55"];
+        const moneyData = [63813322, 63813322, 63813322];
+        const valueData = [162994430, 162994430, 162994430];
+        const totalData = [226807752, 226807752, 226807752];
 
         new Chart(ctx, {
             type: 'line',
@@ -1301,34 +1260,34 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Presupuesto',
+                        label: 'Total Patrimonio',
+                        data: totalData,
+                        borderColor: '#fafafa',
+                        backgroundColor: 'rgba(250, 250, 250, 0.03)',
+                        borderWidth: 1.8,
+                        tension: 0.3,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
+                    },
+                    {
+                        label: 'Caja / Presupuesto',
                         data: moneyData,
                         borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                        borderWidth: 2.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
+                        backgroundColor: 'rgba(16, 185, 129, 0.03)',
+                        borderWidth: 1.5,
+                        tension: 0.3,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
                     },
                     {
                         label: 'Valor Plantilla',
                         data: valueData,
-                        borderColor: '#0a84ff',
-                        backgroundColor: 'rgba(10, 132, 255, 0.05)',
-                        borderWidth: 2.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
-                    },
-                    {
-                        label: 'Total Patrimonio',
-                        data: totalData,
-                        borderColor: '#bf5af2',
-                        backgroundColor: 'rgba(191, 90, 242, 0.05)',
-                        borderWidth: 2.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
+                        borderColor: '#71717a',
+                        backgroundColor: 'rgba(113, 113, 122, 0.03)',
+                        borderWidth: 1.5,
+                        tension: 0.3,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
                     }
                 ]
             },
@@ -1341,8 +1300,8 @@
                         backgroundColor: '#18181b',
                         borderColor: '#27272a',
                         borderWidth: 1,
-                        titleFont: { size: 12, weight: 'bold' },
-                        bodyFont: { size: 12 },
+                        titleFont: { size: 11, family: 'Inter', weight: 'bold' },
+                        bodyFont: { size: 11, family: 'JetBrains Mono' },
                         callbacks: {
                             label: function(context) {
                                 let val = context.raw || 0;
@@ -1353,14 +1312,14 @@
                 },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                        ticks: { color: '#71717a', font: { size: 10 } }
+                        grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                        ticks: { color: '#71717a', font: { size: 9, family: 'JetBrains Mono' } }
                     },
                     y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                        grid: { color: 'rgba(255, 255, 255, 0.03)' },
                         ticks: {
                             color: '#71717a',
-                            font: { size: 10 },
+                            font: { size: 9, family: 'JetBrains Mono' },
                             callback: function(value) {
                                 return (value / 1000000).toFixed(1) + 'M €';
                             }
@@ -1370,22 +1329,20 @@
             }
         });
 
-        // Tab Switching Logic
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('tab-active');
-                el.classList.add('text-neutral-400');
+                el.classList.add('text-zinc-400');
             });
             document.getElementById(tabId).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) {
                 activeBtn.classList.add('tab-active');
-                activeBtn.classList.remove('text-neutral-400');
+                activeBtn.classList.remove('text-zinc-400');
             }
         }
 
-        // Market Filter & Search
         function filterMarket() {
             const search = document.getElementById('marketSearch').value.toLowerCase();
             const pos = document.getElementById('posFilter').value;

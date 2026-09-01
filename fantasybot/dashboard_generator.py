@@ -1,8 +1,11 @@
-"""Apple-Style Dark Mode Dashboard Generator for FantasyBot.
+"""Apple-Style Minimalist Dark Mode Dashboard Generator for FantasyBot.
 
-Generates an ultra-premium, responsive, interactive single-page dashboard
-with Chart.js graphs, full market lists, squad breakdown, Gemini reasoning,
-scheduled plans, and event timelines.
+Features:
+- Clean SVG vector icons (0 emojis).
+- Refined Apple Monochrome / Dark palette (Zinc/Neutral/Emerald minimal accents).
+- Proportionate, compact, high-density layout.
+- Clean date formatting for matchdays (no negative countdowns).
+- Full interactive Chart.js, squad grid, market table with live search and filters.
 """
 
 import json
@@ -36,16 +39,14 @@ def update_history_state(money, value):
             history = []
     
     now_label = datetime.now().strftime("%d/%m %H:%M")
-    # Avoid duplicate snapshots within the same 10 minutes
     if not history or history[-1].get("label") != now_label:
         history.append({
             "label": now_label,
             "timestamp": int(datetime.now().timestamp()),
-            "money": money,
-            "value": value,
+            "money": money or 0,
+            "value": value or 0,
             "total": (money or 0) + (value or 0)
         })
-        # Keep last 50 points
         history = history[-50:]
         try:
             with open(history_file, "w", encoding="utf-8") as f:
@@ -55,8 +56,59 @@ def update_history_state(money, value):
     return history
 
 
+def _format_kickoff(review_report):
+    """Formats matchday info cleanly without raw ISOs or negative countdowns."""
+    md = review_report.get("matchday", {}) if review_report else {}
+    iso = md.get("kickoff")
+    days = md.get("days")
+
+    if not iso:
+        return "Por confirmar", "Próximamente"
+
+    try:
+        dt = datetime.fromisoformat(iso)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        diff_sec = (dt - datetime.now(timezone.utc)).total_seconds()
+
+        months_es = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+        days_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+        
+        date_str = f"{days_es[dt.weekday()]} {dt.day} {months_es[dt.month - 1]} • {dt.strftime('%H:%M')}h"
+
+        if diff_sec < 0:
+            return date_str, "Jornada en curso"
+        elif diff_sec < 86400:
+            hours = int(diff_sec // 3600)
+            return date_str, f"Comienza en {hours}h"
+        else:
+            d = diff_sec / 86400
+            return date_str, f"En {d:.1f} días"
+    except Exception:
+        return "Por confirmar", "Próximamente"
+
+
+# SVG Icons Library (Clean vector icons, 0 emojis)
+ICONS = {
+    "wallet": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>',
+    "shield": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>',
+    "chart": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>',
+    "calendar": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+    "cpu": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>',
+    "users": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>',
+    "market": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>',
+    "clock": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+    "history": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0zM3.055 11H5a7.978 7.978 0 0115.89 0h1.945"/></svg>',
+    "trending_up": '<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>',
+    "trending_down": '<svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>',
+    "target": '<svg class="w-4 h-4 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><circle cx="12" cy="12" r="6" stroke-width="1.8"/><circle cx="12" cy="12" r="2" stroke-width="1.8"/></svg>',
+    "search": '<svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>',
+    "check": '<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+}
+
+
 def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_report, gemini_response, decision, executed, prob_index=None):
-    """Builds the full HTML dashboard string and writes to public/index.html."""
+    """Builds the refined minimalist Apple dark mode HTML dashboard."""
     now = datetime.now()
     now_str = now.strftime("%d/%m/%Y a las %H:%M")
     
@@ -68,21 +120,20 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
     # Save & fetch chart history
     history = update_history_state(money, value)
     if len(history) < 2:
-        # Seed mock previous point if brand new so chart renders a line
         history = [
             {"label": "Inicio", "money": money, "value": value, "total": total_patrimony},
             {"label": now.strftime("%d/%m %H:%M"), "money": money, "value": value, "total": total_patrimony}
         ]
 
-    # Map positions
+    # Map positions (Monochrome with subtle border)
     pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
-    pos_color = {
-        "POR": "bg-amber-500/20 text-amber-300 border-amber-500/30",
-        "DEF": "bg-blue-500/20 text-blue-300 border-blue-500/30",
-        "MED": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-        "DEL": "bg-rose-500/20 text-rose-300 border-rose-500/30",
-        "ENT": "bg-purple-500/20 text-purple-300 border-purple-500/30",
-        "JUG": "bg-gray-500/20 text-gray-300 border-gray-500/30"
+    pos_badge = {
+        "POR": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60",
+        "DEF": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60",
+        "MED": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60",
+        "DEL": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60",
+        "ENT": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60",
+        "JUG": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60"
     }
 
     # Extract Squad
@@ -101,7 +152,6 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         status = pm.get("playerStatus", "ok")
         clause = pt.get("buyoutClause") or (p_val * 1.67)
 
-        # Check probability from prob_index if available
         prob = None
         if prob_index:
             from .matching import match_name
@@ -109,38 +159,38 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             if minfo:
                 prob = minfo.get("prob")
 
-        status_badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Disponible</span>'
+        status_badge = '<span class="inline-flex items-center text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Disponible</span>'
         if status in ("lesionado", "injured"):
-            status_badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">Lesionado</span>'
+            status_badge = '<span class="inline-flex items-center text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Baja / Lesión</span>'
         elif status in ("sancionado", "suspended"):
-            status_badge = '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">Sancionado</span>'
+            status_badge = '<span class="inline-flex items-center text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Sancionado</span>'
 
         squad_cards_html += f"""
-        <div class="group relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-800/80 hover:border-neutral-700 rounded-3xl p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/5">
+        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
             <div class="flex items-start justify-between">
-                <span class="px-2.5 py-1 rounded-xl text-xs font-bold border {pos_color.get(pos_str, pos_color['JUG'])}">{pos_str}</span>
+                <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border {pos_badge.get(pos_str, pos_badge['JUG'])}">{pos_str}</span>
                 {status_badge}
             </div>
-            <div class="flex items-center space-x-4 my-4">
-                <img src="{img}" alt="{p_name}" class="w-16 h-16 rounded-2xl object-cover bg-neutral-800/80 p-1 border border-neutral-700/50 group-hover:scale-105 transition-transform" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
-                <div>
-                    <h4 class="font-bold text-white text-base leading-tight">{p_name}</h4>
-                    <p class="text-xs text-neutral-400 mt-0.5">Cláusula: {_format_money(int(clause))}</p>
-                    <p class="text-xs font-semibold text-emerald-400 mt-1">{_format_money(p_val)}</p>
+            <div class="flex items-center space-x-3 my-3">
+                <img src="{img}" alt="{p_name}" class="w-12 h-12 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+                <div class="min-w-0 flex-1">
+                    <h4 class="font-semibold text-zinc-100 text-sm truncate">{p_name}</h4>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: {_format_money(int(clause))}</p>
+                    <p class="text-xs font-semibold text-zinc-200 mt-0.5">{_format_money(p_val)}</p>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 pt-3 border-t border-neutral-800 text-center text-xs">
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Puntos</span>
-                    <span class="font-bold text-white">{points}</span>
+            <div class="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-zinc-800/60 text-center text-xs">
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Puntos</span>
+                    <span class="font-semibold text-zinc-200 text-xs">{points}</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Media</span>
-                    <span class="font-bold text-white">{avg:.1f}</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Media</span>
+                    <span class="font-semibold text-zinc-200 text-xs">{avg:.1f}</span>
                 </div>
-                <div class="bg-neutral-950/60 rounded-xl p-2">
-                    <span class="text-neutral-500 block text-[10px] uppercase font-bold">Titularidad</span>
-                    <span class="font-bold text-emerald-400">{f"{prob}%" if prob is not None else "100%"}</span>
+                <div class="bg-zinc-950/60 rounded p-1.5">
+                    <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Titular</span>
+                    <span class="font-semibold text-emerald-400 text-xs">{f"{prob}%" if prob is not None else "100%"}</span>
                 </div>
             </div>
         </div>
@@ -156,12 +206,11 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         pos_str = pos_map.get(pos_id, "JUG")
         p_name = pm.get("nickname") or pm.get("name") or "Desconocido"
         sale_price = m.get("salePrice") or pt.get("marketValue") or pm.get("marketValue") or 0
-        market_val = pm.get("marketValue") or sale_price
         mid = m.get("id")
         img = pm.get("images", {}).get("transparent", {}).get("256x256") or "https://assets-fantasy.llt-services.com/players/default.png"
         bids_count = m.get("numberOfBids", 0)
         exp = m.get("expirationDate") or ""
-        time_left_str = "Cierre hoy"
+        time_left_str = "Hoy"
         if exp:
             try:
                 exp_dt = datetime.fromisoformat(exp)
@@ -169,41 +218,41 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                     exp_dt = exp_dt.replace(tzinfo=timezone.utc)
                 diff_sec = (exp_dt - datetime.now(timezone.utc)).total_seconds()
                 if diff_sec > 3600:
-                    time_left_str = f"en {int(diff_sec // 3600)}h {int((diff_sec % 3600) // 60)}m"
+                    time_left_str = f"{int(diff_sec // 3600)}h {int((diff_sec % 3600) // 60)}m"
                 elif diff_sec > 60:
-                    time_left_str = f"en {int(diff_sec // 60)}m"
+                    time_left_str = f"{int(diff_sec // 60)}m"
                 elif diff_sec > 0:
-                    time_left_str = f"en {int(diff_sec)}s"
+                    time_left_str = f"{int(diff_sec)}s"
                 else:
                     time_left_str = "Cerrado"
             except Exception:
                 pass
 
         is_mine = str(m.get("team", {}).get("id")) == tid_str or str(pt.get("teamId")) == tid_str
-        owner_tag = '<span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Tu Equipo</span>' if is_mine else ('<span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-neutral-800 text-neutral-400">Sistema</span>' if m.get("discr") == "marketPlayerLeague" else '<span class="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Rival</span>')
+        owner_tag = '<span class="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Tu Equipo</span>' if is_mine else ('<span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span>' if m.get("discr") == "marketPlayerLeague" else '<span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span>')
 
-        bids_badge = f'<span class="text-xs text-neutral-400">{bids_count} puja(s)</span>'
+        bids_badge = f'<span class="text-xs text-zinc-400">{bids_count}</span>'
         if bids_count > 0:
-            bids_badge = f'<span class="px-2 py-0.5 text-xs font-bold rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30">🔥 {bids_count} puja(s)</span>'
+            bids_badge = f'<span class="text-xs font-semibold text-zinc-100 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">{bids_count} puja(s)</span>'
 
         market_rows_html += f"""
-        <tr class="market-row border-b border-neutral-800/60 hover:bg-neutral-800/40 transition-colors" data-pos="{pos_str}" data-name="{p_name.lower()}">
-            <td class="py-3 px-4">
-                <div class="flex items-center space-x-3">
-                    <img src="{img}" class="w-10 h-10 rounded-xl bg-neutral-800 object-cover border border-neutral-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+        <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="{pos_str}" data-name="{p_name.lower()}">
+            <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2.5">
+                    <img src="{img}" class="w-8 h-8 rounded bg-zinc-800 object-cover border border-zinc-700/50" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                     <div>
-                        <div class="font-bold text-white text-sm">{p_name}</div>
-                        <div class="text-[11px] text-neutral-400">ID: {mid}</div>
+                        <div class="font-semibold text-zinc-200 text-xs">{p_name}</div>
+                        <div class="text-[10px] text-zinc-500 font-mono">#{mid}</div>
                     </div>
                 </div>
             </td>
-            <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-bold border {pos_color.get(pos_str, pos_color['JUG'])}">{pos_str}</span>
+            <td class="py-2.5 px-3">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border {pos_badge.get(pos_str, pos_badge['JUG'])}">{pos_str}</span>
             </td>
-            <td class="py-3 px-4">{owner_tag}</td>
-            <td class="py-3 px-4 text-right font-semibold text-white">{_format_money(sale_price)}</td>
-            <td class="py-3 px-4 text-center">{bids_badge}</td>
-            <td class="py-3 px-4 text-right text-xs text-neutral-400 font-mono">{time_left_str}</td>
+            <td class="py-2.5 px-3">{owner_tag}</td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">{_format_money(sale_price)}</td>
+            <td class="py-2.5 px-3 text-center">{bids_badge}</td>
+            <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">{time_left_str}</td>
         </tr>
         """
 
@@ -217,34 +266,34 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
 
         for u in up_list:
             top_up_html += f"""
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">{u.get('nombre', '').title()}</span>
-                    <span class="text-xs text-neutral-400">{_format_money(u.get('valor', 0))}</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">{u.get('nombre', '').title()}</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">{_format_money(u.get('valor', 0))}</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">+{u.get('tendencia')}%</span>
-                    <span class="text-[10px] text-emerald-400 block mt-0.5">+{_format_money(u.get('aceleracion', 0))}</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+{u.get('tendencia')}%</span>
+                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+{_format_money(u.get('aceleracion', 0))}</span>
                 </div>
             </div>
             """
 
         for d in down_list:
             top_down_html += f"""
-            <div class="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-2xl">
+            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
                 <div>
-                    <span class="font-bold text-white text-sm block">{d.get('nombre', '').title()}</span>
-                    <span class="text-xs text-neutral-400">{_format_money(d.get('valor', 0))}</span>
+                    <span class="font-semibold text-zinc-200 text-xs block">{d.get('nombre', '').title()}</span>
+                    <span class="text-[11px] text-zinc-500 font-mono">{_format_money(d.get('valor', 0))}</span>
                 </div>
                 <div class="text-right">
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">{d.get('tendencia')}%</span>
-                    <span class="text-[10px] text-rose-400 block mt-0.5">{_format_money(d.get('aceleracion', 0))}</span>
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">{d.get('tendencia')}%</span>
+                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">{_format_money(d.get('aceleracion', 0))}</span>
                 </div>
             </div>
             """
     except Exception:
-        top_up_html = "<div class='text-neutral-500 text-xs p-4'>Tendencias no disponibles</div>"
-        top_down_html = "<div class='text-neutral-500 text-xs p-4'>Tendencias no disponibles</div>"
+        top_up_html = "<div class='text-zinc-500 text-xs p-3'>Datos no disponibles</div>"
+        top_down_html = "<div class='text-zinc-500 text-xs p-3'>Datos no disponibles</div>"
 
     # Scheduled Plan / Bid Targets
     bid_plan = state.load_bid_plan()
@@ -255,24 +304,26 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             m_cap = t.get("max_bid", 0)
             p_name = t.get("nombre") or f"Jugador #{m_id}"
             plan_cards_html += f"""
-            <div class="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-4 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold">🎯</div>
+            <div class="bg-zinc-900/70 border border-zinc-800 rounded-lg p-3 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+                        {ICONS['target']}
+                    </div>
                     <div>
-                        <h4 class="font-bold text-white text-sm">{p_name}</h4>
-                        <p class="text-xs text-neutral-400">ID Mercado: {m_id} • Disparo a falta de 25s</p>
+                        <h4 class="font-semibold text-zinc-100 text-xs">{p_name}</h4>
+                        <p class="text-[10px] text-zinc-400 font-mono">ID: {m_id} • Disparo 25s antes de cierre</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="text-xs text-neutral-400 block">Puja Tope</span>
-                    <span class="font-bold text-emerald-400 text-sm">{_format_money(m_cap)}</span>
+                    <span class="text-[10px] text-zinc-500 block uppercase font-mono">Tope</span>
+                    <span class="font-semibold text-emerald-400 text-xs">{_format_money(m_cap)}</span>
                 </div>
             </div>
             """
     else:
         plan_cards_html = """
-        <div class="p-6 text-center text-neutral-500 text-sm bg-neutral-900/40 border border-neutral-800/60 rounded-2xl">
-            ✨ No hay pujas pendientes en cola. El agente programará nuevos objetivos en el próximo pase.
+        <div class="p-4 text-center text-zinc-500 text-xs bg-zinc-900/40 border border-zinc-800/60 rounded-lg">
+            No hay pujas pendientes en cola. El agente programará nuevos objetivos en el próximo pase.
         </div>
         """
 
@@ -283,42 +334,31 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         k = ev.get("kind", "note")
         title = ev.get("title", "")
         ts = ev.get("iso", "")[:16].replace("T", " ")
-        badge_cls = "bg-neutral-800 text-neutral-300"
-        icon = "📝"
-        if k == "bid":
-            badge_cls = "bg-amber-500/20 text-amber-300 border-amber-500/30"
-            icon = "💰"
-        elif k == "lineup":
-            badge_cls = "bg-blue-500/20 text-blue-300 border-blue-500/30"
-            icon = "⚽"
-        elif k == "sell":
-            badge_cls = "bg-rose-500/20 text-rose-300 border-rose-500/30"
-            icon = "🏷️"
-        elif k == "review":
-            badge_cls = "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-            icon = "🔍"
 
         timeline_html += f"""
-        <div class="flex items-start space-x-4 p-3.5 bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/80 rounded-2xl transition-colors">
-            <span class="text-xl p-2 bg-neutral-800/80 rounded-xl border border-neutral-700/50">{icon}</span>
+        <div class="flex items-start space-x-3 p-2.5 bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/80 rounded-lg transition-colors">
+            <span class="p-1.5 bg-zinc-800 rounded border border-zinc-700 text-zinc-300 mt-0.5">{ICONS['clock']}</span>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-white text-sm truncate">{title}</span>
-                    <span class="text-[11px] text-neutral-500 font-mono">{ts}</span>
+                    <span class="font-medium text-zinc-200 text-xs truncate">{title}</span>
+                    <span class="text-[10px] text-zinc-500 font-mono">{ts}</span>
                 </div>
-                <p class="text-xs text-neutral-400 mt-0.5 capitalize">Tipo: {k}</p>
+                <p class="text-[10px] text-zinc-500 font-mono uppercase mt-0.5">Tipo: {k}</p>
             </div>
         </div>
         """
 
-    # Format Gemini Response
-    formatted_gemini = gemini_response.replace("\n", "<br>").replace("### ", "<h3 class='text-base font-bold text-emerald-400 mt-4 mb-1'>").replace("## ", "<h2 class='text-lg font-bold text-white mt-4 mb-2'>").replace("**", "<strong class='text-white'>")
+    # Clean Gemini Response formatting
+    formatted_gemini = (
+        gemini_response
+        .replace("\n", "<br>")
+        .replace("### ", "<h3 class='text-xs uppercase tracking-wider font-bold text-zinc-200 mt-3 mb-1'>")
+        .replace("## ", "<h2 class='text-sm font-semibold text-zinc-100 mt-3 mb-1'>")
+        .replace("**", "<strong class='font-semibold text-zinc-200'>")
+    )
 
-    # Matchday info
-    md = review_report.get("matchday", {}) if review_report else {}
-    kickoff = md.get("kickoff") or "Pendiente de confirmación"
-    days_left = md.get("days")
-    days_text = f"{days_left:.1f} días restantes" if days_left is not None else "Próximamente"
+    # Matchday formatting
+    kickoff_text, countdown_text = _format_kickoff(review_report)
 
     # Chart.js JSON data
     labels_json = json.dumps([h["label"] for h in history])
@@ -326,267 +366,221 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
     value_json = json.dumps([h["value"] for h in history])
     total_json = json.dumps([h["total"] for h in history])
 
-    # Complete HTML Template (Apple Dark Mode Aesthetics)
+    # Minimalist Apple Dark Mode Template
     html = f"""<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FantasyBot OS • Control Center</title>
+    <title>FantasyBot OS • Panel de Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {{
-            darkMode: 'class',
-            theme: {{
-                extend: {{
-                    fontFamily: {{
-                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                    }},
-                    colors: {{
-                        apple: {{
-                            gray: '#1c1c1e',
-                            dark: '#000000',
-                            card: '#121214',
-                            border: '#27272a',
-                            accent: '#10b981',
-                            blue: '#0a84ff',
-                            purple: '#bf5af2',
-                            amber: '#ffd60a',
-                            rose: '#ff453a'
-                        }}
-                    }}
-                }}
-            }}
-        }}
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body {{
-            background-color: #000000;
+            background-color: #09090b;
             color: #f4f4f5;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(10, 132, 255, 0.08) 0px, transparent 50%);
-            background-attachment: fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }}
-        .glass {{
-            background: rgba(18, 18, 20, 0.75);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }}
-        .glass-card {{
-            background: rgba(24, 24, 27, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+        .font-mono {{
+            font-family: 'JetBrains Mono', monospace;
         }}
         .tab-active {{
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.2);
+            background: #27272a;
+            color: #fafafa;
+            border-color: #3f3f46;
         }}
         ::-webkit-scrollbar {{
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }}
         ::-webkit-scrollbar-track {{
             background: #09090b;
         }}
         ::-webkit-scrollbar-thumb {{
             background: #27272a;
-            border-radius: 9999px;
-        }}
-        ::-webkit-scrollbar-thumb:hover {{
-            background: #3f3f46;
+            border-radius: 4px;
         }}
     </style>
 </head>
-<body class="min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-black">
-    <!-- Top Floating Apple Bar -->
-    <nav class="sticky top-4 z-50 max-w-7xl mx-auto px-4">
-        <div class="glass rounded-full px-5 py-3 flex items-center justify-between shadow-2xl">
+<body class="min-h-screen antialiased selection:bg-zinc-800 selection:text-white">
+    <!-- Apple Minimalist Top Header -->
+    <header class="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+                    {ICONS['shield']}
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="font-semibold text-zinc-100 text-sm tracking-tight">{manager_name}</span>
+                    <span class="text-zinc-600 text-xs">•</span>
+                    <span class="text-xs text-zinc-400 font-mono">FantasyBot OS</span>
+                </div>
+            </div>
+
             <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black font-black text-sm shadow-lg shadow-emerald-500/20">
-                    ⚡
+                <div class="flex items-center space-x-1.5 text-xs text-zinc-400 font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Activo (09:00 / 20:15)</span>
                 </div>
-                <div>
-                    <span class="font-extrabold text-white text-sm tracking-tight">{manager_name}</span>
-                    <span class="text-[11px] text-neutral-400 block font-mono">FantasyBot OS • Gemini 3.5 Flash Lite</span>
-                </div>
-            </div>
-
-            <!-- Live Status Indicator -->
-            <div class="hidden md:flex items-center space-x-2 bg-neutral-900/80 border border-neutral-800 px-3.5 py-1.5 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="text-xs font-semibold text-neutral-300">Nube Activa • 09:00 & 20:15</span>
-            </div>
-
-            <!-- Header Action Pill -->
-            <div class="flex items-center space-x-2">
-                <span class="px-3 py-1 rounded-full text-xs font-bold border {('bg-emerald-500/10 text-emerald-400 border-emerald-500/30' if executed else 'bg-blue-500/10 text-blue-400 border-blue-500/30')}">
-                    {'⚡ Ejecución en Vivo' if executed else '🔍 Modo Análisis'}
+                <span class="text-[11px] font-mono px-2 py-0.5 rounded border {('bg-emerald-500/10 text-emerald-400 border-emerald-500/20' if executed else 'bg-zinc-800 text-zinc-400 border-zinc-700')}">
+                    {'Ejecutado' if executed else 'Análisis'}
                 </span>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 pt-8 pb-16 space-y-8">
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
         
-        <!-- Hero Bento Grid -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Card 1: Presupuesto -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
-                    <span>Caja / Presupuesto</span>
-                    <span class="text-emerald-400 text-lg">💰</span>
+        <!-- Metrics Bento Grid -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <!-- Box 1: Presupuesto -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+                    <span>Presupuesto</span>
+                    <span class="text-zinc-400">{ICONS['wallet']}</span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-3xl font-extrabold text-white tracking-tight">{_format_money(money)}</div>
-                    <p class="text-xs text-neutral-400 mt-1">Disponible para compras y flips</p>
+                <div class="mt-1.5">
+                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(money)}</div>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Disponible en caja</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
             </div>
 
-            <!-- Card 2: Valor Plantilla -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
-                    <span>Valor Plantilla</span>
-                    <span class="text-blue-400 text-lg">🛡️</span>
+            <!-- Box 2: Valor Plantilla -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+                    <span>Plantilla</span>
+                    <span class="text-zinc-400">{ICONS['users']}</span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-3xl font-extrabold text-white tracking-tight">{_format_money(value)}</div>
-                    <p class="text-xs text-neutral-400 mt-1">{len(players)} jugadores en nómina</p>
+                <div class="mt-1.5">
+                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(value)}</div>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">{len(players)} jugadores en nómina</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
             </div>
 
-            <!-- Card 3: Patrimonio Total -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
+            <!-- Box 3: Total Club -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Patrimonio Total</span>
-                    <span class="text-purple-400 text-lg">📈</span>
+                    <span class="text-zinc-400">{ICONS['chart']}</span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-3xl font-extrabold text-white tracking-tight">{_format_money(total_patrimony)}</div>
-                    <p class="text-xs text-emerald-400 mt-1">Valor neto de club</p>
+                <div class="mt-1.5">
+                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(total_patrimony)}</div>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Activos netos</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
             </div>
 
-            <!-- Card 4: Próxima Jornada -->
-            <div class="glass-card rounded-3xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-                <div class="flex items-center justify-between text-neutral-400 text-xs font-bold uppercase tracking-wider">
+            <!-- Box 4: Próxima Jornada -->
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
                     <span>Próxima Jornada</span>
-                    <span class="text-amber-400 text-lg">⏱️</span>
+                    <span class="text-zinc-400">{ICONS['calendar']}</span>
                 </div>
-                <div class="mt-3">
-                    <div class="text-lg font-bold text-white truncate">{kickoff}</div>
-                    <p class="text-xs font-bold text-amber-400 mt-1">{days_text}</p>
+                <div class="mt-1.5">
+                    <div class="text-xs font-semibold text-zinc-200 truncate">{kickoff_text}</div>
+                    <p class="text-[11px] text-emerald-400 font-mono mt-0.5 font-medium">{countdown_text}</p>
                 </div>
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
             </div>
         </section>
 
-        <!-- Chart Section: Evolución Patrimonial -->
-        <section class="glass-card rounded-3xl p-6 md:p-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-neutral-800/80 gap-4">
+        <!-- Chart Section: Evolución Financiera -->
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                 <div>
-                    <h2 class="text-xl font-bold text-white tracking-tight">Evolución Financiera del Club</h2>
-                    <p class="text-xs text-neutral-400 mt-0.5">Historial en tiempo real de presupuesto vs valor de plantilla</p>
+                    <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Evolución Financiera</h2>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Historial acumulado de presupuesto y plantilla</p>
                 </div>
-                <div class="flex items-center space-x-4 text-xs font-semibold">
-                    <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span><span class="text-neutral-300">Presupuesto</span></span>
-                    <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-blue-400"></span><span class="text-neutral-300">Valor Plantilla</span></span>
-                    <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-purple-400"></span><span class="text-neutral-300">Total</span></span>
+                <div class="flex items-center space-x-3 text-[11px] font-mono text-zinc-400">
+                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-100"></span><span>Patrimonio</span></span>
+                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Caja</span></span>
+                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-500"></span><span>Plantilla</span></span>
                 </div>
             </div>
-            <div class="h-72 mt-6">
+            <div class="h-56 mt-4">
                 <canvas id="patrimonyChart"></canvas>
             </div>
         </section>
 
-        <!-- AI Brain & Strategy Section -->
-        <section class="relative overflow-hidden rounded-3xl p-6 md:p-8 border border-emerald-500/20 bg-gradient-to-b from-emerald-950/20 to-neutral-900/60 backdrop-blur-2xl shadow-2xl">
-            <div class="flex items-center justify-between pb-6 border-b border-neutral-800">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
-                        🧠
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-extrabold text-white tracking-tight">Informe Táctico de Gemini Flash Lite</h2>
-                        <p class="text-xs text-neutral-400">Thinking Pro (3.072 tokens de razonamiento) • {now_str}</p>
-                    </div>
+        <!-- AI Tactical Brain Analysis -->
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div class="flex items-center space-x-2">
+                    <span class="text-zinc-400">{ICONS['cpu']}</span>
+                    <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Informe Táctico de Gemini</h2>
                 </div>
-                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-mono font-bold">
-                    AI Director
-                </span>
+                <span class="text-[10px] text-zinc-500 font-mono">{now_str}</span>
             </div>
-
-            <!-- Strategy Report Content -->
-            <div class="mt-6 text-sm text-neutral-300 leading-relaxed space-y-3 font-normal">
+            <div class="mt-3 text-xs text-zinc-300 leading-relaxed space-y-2">
                 {formatted_gemini}
             </div>
         </section>
 
-        <!-- Navigation Tabs for Deep Dive -->
-        <div class="flex items-center space-x-2 overflow-x-auto pb-2 border-b border-neutral-800 text-sm font-bold">
-            <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-5 py-2.5 rounded-2xl border border-transparent transition-all">👥 Mi Plantilla ({len(players)})</button>
-            <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">🛒 Mercado Completo ({len(market)})</button>
-            <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">📈 Tendencias & Chollos</button>
-            <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">⏱️ Plan & Automatizaciones</button>
-            <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-5 py-2.5 rounded-2xl text-neutral-400 hover:text-white border border-transparent transition-all">📜 Historial de Acciones</button>
+        <!-- Navigation Tabs -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 border-b border-zinc-800/80 text-xs font-medium">
+            <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5">
+                <span>{ICONS['users']}</span>
+                <span>Plantilla ({len(players)})</span>
+            </button>
+            <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span>{ICONS['market']}</span>
+                <span>Mercado ({len(market)})</span>
+            </button>
+            <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span>{ICONS['chart']}</span>
+                <span>Tendencias</span>
+            </button>
+            <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span>{ICONS['clock']}</span>
+                <span>Plan de Pujas</span>
+            </button>
+            <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <span>{ICONS['history']}</span>
+                <span>Historial</span>
+            </button>
         </div>
 
         <!-- TAB 1: SQUAD -->
-        <section id="tab-squad" class="tab-content space-y-6">
+        <section id="tab-squad" class="tab-content space-y-4">
             <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-bold text-white">Jugadores en Nómina</h3>
-                    <p class="text-xs text-neutral-400">Todos los futbolistas están listados en el mercado para recibir ofertas</p>
-                </div>
-                <div class="text-xs text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-xl font-mono">
-                    Huecos: {', '.join(gaps) if gaps else 'Ninguno'}
-                </div>
+                <span class="text-xs text-zinc-400">Todos los futbolistas están a la venta para recibir ofertas diarias.</span>
+                <span class="text-[11px] text-zinc-500 font-mono">Huecos: {', '.join(gaps) if gaps else 'Ninguno'}</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {squad_cards_html or '<div class="col-span-4 p-8 text-center text-neutral-500">Plantilla vacía</div>'}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {squad_cards_html or '<div class="col-span-4 p-6 text-center text-zinc-500 text-xs">Plantilla vacía</div>'}
             </div>
         </section>
 
-        <!-- TAB 2: FULL MARKET -->
-        <section id="tab-market" class="tab-content hidden space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-white">Mercado de Fichajes de la Liga</h3>
-                    <p class="text-xs text-neutral-400">Jugadores a la venta en tiempo real (Sistema y Rivales)</p>
-                </div>
+        <!-- TAB 2: MARKET -->
+        <section id="tab-market" class="tab-content hidden space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <span class="text-xs text-zinc-400">Listado en tiempo real de jugadores disponibles.</span>
                 <div class="flex items-center space-x-2">
-                    <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-neutral-900 border border-neutral-800 text-white text-xs px-4 py-2 rounded-xl focus:outline-none focus:border-emerald-500 w-48">
-                    <select id="posFilter" onchange="filterMarket()" class="bg-neutral-900 border border-neutral-800 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-emerald-500">
-                        <option value="ALL">Todas las posiciones</option>
-                        <option value="POR">Porteros (POR)</option>
-                        <option value="DEF">Defensas (DEF)</option>
-                        <option value="MED">Centrocampistas (MED)</option>
-                        <option value="DEL">Delanteros (DEL)</option>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">{ICONS['search']}</span>
+                        <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs pl-7 pr-3 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700 w-44">
+                    </div>
+                    <select id="posFilter" onchange="filterMarket()" class="bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700">
+                        <option value="ALL">Todas las pos.</option>
+                        <option value="POR">POR</option>
+                        <option value="DEF">DEF</option>
+                        <option value="MED">MED</option>
+                        <option value="DEL">DEL</option>
                     </select>
                 </div>
             </div>
 
-            <div class="glass-card rounded-3xl overflow-hidden">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm" id="marketTable">
+                    <table class="w-full text-left text-xs" id="marketTable">
                         <thead>
-                            <tr class="text-neutral-400 border-b border-neutral-800 text-xs uppercase font-bold tracking-wider">
-                                <th class="py-3.5 px-4">Jugador</th>
-                                <th class="py-3.5 px-4">Posición</th>
-                                <th class="py-3.5 px-4">Vendedor</th>
-                                <th class="py-3.5 px-4 text-right">Precio Salida</th>
-                                <th class="py-3.5 px-4 text-center">Pujas</th>
-                                <th class="py-3.5 px-4 text-right">Cierre</th>
+                            <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
+                                <th class="py-2.5 px-3">Jugador</th>
+                                <th class="py-2.5 px-3">Pos</th>
+                                <th class="py-2.5 px-3">Origen</th>
+                                <th class="py-2.5 px-3 text-right">Precio Salida</th>
+                                <th class="py-2.5 px-3 text-center">Pujas</th>
+                                <th class="py-2.5 px-3 text-right">Cierre</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -598,26 +592,32 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         </section>
 
         <!-- TAB 3: TRENDS -->
-        <section id="tab-trends" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section id="tab-trends" class="tab-content hidden space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Top Gainers -->
-                <div class="glass-card rounded-3xl p-6">
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center justify-between">
-                        <span>🚀 Mayores Subidas del Día</span>
-                        <span class="text-xs text-emerald-400 font-mono">En alza</span>
-                    </h3>
-                    <div class="space-y-3">
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-1.5">
+                            {ICONS['trending_up']}
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Subidas</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">En alza</span>
+                    </div>
+                    <div class="space-y-2">
                         {top_up_html}
                     </div>
                 </div>
 
                 <!-- Top Losers -->
-                <div class="glass-card rounded-3xl p-6">
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center justify-between">
-                        <span>📉 Mayores Caídas del Día</span>
-                        <span class="text-xs text-rose-400 font-mono">Ventas urgentes</span>
-                    </h3>
-                    <div class="space-y-3">
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-1.5">
+                            {ICONS['trending_down']}
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Caídas</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">Depreciación</span>
+                    </div>
+                    <div class="space-y-2">
                         {top_down_html}
                     </div>
                 </div>
@@ -625,50 +625,49 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         </section>
 
         <!-- TAB 4: SCHEDULED PLAN -->
-        <section id="tab-plan" class="tab-content hidden space-y-6">
+        <section id="tab-plan" class="tab-content hidden space-y-4">
             <div>
-                <h3 class="text-lg font-bold text-white">Objetivos Programados (Sniping a 25s)</h3>
-                <p class="text-xs text-neutral-400">Pujas preparadas para lanzarse exactamente 25 segundos antes del cierre de mercado</p>
+                <h3 class="text-xs uppercase font-bold text-zinc-200">Plan de Sniping de Último Minuto</h3>
+                <p class="text-[11px] text-zinc-500 mt-0.5">Pujas programadas para ejecutarse a 25 segundos del cierre.</p>
             </div>
-            <div class="space-y-3">
+            <div class="space-y-2">
                 {plan_cards_html}
             </div>
 
-            <div class="glass-card rounded-3xl p-6 mt-6">
-                <h4 class="text-base font-bold text-white mb-3">⏰ Rutina Autónoma en la Nube</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-neutral-300">
-                    <div class="bg-neutral-900/60 p-4 rounded-2xl border border-neutral-800">
-                        <span class="font-bold text-emerald-400 block text-sm mb-1">09:00 (Hora España) • Revisión Matinal</span>
-                        Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación estratégica del día.
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 mt-4">
+                <h4 class="text-xs uppercase font-bold text-zinc-300 mb-2.5">Horarios de Automatización</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-400">
+                    <div class="bg-zinc-950/60 p-3 rounded-lg border border-zinc-800/60">
+                        <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">09:00 (Hora España) • Matinal</span>
+                        Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación del día.
                     </div>
-                    <div class="bg-neutral-900/60 p-4 rounded-2xl border border-neutral-800">
-                        <span class="font-bold text-blue-400 block text-sm mb-1">20:15 (Hora España) • Cierre & Alineación</span>
-                        Disparo de pujas de último minuto (+210€ o competitivas), aseguramiento del 11 inicial y actualización web.
+                    <div class="bg-zinc-950/60 p-3 rounded-lg border border-zinc-800/60">
+                        <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">20:15 (Hora España) • Cierre</span>
+                        Disparo de pujas de último minuto (+210€ o competitivas) y confirmación de alineación.
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- TAB 5: TIMELINE / AUDIT -->
-        <section id="tab-history" class="tab-content hidden space-y-6">
+        <section id="tab-history" class="tab-content hidden space-y-4">
             <div>
-                <h3 class="text-lg font-bold text-white">Registro de Actividad y Decisiones</h3>
-                <p class="text-xs text-neutral-400">Historial completo de auditoría con cada acción del agente</p>
+                <h3 class="text-xs uppercase font-bold text-zinc-200">Registro de Actividad</h3>
+                <p class="text-[11px] text-zinc-500 mt-0.5">Historial cronológico de acciones ejecutadas por el bot.</p>
             </div>
-            <div class="space-y-2">
-                {timeline_html or '<div class="p-8 text-center text-neutral-500">Sin eventos registrados</div>'}
+            <div class="space-y-1.5">
+                {timeline_html or '<div class="p-6 text-center text-zinc-500 text-xs">Sin eventos registrados</div>'}
             </div>
         </section>
 
         <!-- Footer -->
-        <footer class="pt-8 border-t border-neutral-900 text-center text-xs text-neutral-500 font-mono">
-            FantasyBot OS • Powered by Google Gemini Flash Lite (Thinking Pro) • Desplegado en GitHub Pages
+        <footer class="pt-6 border-t border-zinc-800/60 text-center text-[11px] text-zinc-600 font-mono">
+            FantasyBot OS • Gemini 3.5 Flash Lite • GitHub Pages
         </footer>
     </main>
 
-    <!-- Scripts for Interactivity & Chart.js -->
+    <!-- Scripts for Chart.js and Interactivity -->
     <script>
-        // Chart.js Setup
         const ctx = document.getElementById('patrimonyChart').getContext('2d');
         const labels = {labels_json};
         const moneyData = {money_json};
@@ -681,34 +680,34 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                 labels: labels,
                 datasets: [
                     {{
-                        label: 'Presupuesto',
+                        label: 'Total Patrimonio',
+                        data: totalData,
+                        borderColor: '#fafafa',
+                        backgroundColor: 'rgba(250, 250, 250, 0.03)',
+                        borderWidth: 1.8,
+                        tension: 0.3,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
+                    }},
+                    {{
+                        label: 'Caja / Presupuesto',
                         data: moneyData,
                         borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                        borderWidth: 2.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
+                        backgroundColor: 'rgba(16, 185, 129, 0.03)',
+                        borderWidth: 1.5,
+                        tension: 0.3,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
                     }},
                     {{
                         label: 'Valor Plantilla',
                         data: valueData,
-                        borderColor: '#0a84ff',
-                        backgroundColor: 'rgba(10, 132, 255, 0.05)',
-                        borderWidth: 2.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
-                    }},
-                    {{
-                        label: 'Total Patrimonio',
-                        data: totalData,
-                        borderColor: '#bf5af2',
-                        backgroundColor: 'rgba(191, 90, 242, 0.05)',
-                        borderWidth: 2.5,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
+                        borderColor: '#71717a',
+                        backgroundColor: 'rgba(113, 113, 122, 0.03)',
+                        borderWidth: 1.5,
+                        tension: 0.3,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
                     }}
                 ]
             }},
@@ -721,8 +720,8 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                         backgroundColor: '#18181b',
                         borderColor: '#27272a',
                         borderWidth: 1,
-                        titleFont: {{ size: 12, weight: 'bold' }},
-                        bodyFont: {{ size: 12 }},
+                        titleFont: {{ size: 11, family: 'Inter', weight: 'bold' }},
+                        bodyFont: {{ size: 11, family: 'JetBrains Mono' }},
                         callbacks: {{
                             label: function(context) {{
                                 let val = context.raw || 0;
@@ -733,14 +732,14 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                 }},
                 scales: {{
                     x: {{
-                        grid: {{ color: 'rgba(255, 255, 255, 0.04)' }},
-                        ticks: {{ color: '#71717a', font: {{ size: 10 }} }}
+                        grid: {{ color: 'rgba(255, 255, 255, 0.03)' }},
+                        ticks: {{ color: '#71717a', font: {{ size: 9, family: 'JetBrains Mono' }} }}
                     }},
                     y: {{
-                        grid: {{ color: 'rgba(255, 255, 255, 0.04)' }},
+                        grid: {{ color: 'rgba(255, 255, 255, 0.03)' }},
                         ticks: {{
                             color: '#71717a',
-                            font: {{ size: 10 }},
+                            font: {{ size: 9, family: 'JetBrains Mono' }},
                             callback: function(value) {{
                                 return (value / 1000000).toFixed(1) + 'M €';
                             }}
@@ -750,22 +749,20 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             }}
         }});
 
-        // Tab Switching Logic
         function switchTab(tabId) {{
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {{
                 el.classList.remove('tab-active');
-                el.classList.add('text-neutral-400');
+                el.classList.add('text-zinc-400');
             }});
             document.getElementById(tabId).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) {{
                 activeBtn.classList.add('tab-active');
-                activeBtn.classList.remove('text-neutral-400');
+                activeBtn.classList.remove('text-zinc-400');
             }}
         }}
 
-        // Market Filter & Search
         function filterMarket() {{
             const search = document.getElementById('marketSearch').value.toLowerCase();
             const pos = document.getElementById('posFilter').value;
@@ -795,4 +792,4 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
     out_file = os.path.join(public_dir, "index.html")
     with open(out_file, "w", encoding="utf-8") as f:
         f.write(html)
-    print(f"\n[OK] Panel Apple Dark Mode generado exitosamente en public/index.html")
+    print(f"\n[OK] Panel Apple Dark Mode Minimalista generado exitosamente en public/index.html")

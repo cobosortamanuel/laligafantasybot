@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: Wednesday, 02 de September de 2026 a las 00:30:04 (Hora España)
+Última actualización: Wednesday, 02 de September de 2026 a las 00:44:05 (Hora España)
 
-Caja sólida de 63.8M. Se han lanzado clausulazos inmediatos por Vlachodimos (POR) y Tenaglia (DEF) para solucionar urgentemente la ausencia de portero y cubrir huecos defensivos antes de la proxima jornada, manteniendo una gestión prudente del presupuesto proyectado.
+Caja reforzada tras aceptar la oferta de venta por Guido Rodríguez (+24M€). Planificado el clausulazo sobre R. Mendoza para cubrir la medular aprovechando la apertura del escudo. Seguimos acumulando patrimonio y controlando el presupuesto proyectado.

@@ -195,21 +195,36 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 "cierre": m.get("expirationDate")
             })
 
-        if is_mine:
-            bids_list = m.get("bids") or m.get("offers") or []
-            for b in bids_list:
-                bid_id = b.get("id") or b.get("bidId") or b.get("offerId")
-                amount = b.get("money") or b.get("offerMoney") or b.get("price") or 0
-                buyer = b.get("user", {}).get("username") or b.get("team", {}).get("teamName") or "Sistema (Mercado)"
-                my_received_offers.append({
-                    "marketId": mid,
-                    "offerId": bid_id,
-                    "jugador": name,
-                    "valor_mercado": price,
-                    "oferta_recibida": amount,
-                    "diferencia_pct": round(((amount - price) / price) * 100, 2) if price else 0,
-                    "comprador": buyer
-                })
+    # Fetch active received offers for all players in squad
+    for p in team.get("players", []):
+        pm = p.get("playerMaster", {})
+        ptid = p.get("playerTeamId")
+        pname = pm.get("nickname") or pm.get("name") or "Desconocido"
+        val = pm.get("marketValue") or 0
+        mid = p.get("playerMarket", {}).get("id")
+        if ptid and p.get("playerMarket"):
+            try:
+                offers = fc.player_offers(lid, ptid)
+                if isinstance(offers, list):
+                    for off in offers:
+                        if off.get("status") == "pending":
+                            off_id = off.get("id")
+                            amt = off.get("money") or 0
+                            diff_pct = round(((amt - val) / val) * 100, 2) if val else 0
+                            buyer = "Sistema (Mercado)" if off.get("isFromMarket") else "Rival"
+                            my_received_offers.append({
+                                "playerTeamId": ptid,
+                                "marketId": mid,
+                                "offerId": off_id,
+                                "jugador": pname,
+                                "valor_mercado": val,
+                                "oferta_recibida": amt,
+                                "diferencia_pct": diff_pct,
+                                "comprador": buyer,
+                                "expiracion": off.get("expirationDate")
+                            })
+            except Exception:
+                pass
 
     # 5. Extract Full Rival Rosters with Buyout Clauses & Shield Status
     rival_clause_targets = []
@@ -506,10 +521,11 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                     m_id = accept_item.get("marketId")
                     off_id = accept_item.get("offerId")
                     money = accept_item.get("cantidad")
+                    ptid = accept_item.get("playerTeamId") or m_id
                     j_name = accept_item.get("jugador", str(m_id))
-                    if m_id and off_id and money:
+                    if (ptid or m_id) and off_id and money:
                         try:
-                            fc.accept_offer(lid, m_id, off_id, int(money))
+                            fc.accept_offer(lid, ptid, off_id, int(money))
                             events.emit("sell", f"Oferta ACEPTADA por {j_name}: {int(money):,} €")
                             print(f"  ✓ Oferta ACEPTADA por {j_name}: {int(money):,} €")
                         except Exception as e:

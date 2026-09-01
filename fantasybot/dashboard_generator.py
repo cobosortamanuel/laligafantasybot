@@ -30,7 +30,7 @@ def _format_money(amount):
 
 
 def update_history_state(money, value):
-    """Persists historical budget and team value snapshots for Chart.js."""
+    """Persists historical daily budget and team value snapshots for Chart.js (strictly 1 point per day)."""
     history_file = os.path.join(config.ROOT, ".state", "chart_history.json")
     os.makedirs(os.path.dirname(history_file), exist_ok=True)
     history = []
@@ -41,21 +41,29 @@ def update_history_state(money, value):
         except Exception:
             history = []
     
-    now_label = datetime.now().strftime("%d/%m %H:%M")
-    if not history or history[-1].get("label") != now_label:
-        history.append({
-            "label": now_label,
-            "timestamp": int(datetime.now().timestamp()),
-            "money": money or 0,
-            "value": value or 0,
-            "total": (money or 0) + (value or 0)
-        })
-        history = history[-50:]
-        try:
-            with open(history_file, "w", encoding="utf-8") as f:
-                json.dump(history, f, indent=2)
-        except Exception:
-            pass
+    today_label = datetime.now().strftime("%d/%m")
+    today_date = datetime.now().strftime("%Y-%m-%d")
+    entry = {
+        "label": today_label,
+        "date": today_date,
+        "timestamp": int(datetime.now().timestamp()),
+        "money": money or 0,
+        "value": value or 0,
+        "total": (money or 0) + (value or 0)
+    }
+
+    # If an entry for today already exists, update today's values; otherwise append a new day
+    if history and (history[-1].get("label") == today_label or history[-1].get("date") == today_date):
+        history[-1] = entry
+    else:
+        history.append(entry)
+        
+    history = history[-90:]  # Keep last 90 daily points
+    try:
+        with open(history_file, "w", encoding="utf-8") as f:
+            json.dump(history, f, indent=2)
+    except Exception:
+        pass
     return history
 
 

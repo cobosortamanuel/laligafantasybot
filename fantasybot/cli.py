@@ -321,7 +321,7 @@ def cmd_agent(args):
 
 def cmd_gemini(args):
     from . import gemini_agent
-    gemini_agent.run_gemini_manager(execute=args.execute)
+    gemini_agent.run_gemini_agent(execute=args.execute)
 
 
 def cmd_sell(args):

@@ -505,3 +505,7 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
 
     except Exception as e:
         print(f"[ERROR] Error al llamar a Gemini: {e}")
+
+
+# Alias for backwards compatibility
+run_gemini_manager = run_gemini_agent

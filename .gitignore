@@ -6,7 +6,8 @@ tokens.json
 
 # Scrape cache and agent state (regenerable)
 .cache/
-.state/
+.state/*
+!.state/chart_history.json
 
 # Python
 __pycache__/

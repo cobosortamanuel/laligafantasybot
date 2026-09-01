@@ -36,7 +36,8 @@ class ValueRefreshedEachPoll(unittest.TestCase):
                 placed["amount"] = amount
                 return {"id": "b1"}
 
-        with mock.patch.object(bidding, "FantasyClient", lambda: FC()):
+        with mock.patch.object(bidding, "FantasyClient", lambda: FC()), \
+             mock.patch.object(bidding.events, "emit", lambda *a, **k: {}):
             bidding.last_minute_bid("L", "m1", max_bid=30_000_000)
         return placed.get("amount")
 

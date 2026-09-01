@@ -46,6 +46,9 @@ jobs:
           echo "GEMINI_API_KEY=$GEMINI_KEY" > .env
 
       - name: Run Gemini Agent (Autonomous Review & Actions)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LALIGA_TOKENS: ${{ secrets.LALIGA_TOKENS }}
         run: |
           python -m fantasybot gemini --execute
 

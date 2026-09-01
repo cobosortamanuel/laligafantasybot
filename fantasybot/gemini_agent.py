@@ -72,6 +72,18 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"
     """Runs the full Gemini AI manager review and execution cycle."""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
+        env_path = os.path.join(config.ROOT, ".env")
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.startswith("GEMINI_API_KEY="):
+                            api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                            break
+            except Exception:
+                pass
+
+    if not api_key:
         print("[ERROR] GEMINI_API_KEY no encontrada en las variables de entorno.")
         return
 

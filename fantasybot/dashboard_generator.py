@@ -791,6 +791,14 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             options: {{
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {{
+                    padding: {{
+                        left: 5,
+                        right: 15,
+                        top: 5,
+                        bottom: 5
+                    }}
+                }},
                 plugins: {{
                     legend: {{ display: false }},
                     tooltip: {{
@@ -817,9 +825,14 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                         ticks: {{
                             color: '#71717a',
                             font: {{ size: 9, family: 'JetBrains Mono' }},
+                            padding: 8,
                             callback: function(value) {{
-                                return (value / 1000000).toFixed(1) + 'M €';
+                                let m = value / 1000000;
+                                return (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)) + 'M €';
                             }}
+                        }},
+                        afterFit: function(axis) {{
+                            axis.width = 65;
                         }}
                     }}
                 }}

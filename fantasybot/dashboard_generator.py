@@ -506,7 +506,7 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-1.5 text-xs text-zinc-400 font-mono">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Activo (09:00 / 20:15)</span>
+                    <span>Activo (17:00 / 22:10)</span>
                 </div>
                 <span class="text-[11px] font-mono px-2 py-0.5 rounded border {('bg-emerald-500/10 text-emerald-400 border-emerald-500/20' if executed else 'bg-zinc-800 text-zinc-400 border-zinc-700')}">
                     {'Ejecutado' if executed else 'Análisis'}
@@ -727,12 +727,12 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                     <h4 class="text-xs uppercase font-bold text-zinc-300 mb-2.5">Horarios de Automatización</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-400">
                         <div class="bg-zinc-950/60 p-3.5 rounded-lg border border-zinc-800/60">
-                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">09:00 (Hora España) • Matinal</span>
+                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">17:00 (Hora España) • Tarde</span>
                             Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación del día.
                         </div>
                         <div class="bg-zinc-950/60 p-3.5 rounded-lg border border-zinc-800/60">
-                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">20:15 (Hora España) • Cierre</span>
-                            Disparo de pujas de último minuto (+210€ o competitivas) y confirmación de alineación.
+                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">22:10 (Hora España) • Cierre</span>
+                            Disparo de pujas de último minuto (+210€ o competitivas) 8 minutos antes del cierre de mercado (22:18).
                         </div>
                     </div>
                 </div>

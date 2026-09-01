@@ -9,6 +9,7 @@ tokens.json
 .state/*
 !.state/chart_history.json
 !.state/reasoning_history.json
+!.state/events.jsonl
 
 # Python
 __pycache__/

@@ -8,6 +8,7 @@ tokens.json
 .cache/
 .state/*
 !.state/chart_history.json
+!.state/reasoning_history.json
 
 # Python
 __pycache__/

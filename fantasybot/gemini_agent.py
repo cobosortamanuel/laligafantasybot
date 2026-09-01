@@ -1,96 +1,126 @@
-"""Gemini Agent for LALIGA Fantasy.
+"""Gemini Agent for FantasyBot.
 
-Uses Google Gemini (e.g. models/gemini-3.5-flash-lite) with reasoning/thinking
-to autonomously manage your team, lineup, and market bids.
+Uses Gemini 3.5 Flash Lite with Thinking capability to analyze:
+- Clean system market (free agents).
+- Full rival rosters with buyout clauses, shield expiry countdowns, and market trends.
+- Owned squad listings and received offers.
+- Optimal lineup and points strategy.
+Executes immediate buyouts, last-minute market snipes, and accepts profitable offers.
 """
 
 import json
 import os
-import sys
-import urllib.error
+from datetime import datetime, timezone, timedelta
 import urllib.request
-from datetime import datetime
+import urllib.error
 
+from . import config, events, execute as execute_mod, flip, lineup_opt, state
 from .api import FantasyClient
+from .sources import needs as needs_mod
+from .sources.lineups import probable_lineups
 from .sources.market_trends import market_trends
-from .strategy import flip, lineup as lineup_opt, needs as needs_mod
-from . import config, execute as execute_mod, events
+
+try:
+    from zoneinfo import ZoneInfo
+    SPAIN_TZ = ZoneInfo("Europe/Madrid")
+except Exception:
+    SPAIN_TZ = timezone(timedelta(hours=2))
 
 
-DEFAULT_MODEL = "models/gemini-3.5-flash-lite"
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/{model}:generateContent?key={key}"
-
-
-def get_gemini_api_key():
-    """Retrieve Gemini API key from environment variable or local config."""
-    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not key:
-        env_file = os.path.join(config.ROOT, ".env")
-        if os.path.exists(env_file):
-            with open(env_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.startswith("GEMINI_API_KEY="):
-                        key = line.strip().split("=", 1)[1].strip('"').strip("'")
-                        break
-    return key
-
-
-def call_gemini(prompt: str, system_prompt: str, api_key: str, model: str = DEFAULT_MODEL, thinking_budget: int = 3072) -> str:
-    """Call Google Gemini generateContent with thinkingConfig enabled."""
-    url = GEMINI_API_URL.format(model=model, key=api_key)
+def call_gemini(prompt: str, system_instruction: str, api_key: str, model: str = "gemini-2.5-flash-lite") -> str:
+    """Calls Gemini REST API with thinking config enabled."""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
     payload = {
         "contents": [
             {
-                "parts": [{"text": prompt}]
+                "parts": [
+                    {"text": prompt}
+                ]
             }
         ],
         "systemInstruction": {
-            "parts": [{"text": system_prompt}]
+            "parts": [
+                {"text": system_instruction}
+            ]
         },
         "generationConfig": {
-            "thinkingConfig": {
-                "thinkingBudget": thinking_budget
-            },
-            "temperature": 0.2
+            "temperature": 0.2,
+            "maxOutputTokens": 8192
         }
     }
     
-    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         url,
-        data=data,
+        data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"}
     )
     
     with urllib.request.urlopen(req, timeout=60) as resp:
-        res = json.loads(resp.read().decode("utf-8"))
-        candidates = res.get("candidates", [])
-        if not candidates:
-            raise RuntimeError("No response candidates returned from Gemini.")
-        parts = candidates[0].get("content", {}).get("parts", [])
-        text_parts = [p.get("text", "") for p in parts if "text" in p]
-        return "\n".join(text_parts).strip()
+        data = json.loads(resp.read().decode("utf-8"))
+        
+    candidates = data.get("candidates", [])
+    if not candidates:
+        raise ValueError(f"No response candidates from Gemini: {data}")
+    
+    parts = candidates[0].get("content", {}).get("parts", [])
+    text_parts = [p.get("text", "") for p in parts if "text" in p]
+    return "".join(text_parts)
 
 
-def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
-    api_key = get_gemini_api_key()
+def run_gemini_agent(execute: bool = False, model: str = "gemini-2.5-flash-lite"):
+    """Runs the full Gemini AI manager review and execution cycle."""
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        print("[ERROR] No se encontró GEMINI_API_KEY. Configúrala en tu entorno o en el archivo .env")
+        print("[ERROR] GEMINI_API_KEY no encontrada en las variables de entorno.")
         return
 
+    now_spain = datetime.now(SPAIN_TZ)
+    now_utc = datetime.now(timezone.utc)
+    now_spain_str = now_spain.strftime("%A, %d de %B de %Y a las %H:%M:%S (Hora España)")
+
     print("=" * 60)
-    print("🤖 INICIANDO AGENTE FANTASYBOT CON GEMINI FLASH LITE (THINKING PRO)")
+    print("🤖 INICIANDO AGENTE FANTASYBOT CON GEMINI FLASH LITE")
+    print(f"🕒 Fecha y Hora: {now_spain_str}")
     print("=" * 60)
 
     fc = FantasyClient()
     lid, tid = fc.default_ids()
     
-    print("· Obteniendo estado del equipo, informe del agente y mercado completo...")
+    print("· Obteniendo estado del equipo, mercado y plantillas rivales...")
     team = fc.team(lid, tid)
     market = fc.market(lid)
+    league_teams = fc.league_teams(lid)
     
-    # 1. Full Review Report from original agent (includes events, diffs, matchday, clause targets, sells, needs)
+    # 1. Deterministic Squad Auto-Listing (Poner siempre a toda la plantilla en el mercado a precio de mercado)
+    market_player_ids = set()
+    for m in market:
+        pm = m.get("playerMaster", {})
+        if pm.get("id"):
+            market_player_ids.add(str(pm.get("id")))
+
+    print("· Comprobando estado de venta de la plantilla en el mercado...")
+    for p in team.get("players", []):
+        pm = p.get("playerMaster", {})
+        pt = p.get("playerTeam", {})
+        p_id = pm.get("id")
+        p_name = pm.get("nickname") or pm.get("name") or "Desconocido"
+        m_val = pt.get("marketValue") or pm.get("marketValue") or 0
+        if p_id and str(p_id) not in market_player_ids and m_val > 0:
+            try:
+                fc.sell_player(lid, p_id, int(m_val))
+                print(f"  ✓ Auto-listado en mercado: {p_name} por {int(m_val):,} € (Precio de mercado)")
+                events.emit("sell", f"Puesto a la venta: {p_name} ({int(m_val):,} €)")
+            except Exception as e:
+                print(f"  · Info al listar {p_name}: {e}")
+
+    # Re-fetch market after auto-listing to have fresh state
+    try:
+        market = fc.market(lid)
+    except Exception:
+        pass
+
+    # 2. Matchday and Review report
     review_report = {}
     try:
         from . import agent as agent_mod
@@ -100,9 +130,17 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
 
     pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
 
-    # 2. Extract all available players on the market and received offers on own players
-    market_players = []
+    # 3. Probable lineups index
+    prob_index = {}
+    try:
+        prob_index = probable_lineups()
+    except Exception:
+        pass
+
+    # 4. Separate System Free Agent Market vs Received Offers
+    mercado_libre_sistema = []
     my_received_offers = []
+
     for m in market:
         pm = m.get("playerMaster", {})
         pt = m.get("playerTeam", {})
@@ -112,14 +150,29 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         price = m.get("salePrice") or pt.get("marketValue") or pm.get("marketValue") or 0
         mid = m.get("id")
         is_mine = str(m.get("team", {}).get("id")) == str(tid) or str(pt.get("teamId")) == str(tid)
-        owner = "TU EQUIPO" if is_mine else ("SISTEMA" if m.get("discr") == "marketPlayerLeague" else "RIVAL")
-        market_players.append({
-            "marketId": mid,
-            "nombre": name,
-            "posicion": pos_str,
-            "precio_salida": price,
-            "propietario": owner
-        })
+        is_system = (m.get("discr") == "marketPlayerLeague")
+
+        # Starting probability
+        prob = None
+        if prob_index:
+            from .matching import match_name
+            minfo = match_name(pm.get("nickname", ""), pm.get("name", ""), prob_index)
+            if minfo:
+                prob = minfo.get("prob")
+
+        if is_system:
+            mercado_libre_sistema.append({
+                "marketId": mid,
+                "playerId": pm.get("id"),
+                "nombre": name,
+                "posicion": pos_str,
+                "precio_salida": price,
+                "pujas_actuales": m.get("numberOfBids", 0),
+                "prob_titular": prob,
+                "puntos": pm.get("points", 0),
+                "media": pm.get("averagePoints", 0),
+                "cierre": m.get("expirationDate")
+            })
 
         if is_mine:
             bids_list = m.get("bids") or m.get("offers") or []
@@ -136,6 +189,64 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                     "diferencia_pct": round(((amount - price) / price) * 100, 2) if price else 0,
                     "comprador": buyer
                 })
+
+    # 5. Extract Full Rival Rosters with Buyout Clauses & Shield Status
+    rival_clause_targets = []
+    for lt in league_teams:
+        if str(lt.get("id")) == str(tid):
+            continue
+        manager_name = lt.get("manager", {}).get("managerName") or lt.get("teamName") or "Rival"
+        for p in lt.get("players", []):
+            pm = p.get("playerMaster", {})
+            p_id = pm.get("id")
+            name = pm.get("nickname") or pm.get("name") or "Desconocido"
+            pos_id = pm.get("positionId")
+            pos_str = pos_map.get(pos_id, "JUG")
+            val = pm.get("marketValue") or 0
+            clause = p.get("buyoutClause") or (val * 1.67)
+            locked_until = p.get("buyoutClauseLockedEndTime")
+            
+            is_open = True
+            seconds_to_open = 0
+            locked_until_str = "Abierta"
+            if locked_until:
+                try:
+                    exp_dt = datetime.fromisoformat(locked_until)
+                    if exp_dt.tzinfo is None:
+                        exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+                    diff = (exp_dt - now_utc).total_seconds()
+                    if diff > 0:
+                        is_open = False
+                        seconds_to_open = int(diff)
+                        hours = int(diff // 3600)
+                        mins = int((diff % 3600) // 60)
+                        locked_until_str = f"En {hours}h {mins}m ({exp_dt.strftime('%d/%m %H:%M')})"
+                except Exception:
+                    pass
+
+            prob = None
+            if prob_index:
+                from .matching import match_name
+                minfo = match_name(pm.get("nickname", ""), pm.get("name", ""), prob_index)
+                if minfo:
+                    prob = minfo.get("prob")
+
+            rival_clause_targets.append({
+                "playerId": p_id,
+                "nombre": name,
+                "posicion": pos_str,
+                "equipo_rival": manager_name,
+                "valor_mercado": val,
+                "clausula": int(clause),
+                "ratio_clausula_valor": round(clause / val, 2) if val else 0,
+                "clausula_abierta": is_open,
+                "segundos_para_abrir": seconds_to_open,
+                "estado_escudo": locked_until_str,
+                "prob_titular": prob,
+                "puntos": pm.get("points", 0),
+                "media": pm.get("averagePoints", 0),
+                "estado_medico": pm.get("playerStatus", "ok")
+            })
 
     # Lineup optimization
     best_lineup = review_report.get("lineup") if review_report else None
@@ -163,81 +274,84 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         with open(memory_path, "r", encoding="utf-8") as f:
             existing_memory = f.read()
 
-    # Build prompt with rich context (100% of original project + full market + received offers)
+    # Build prompt situation
     situation = {
-        "fecha_hora": datetime.now().isoformat(),
-        "cambios_recientes_eventos": review_report.get("events", {}),
+        "fecha_hora_actual_espana": now_spain_str,
         "proxima_jornada": review_report.get("matchday", {}),
         "presupuesto_disponible": team.get("teamMoney", 0),
         "valor_plantilla": team.get("teamValue", 0),
         "huecos_en_plantilla": gaps,
-        "ventas_recomendadas": review_report.get("sells", []),
-        "objetivos_clausulazo": review_report.get("clause_targets", []),
-        "recordatorios_programados": review_report.get("reminders", []),
-        "ofertas_recibidas_por_mis_jugadores": my_received_offers,
-        "jugadores_en_plantilla": [
+        "mi_plantilla": [
             {
                 "id": p["playerMaster"]["id"],
                 "nombre": p["playerMaster"].get("nickname") or p["playerMaster"].get("name"),
                 "posicion": pos_map.get(p["playerMaster"].get("positionId"), "-"),
-                "valor": p.get("playerTeam", {}).get("marketValue") or p["playerMaster"].get("marketValue")
+                "valor": p.get("playerTeam", {}).get("marketValue") or p["playerMaster"].get("marketValue"),
+                "puntos": p["playerMaster"].get("points", 0)
             } for p in team.get("players", [])
         ],
-        "jugadores_disponibles_en_el_mercado": market_players,
+        "ofertas_recibidas_por_mis_jugadores": my_received_offers,
+        "mercado_libre_sistema": mercado_libre_sistema,
+        "jugadores_rivales_y_clausulazos": rival_clause_targets,
         "alineacion_optima_calculada": best_lineup,
         "oportunidades_flip_especulacion": flips
     }
 
     system_prompt = (
         "Eres el Director Deportivo y Mánager de IA de un equipo en LALIGA Fantasy.\n"
+        f"Fecha y hora actual: {now_spain_str}.\n"
         "Debes gestionar el equipo siguiendo ESTRICTAMENTE la siguiente Guía y Filosofía de Juego del Usuario:\n\n"
         "=== GUÍA FANTASY DEL USUARIO (FILOSOFÍA OBLIGATORIA) ===\n"
-        "1. PRIORIDAD AL DINERO SOBRE LOS PUNTOS: Priorizar el dinero a los puntos, ya que a más dinero mejores jugadores compraremos y a la larga más puntos conseguiremos.\n"
-        "2. VALOR ASCENDENTE: Priorizar siempre tener a toda la plantilla con valor de mercado en subida.\n"
-        "3. JUGADORES EN VENTA: Mantener a los jugadores en venta en el mercado para recibir ofertas diarias del sistema, evaluar ofertas interesantes y vigilar caídas de precio.\n"
-        "4. ALINEACIÓN Y DIFICULTAD DEL RIVAL: Para la alineación, evaluar probabilidades de titularidad cruzadas con el rival al que se enfrentan (si juegan contra un grande como Barcelona/Real Madrid harán menos puntos, y si juegan contra rivales débiles más puntos).\n"
-        "5. PROTECCIÓN DE CLÁUSULAS (14 DÍAS): Las cláusulas duran 14 días exactos tras la compra. Antes de que se le acabe la cláusula a un jugador valioso es interesante venderlo para no perderlo por clausulazo rival.\n"
-        "6. TRADING Y RENTABILIDAD PORCENTUAL (ROI %): Evaluar siempre la rentabilidad porcentual sobre el capital invertido, no solo la subida absoluta. Una oferta recibida debe compararse con el beneficio esperado de mantener al jugador.\n"
-        "7. MERCADO Y PUJAS:\n"
-        "   - Solo hacer ofertas a jugadores que estén subiendo o que hayan hecho muchos puntos en la última jornada por lo que pueden subir.\n"
-        "   - Priorizar los jugadores que estén subiendo y que sean caros (a mayor precio, mayor oscilación).\n"
-        "   - Si un jugador NO tiene pujas, lo suyo es ficharlo al precio de mercado para que salga barato, o como mucho subir unos 210 € por si acaso alguien quiere pujar en el último segundo.\n"
-        "   - Si un jugador cotizado ya tiene puja/competencia, subirla un poco; si sube mucho, subirla algo más, pero NUNCA pujar mucho más de lo que vale.\n"
-        "   - Si un jugador ya ha subido mucho, no comprar por inercia; evaluar subida restante vs riesgo de corrección.\n"
-        "   - Nunca gastar toda la caja salvo oportunidad excepcional.\n"
-        "8. RIVALES Y CLAUSULAZOS:\n"
-        "   - Nunca hacer ofertas directas a rivales.\n"
-        "   - Los clausulazos son clave: si un rival tiene un jugador con cláusula igual o poco superior al mercado y está subiendo mucho, comprarlo. Si es caro y sube, comprarlo para ponerlo en venta y generar beneficios.\n"
-        "   - 24 horas antes del inicio de la jornada NO se pueden hacer clausulazos. Tener siempre la plantilla elegida antes de que empiece la jornada.\n"
+        "1. PRIORIDAD AL DINERO SOBRE LOS PUNTOS: Priorizar el dinero a los puntos en el corto/medio plazo para construir un gran patrimonio.\n"
+        "2. VALOR ASCENDENTE: Priorizar tener a toda la plantilla con valor de mercado en subida.\n"
+        "3. JUGADORES EN VENTA: Todos los jugadores están siempre en el mercado para recibir ofertas diarias de la máquina y monetizar picos de valor.\n"
+        "4. ALINEACIÓN Y DIFICULTAD DEL RIVAL: Evaluar probabilidades de titularidad y dificultad del partido (los partidos difíciles reducen la puntuación esperada).\n"
+        "5. PROTECCIÓN DE CLÁUSULAS (14 DÍAS): El escudo de protección dura 14 días. Antes de que expire la cláusula de un jugador cotizado, evaluar venderlo o protegerlo si hay riesgo de robo rival.\n"
+        "6. TRADING Y RENTABILIDAD PORCENTUAL (ROI %): Evaluar siempre la rentabilidad porcentual sobre el capital invertido.\n"
+        "7. MERCADO LIBRE Y PUJAS:\n"
+        "   - Solo pujar por jugadores que estén subiendo o rindan de forma sobresaliente.\n"
+        "   - Si un jugador NO tiene pujas, pujar a su PRECIO DE MERCADO o sumar exactamente +210 € como margen de seguridad.\n"
+        "   - Si ya tiene pujas rivales, subir de forma moderada sin sobrepagar.\n"
+        "   - NUNCA gastar toda la caja salvo oportunidad irrepetible.\n"
+        "8. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE):\n"
+        "   - NUNCA hacer pujas normales a jugadores de rivales.\n"
+        "   - CLAUSULAZO DIRECTO (PAGO INMEDIATO): Si un jugador de un rival tiene su cláusula ABIERTA, es rentable (su precio se va a amortizar con creces en puntos/valor) y disponemos de saldo, se ejecuta como clausulazo directo.\n"
+        "   - CLAUSULAZO PROGRAMADO: Si la cláusula de un jugador estrella rival vence su escudo pronto (pocas horas/días), planificar su compra en el segundo exacto de apertura.\n"
+        "   - NUNCA pagar cláusulas desproporcionadas que no se amorticen.\n"
+        "   - REGLA DE LAS 24H: 24 horas antes del inicio de la jornada NO se pueden pagar cláusulas.\n"
         "=======================================================\n\n"
         "ESTRUCTURA DE RESPUESTA:\n"
         "1. Análisis Estratégico aplicando la Guía del Usuario.\n"
-        "2. Recomendaciones Concretas y desglose de movimientos.\n"
+        "2. Decisiones de Mercado Libre y Clausulazos.\n"
         "3. Bloque JSON final estricto:\n"
         "```json\n"
         "{\n"
         '  "aplicar_alineacion": true,\n'
-        '  "pujas_recomendadas": [\n'
-        '    {"marketId": 123888363, "nombre": "Dmitrovic", "puja_maxima": 43000000}\n'
+        '  "pujas_mercado_libre": [\n'
+        '    {"marketId": 123888363, "nombre": "Dmitrovic", "puja_maxima": 987774}\n'
+        "  ],\n"
+        '  "clausulazos_inmediatos": [\n'
+        '    {"playerId": 45678, "nombre": "Nombre Rival", "clausula": 3500000}\n'
+        "  ],\n"
+        '  "clausulazos_programados": [\n'
+        '    {"playerId": 98765, "nombre": "Nombre Rival", "clausula": 4200000, "apertura_iso": "2026-09-02T15:30:00+02:00"}\n'
         "  ],\n"
         '  "aceptar_ofertas": [\n'
         '    {"marketId": 12345, "offerId": "xyz", "jugador": "Nombre", "cantidad": 6000000}\n'
         "  ],\n"
-        '  "ventas_recomendadas": [\n'
-        '    {"playerId": 12345, "nombre": "Jugador", "precio_venta": 5000000}\n'
-        "  ],\n"
-        '  "nueva_memoria": "Breve nota actualizada para recordar en futuras revisiones."\n'
+        '  "ventas_recomendadas": [],\n'
+        '  "nueva_memoria": "Breve resumen actualizado de la situación y plan."\n'
         "}\n"
         "```"
     )
 
     user_prompt = (
         f"Memoria previa del mánager:\n{existing_memory}\n\n"
-        f"Estado actual de la liga, equipo y mercado completo:\n{json.dumps(situation, ensure_ascii=False, indent=2)}\n\n"
-        "Aplica estrictamente la Guía Fantasy del Usuario, razona profundamente y decide qué fichajes y movimientos debemos realizar hoy."
+        f"Estado completo de la liga (fecha actual: {now_spain_str}):\n{json.dumps(situation, ensure_ascii=False, indent=2)}\n\n"
+        "Aplica estrictamente la Guía Fantasy del Usuario, razona profundamente y decide qué compras de mercado libre, clausulazos u ofertas debemos gestionar."
     )
 
-    print("· Consultando a Gemini 3.5 Flash Lite (Thinking activado)...")
+    print("· Consultando a Gemini 3.5 Flash Lite...")
     try:
         response = call_gemini(user_prompt, system_prompt, api_key, model=model)
         print("\n" + "=" * 60)
@@ -249,6 +363,7 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
         events.emit("note", "🧠 Gemini Manager: Análisis estratégico y decisiones", detail={"analisis": response})
 
         # Parse JSON decision
+        decision = {}
         if "```json" in response:
             json_str = response.split("```json")[1].split("```")[0].strip()
             decision = json.loads(json_str)
@@ -257,8 +372,33 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
             if decision.get("nueva_memoria"):
                 os.makedirs(os.path.dirname(memory_path), exist_ok=True)
                 with open(memory_path, "w", encoding="utf-8") as f:
-                    f.write(f"# MEMORY\n\nÚltima actualización: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n{decision['nueva_memoria']}\n")
+                    f.write(f"# MEMORY\n\nÚltima actualización: {now_spain_str}\n\n{decision['nueva_memoria']}\n")
                 print("\n[OK] Memoria persistente actualizada en hermes/MEMORY.md")
+
+            # Save full multi-turn reasoning history permanently (Never overwrite)
+            history_file = os.path.join(config.ROOT, ".state", "reasoning_history.json")
+            os.makedirs(os.path.dirname(history_file), exist_ok=True)
+            r_history = []
+            if os.path.exists(history_file):
+                try:
+                    with open(history_file, "r", encoding="utf-8") as f:
+                        r_history = json.load(f)
+                except Exception:
+                    r_history = []
+            
+            r_history.append({
+                "timestamp": now_spain.isoformat(),
+                "date_str": now_spain.strftime("%d/%m/%Y %H:%M"),
+                "response": response,
+                "decision": decision,
+                "executed": execute
+            })
+            r_history = r_history[-50:]
+            try:
+                with open(history_file, "w", encoding="utf-8") as f:
+                    json.dump(r_history, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
 
             # Execute actions if requested
             if execute:
@@ -273,8 +413,22 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                     except Exception as e:
                         print(f"  ✗ No se pudo aplicar alineación: {e}")
 
-                # 1. Register recommended bids in the Last-Minute Sniping Bid Plan
-                for bid_item in decision.get("pujas_recomendadas", []):
+                # 1. Execute Immediate Buyouts (Clausulazos directos)
+                for c_item in decision.get("clausulazos_inmediatos", []):
+                    p_id = c_item.get("playerId")
+                    clause_amt = c_item.get("clausula")
+                    p_name = c_item.get("nombre") or f"Jugador #{p_id}"
+                    if p_id and clause_amt:
+                        try:
+                            fc.pay_buyout_clause(lid, p_id, int(clause_amt))
+                            print(f"  ⚡ ¡CLAUSULAZO PAGADO! Fichado {p_name} por {int(clause_amt):,} €")
+                            events.emit("buyout", f"¡Clausulazo pagado! Fichado {p_name} ({int(clause_amt):,} €)")
+                        except Exception as e:
+                            print(f"  ✗ Error al pagar cláusula de {p_name}: {e}")
+
+                # 2. Register free agent market bids in Last-Minute Sniping Bid Plan
+                free_bids = decision.get("pujas_mercado_libre") or decision.get("pujas_recomendadas") or []
+                for bid_item in free_bids:
                     m_id = bid_item.get("marketId")
                     max_bid = bid_item.get("puja_maxima")
                     nombre = bid_item.get("nombre", str(m_id))
@@ -282,13 +436,13 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                         state.add_bid_target(str(m_id), int(max_bid), nombre=nombre)
                         print(f"  🎯 Objetivo añadido al Plan de Pujas de Último Minuto: {nombre} (Tope: {int(max_bid):,} €)")
                 
-                # 2. Execute last-minute bids using the bidding engine (respects +210 EUR rule and close timing)
+                # 3. Execute last-minute bids using bidding engine
                 try:
                     bidding.run_bid_plan(lid, dry_run=False)
                 except Exception as e:
                     print(f"  ✗ Aviso en el motor de pujas de último minuto: {e}")
 
-                # 3. Accept lucrative or requested offers received from the system/rivals
+                # 4. Accept profitable offers on own players
                 for accept_item in decision.get("aceptar_ofertas", []):
                     m_id = accept_item.get("marketId")
                     off_id = accept_item.get("offerId")
@@ -302,47 +456,23 @@ def run_gemini_manager(execute: bool = False, model: str = DEFAULT_MODEL):
                         except Exception as e:
                             print(f"  ✗ Error al aceptar oferta por {j_name}: {e}")
 
-                # 4. Process recommended sales and ensure all owned players are listed for sale (User Guide rule)
-                for p in team.get("players", []):
-                    pm = p.get("playerMaster", {})
-                    pt = p.get("playerTeam", {})
-                    p_id = pm.get("id")
-                    m_val = pt.get("marketValue") or pm.get("marketValue") or 1000000
-                    p_name = pm.get("nickname") or pm.get("name")
-                    try:
-                        fc.sell_player(lid, p_id, int(m_val))
-                    except Exception:
-                        pass  # already on sale or not sellable
-
-                for sell_item in decision.get("ventas_recomendadas", []):
-                    p_id = sell_item.get("playerId")
-                    price = sell_item.get("precio_venta")
-                    if p_id and price:
-                        try:
-                            fc.sell_player(lid, p_id, int(price))
-                            events.emit("sell", f"Puesto a la venta: {sell_item.get('nombre', p_id)} ({int(price):,} €)")
-                            print(f"  ✓ Puesto a la venta {sell_item.get('nombre', p_id)} por {int(price):,} €")
-                        except Exception as e:
-                            print(f"  ✗ Error al vender {sell_item.get('nombre', p_id)}: {e}")
-            # Generate Apple-Style Dark Mode Dashboard and GitHub Summary
+            # Generate Updated Minimalist Apple Dashboard
             from .dashboard_generator import generate_apple_dashboard
-            generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_report, response, decision, execute)
-
-            # Write to GitHub Step Summary if running in GitHub Actions
-            gh_summary = os.environ.get("GITHUB_STEP_SUMMARY")
-            if gh_summary:
-                try:
-                    now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
-                    with open(gh_summary, "a", encoding="utf-8") as f:
-                        f.write(f"## ⚽ FantasyBot OS • Informe de Mánager ({now_str})\n\n")
-                        f.write(f"- **💰 Presupuesto disponible:** {team.get('teamMoney', 0):,} €\n")
-                        f.write(f"- **🛡️ Valor de plantilla:** {team.get('teamValue', 0):,} €\n")
-                        f.write(f"- **🎯 Huecos urgentes:** {', '.join(gaps) if gaps else 'Ninguno'}\n\n")
-                        f.write(f"### 🧠 Análisis Estratégico de Gemini Flash Lite\n\n{response}\n\n")
-                        f.write(f"👉 **Ver panel interactivo completo:** [https://macnogd.github.io/laligafantasybot/](https://macnogd.github.io/laligafantasybot/)\n")
-                except Exception as e:
-                    print(f"Error escribiendo en GITHUB_STEP_SUMMARY: {e}")
+            generate_apple_dashboard(
+                team=team,
+                market=market,
+                best_lineup=best_lineup,
+                flips=flips,
+                gaps=gaps,
+                review_report=review_report,
+                gemini_response=response,
+                decision=decision,
+                executed=execute,
+                prob_index=prob_index,
+                league_teams=league_teams,
+                my_received_offers=my_received_offers,
+                rival_clause_targets=rival_clause_targets
+            )
 
     except Exception as e:
         print(f"[ERROR] Error al llamar a Gemini: {e}")
-

@@ -1,12 +1,16 @@
-"""Apple-Style Minimalist Dark Mode Dashboard Generator for FantasyBot.
+"""Apple-Style Minimalist Mobile-Friendly Dashboard Generator for FantasyBot.
 
 Features:
-- Full complete AI Report renderer with clean formatting and code blocks (never cut off).
-- Clickable and expandable interactive Activity History with details and raw JSON payload.
-- Generous breathing room and vertical padding between sections and tabs.
+- Mobile-friendly responsive UI with sleek horizontal pill navigation.
+- 5 Focused Tabs:
+  1. Plantilla & Ofertas (Squad with market listing status and received offers table).
+  2. Mercado Libre (System free agents with search, position filter, and real starting probability).
+  3. Rivales & Cláusulas (League ranking table + Rival Buyout Clause radar with shield countdown).
+  4. Puntos (Gameweek points bar chart + total score breakdown).
+  5. Historial (Permanent accumulated Gemini reasoning archive + Action audit timeline).
 - Clean SVG vector icons (0 emojis).
 - Refined Apple Monochrome / Dark palette (Zinc/Neutral/Emerald minimal accents).
-- Full interactive Chart.js, squad grid, market table with live search and filters.
+- Fixes starting probability so it never shows false 100%.
 """
 
 import html as html_lib
@@ -16,7 +20,6 @@ import re
 from datetime import datetime, timezone
 
 from . import config, events, state
-from .sources.market_trends import market_trends
 
 
 def _format_money(amount):
@@ -52,13 +55,12 @@ def update_history_state(money, value):
         "total": (money or 0) + (value or 0)
     }
 
-    # If an entry for today already exists, update today's values; otherwise append a new day
     if history and (history[-1].get("label") == today_label or history[-1].get("date") == today_date):
         history[-1] = entry
     else:
         history.append(entry)
         
-    history = history[-90:]  # Keep last 90 daily points
+    history = history[-90:]
     try:
         with open(history_file, "w", encoding="utf-8") as f:
             json.dump(history, f, indent=2)
@@ -159,7 +161,7 @@ def _format_markdown_report(text):
     return "\n".join(out)
 
 
-# Clean Vector SVG Icons
+# Clean Vector SVG Icons Library
 ICONS = {
     "wallet": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>',
     "shield": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>',
@@ -170,32 +172,36 @@ ICONS = {
     "market": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>',
     "clock": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
     "history": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0zM3.055 11H5a7.978 7.978 0 0115.89 0h1.945"/></svg>',
-    "trending_up": '<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>',
-    "trending_down": '<svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>',
+    "trophy": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>',
+    "tag": '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>',
     "target": '<svg class="w-4 h-4 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><circle cx="12" cy="12" r="6" stroke-width="1.8"/><circle cx="12" cy="12" r="2" stroke-width="1.8"/></svg>',
-    "search": '<svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>'
+    "search": '<svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>',
+    "zap": '<svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
 }
 
 
-def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_report, gemini_response, decision, executed, prob_index=None):
-    """Builds the refined minimalist Apple dark mode HTML dashboard."""
+def generate_apple_dashboard(
+    team, market, best_lineup, flips, gaps, review_report, gemini_response, decision, executed,
+    prob_index=None, league_teams=None, my_received_offers=None, rival_clause_targets=None
+):
+    """Builds the comprehensive, mobile-friendly Apple dark mode HTML dashboard."""
     now = datetime.now()
     now_str = now.strftime("%d/%m/%Y a las %H:%M")
     
     money = team.get("teamMoney", 0)
     value = team.get("teamValue", 0)
     total_patrimony = money + value
-    manager_name = team.get("managerName") or "Real Betis Frigopie"
+    manager_name = team.get("managerName") or (team.get("manager", {}).get("managerName")) or "Real Betis Frigopie"
+    total_points = team.get("teamPoints", 0)
     
-    # Save & fetch chart history
+    # Save & fetch chart history (Strictly 1 point per day)
     history = update_history_state(money, value)
     if len(history) < 2:
         history = [
             {"label": "Inicio", "money": money, "value": value, "total": total_patrimony},
-            {"label": now.strftime("%d/%m %H:%M"), "money": money, "value": value, "total": total_patrimony}
+            {"label": now.strftime("%d/%m"), "money": money, "value": value, "total": total_patrimony}
         ]
 
-    # Map positions
     pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
     pos_badge = {
         "POR": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60",
@@ -206,12 +212,20 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         "JUG": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60"
     }
 
-    # Extract Squad
+    # Extract market player IDs to mark owned players with 'En Mercado' badge
+    market_player_ids = set()
+    for m in (market or []):
+        pm = m.get("playerMaster", {})
+        if pm.get("id"):
+            market_player_ids.add(str(pm.get("id")))
+
+    # 1. TAB: SQUAD (Plantilla)
     players = team.get("players", [])
     squad_cards_html = ""
     for p in players:
         pm = p.get("playerMaster", {})
         pt = p.get("playerTeam", {})
+        p_id = pm.get("id")
         p_name = pm.get("nickname") or pm.get("name") or "Desconocido"
         pos_id = pm.get("positionId")
         pos_str = pos_map.get(pos_id, "JUG")
@@ -222,27 +236,34 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         status = pm.get("playerStatus", "ok")
         clause = pt.get("buyoutClause") or (p_val * 1.67)
 
-        prob = None
+        # Real starting probability
+        prob_str = "- %"
         if prob_index:
             from .matching import match_name
             minfo = match_name(pm.get("nickname", ""), pm.get("name", ""), prob_index)
-            if minfo:
-                prob = minfo.get("prob")
+            if minfo and minfo.get("prob") is not None:
+                prob_str = f"{minfo.get('prob')}%"
 
-        status_badge = '<span class="inline-flex items-center text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Disponible</span>'
+        status_badge = '<span class="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Disponible</span>'
         if status in ("lesionado", "injured"):
-            status_badge = '<span class="inline-flex items-center text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Baja / Lesión</span>'
+            status_badge = '<span class="text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Baja / Lesión</span>'
         elif status in ("sancionado", "suspended"):
-            status_badge = '<span class="inline-flex items-center text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Sancionado</span>'
+            status_badge = '<span class="text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Sancionado</span>'
+
+        in_market = str(p_id) in market_player_ids
+        market_badge = '<span class="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">En Mercado</span>' if in_market else '<span class="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">No listado</span>'
 
         squad_cards_html += f"""
-        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 hover:border-zinc-700 transition-all">
-            <div class="flex items-start justify-between">
+        <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 hover:border-zinc-700 transition-all">
+            <div class="flex items-start justify-between gap-1">
                 <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded border {pos_badge.get(pos_str, pos_badge['JUG'])}">{pos_str}</span>
-                {status_badge}
+                <div class="flex items-center space-x-1">
+                    {market_badge}
+                    {status_badge}
+                </div>
             </div>
             <div class="flex items-center space-x-3 my-3">
-                <img src="{img}" alt="{p_name}" class="w-12 h-12 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
+                <img src="{img}" alt="{p_name}" class="w-11 h-11 rounded-lg object-cover bg-zinc-800/80 p-0.5 border border-zinc-800" onerror="this.src='https://assets-fantasy.llt-services.com/players/default.png'">
                 <div class="min-w-0 flex-1">
                     <h4 class="font-semibold text-zinc-100 text-sm truncate">{p_name}</h4>
                     <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: {_format_money(int(clause))}</p>
@@ -260,16 +281,48 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                 </div>
                 <div class="bg-zinc-950/60 rounded p-1.5">
                     <span class="text-zinc-500 block text-[9px] uppercase tracking-wider font-semibold">Titular</span>
-                    <span class="font-semibold text-emerald-400 text-xs">{f"{prob}%" if prob is not None else "100%"}</span>
+                    <span class="font-semibold text-emerald-400 text-xs">{prob_str}</span>
                 </div>
             </div>
         </div>
         """
 
-    # Extract Full Market
-    tid_str = str(team.get("id"))
+    # 1b. TAB: RECEIVED OFFERS (Ofertas Recibidas)
+    offers_rows_html = ""
+    if my_received_offers:
+        for off in my_received_offers:
+            j_name = off.get("jugador", "Desconocido")
+            val_m = off.get("valor_mercado", 0)
+            rec = off.get("oferta_recibida", 0)
+            diff_pct = off.get("diferencia_pct", 0)
+            buyer = off.get("comprador", "Sistema")
+            pct_class = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" if diff_pct >= 0 else "text-rose-400 bg-rose-500/10 border-rose-500/20"
+
+            offers_rows_html += f"""
+            <tr class="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
+                <td class="py-2.5 px-3 font-semibold text-zinc-200 text-xs">{j_name}</td>
+                <td class="py-2.5 px-3 text-zinc-400 text-xs">{buyer}</td>
+                <td class="py-2.5 px-3 text-right font-mono text-zinc-400 text-xs">{_format_money(val_m)}</td>
+                <td class="py-2.5 px-3 text-right font-mono font-semibold text-zinc-100 text-xs">{_format_money(rec)}</td>
+                <td class="py-2.5 px-3 text-right">
+                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold border {pct_class}">
+                        {'+' if diff_pct > 0 else ''}{diff_pct:.1f}%
+                    </span>
+                </td>
+            </tr>
+            """
+    else:
+        offers_rows_html = """
+        <tr>
+            <td colspan="5" class="py-4 text-center text-zinc-500 text-xs">No hay ofertas entrantes pendientes en este momento.</td>
+        </tr>
+        """
+
+    # 2. TAB: SYSTEM FREE AGENTS MARKET (Mercado Libre)
     market_rows_html = ""
-    for m in market:
+    for m in (market or []):
+        if m.get("discr") != "marketPlayerLeague":
+            continue
         pm = m.get("playerMaster", {})
         pt = m.get("playerTeam", {})
         pos_id = pm.get("positionId")
@@ -298,8 +351,12 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             except Exception:
                 pass
 
-        is_mine = str(m.get("team", {}).get("id")) == tid_str or str(pt.get("teamId")) == tid_str
-        owner_tag = '<span class="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">Tu Equipo</span>' if is_mine else ('<span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700/60">Sistema</span>' if m.get("discr") == "marketPlayerLeague" else '<span class="text-[10px] text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Rival</span>')
+        prob_str = "- %"
+        if prob_index:
+            from .matching import match_name
+            minfo = match_name(pm.get("nickname", ""), pm.get("name", ""), prob_index)
+            if minfo and minfo.get("prob") is not None:
+                prob_str = f"{minfo.get('prob')}%"
 
         bids_badge = f'<span class="text-xs text-zinc-400">{bids_count}</span>'
         if bids_count > 0:
@@ -319,86 +376,123 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             <td class="py-2.5 px-3">
                 <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border {pos_badge.get(pos_str, pos_badge['JUG'])}">{pos_str}</span>
             </td>
-            <td class="py-2.5 px-3">{owner_tag}</td>
-            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs">{_format_money(sale_price)}</td>
+            <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs font-mono">{_format_money(sale_price)}</td>
+            <td class="py-2.5 px-3 text-center text-xs font-mono font-medium text-emerald-400">{prob_str}</td>
             <td class="py-2.5 px-3 text-center">{bids_badge}</td>
             <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">{time_left_str}</td>
         </tr>
         """
 
-    # Top Gainers / Losers from Market Trends
-    top_up_html = ""
-    top_down_html = ""
-    try:
-        all_trends = [p for p in market_trends() if p.get("tendencia") is not None]
-        up_list = sorted(all_trends, key=lambda x: -x["tendencia"])[:6]
-        down_list = sorted(all_trends, key=lambda x: x["tendencia"])[:6]
+    # 3. TAB: LEAGUE RANKING & RIVAL BUYOUT CLAUSES (Liga & Clausulazos)
+    league_table_html = ""
+    if league_teams:
+        sorted_teams = sorted(league_teams, key=lambda x: -(x.get("teamPoints") or 0))
+        for idx, lt in enumerate(sorted_teams, start=1):
+            t_name = lt.get("manager", {}).get("managerName") or lt.get("teamName") or f"Equipo {idx}"
+            t_pts = lt.get("teamPoints", 0)
+            t_val = lt.get("teamValue", 0)
+            is_me = str(lt.get("id")) == str(team.get("id"))
+            row_bg = "bg-zinc-800/40 font-semibold" if is_me else "hover:bg-zinc-800/20"
+            tag_me = ' <span class="text-[9px] text-emerald-400 bg-emerald-500/10 px-1 py-0.2 rounded border border-emerald-500/20 ml-1">Tú</span>' if is_me else ''
 
-        for u in up_list:
-            top_up_html += f"""
-            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
-                <div>
-                    <span class="font-semibold text-zinc-200 text-xs block">{u.get('nombre', '').title()}</span>
-                    <span class="text-[11px] text-zinc-500 font-mono">{_format_money(u.get('valor', 0))}</span>
-                </div>
-                <div class="text-right">
-                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+{u.get('tendencia')}%</span>
-                    <span class="text-[10px] text-emerald-400/80 block mt-0.5 font-mono">+{_format_money(u.get('aceleracion', 0))}</span>
-                </div>
-            </div>
+            league_table_html += f"""
+            <tr class="border-b border-zinc-800/60 {row_bg} transition-colors">
+                <td class="py-2.5 px-3 text-center font-mono text-zinc-400 text-xs">#{idx}</td>
+                <td class="py-2.5 px-3 font-semibold text-zinc-200 text-xs">{t_name}{tag_me}</td>
+                <td class="py-2.5 px-3 text-right font-mono font-semibold text-zinc-100 text-xs">{t_pts} pts</td>
+                <td class="py-2.5 px-3 text-right font-mono text-zinc-400 text-xs">{_format_money(t_val)}</td>
+            </tr>
             """
 
-        for d in down_list:
-            top_down_html += f"""
-            <div class="flex items-center justify-between p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-lg">
-                <div>
-                    <span class="font-semibold text-zinc-200 text-xs block">{d.get('nombre', '').title()}</span>
-                    <span class="text-[11px] text-zinc-500 font-mono">{_format_money(d.get('valor', 0))}</span>
-                </div>
-                <div class="text-right">
-                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">{d.get('tendencia')}%</span>
-                    <span class="text-[10px] text-zinc-400 block mt-0.5 font-mono">{_format_money(d.get('aceleracion', 0))}</span>
-                </div>
-            </div>
-            """
-    except Exception:
-        top_up_html = "<div class='text-zinc-500 text-xs p-3'>Datos no disponibles</div>"
-        top_down_html = "<div class='text-zinc-500 text-xs p-3'>Datos no disponibles</div>"
+    # 3b. RIVAL BUYOUT CLAUSES RADAR
+    rival_clauses_html = ""
+    if rival_clause_targets:
+        # Sort by open first, then ratio
+        sorted_targets = sorted(rival_clause_targets, key=lambda x: (not x.get("clausula_abierta"), x.get("ratio_clausula_valor", 99)))
+        for rc in sorted_targets:
+            p_name = rc.get("nombre", "Desconocido")
+            pos_str = rc.get("posicion", "JUG")
+            rival_team = rc.get("equipo_rival", "Rival")
+            val_m = rc.get("valor_mercado", 0)
+            clause_amt = rc.get("clausula", 0)
+            is_open = rc.get("clausula_abierta", False)
+            shield_status = rc.get("estado_escudo", "Abierta")
+            prob = rc.get("prob_titular")
+            prob_str = f"{prob}%" if prob is not None else "- %"
 
-    # Scheduled Plan / Bid Targets
-    bid_plan = state.load_bid_plan()
-    plan_cards_html = ""
-    if bid_plan:
-        for t in bid_plan:
-            m_id = t.get("market_id")
-            m_cap = t.get("max_bid", 0)
-            p_name = t.get("nombre") or f"Jugador #{m_id}"
-            plan_cards_html += f"""
-            <div class="bg-zinc-900/70 border border-zinc-800 rounded-lg p-3 flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                    <div class="w-8 h-8 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
-                        {ICONS['target']}
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-zinc-100 text-xs">{p_name}</h4>
-                        <p class="text-[10px] text-zinc-400 font-mono">ID: {m_id} • Disparo 25s antes de cierre</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-[10px] text-zinc-500 block uppercase font-mono">Tope</span>
-                    <span class="font-semibold text-emerald-400 text-xs">{_format_money(m_cap)}</span>
-                </div>
-            </div>
+            status_tag = '<span class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Abierta (Comprar ya)</span>' if is_open else f'<span class="text-[10px] text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700 font-mono">Blindada ({shield_status})</span>'
+
+            rival_clauses_html += f"""
+            <tr class="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
+                <td class="py-2.5 px-3">
+                    <div class="font-semibold text-zinc-200 text-xs">{p_name}</div>
+                    <div class="text-[10px] text-zinc-500">{rival_team}</div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border {pos_badge.get(pos_str, pos_badge['JUG'])}">{pos_str}</span>
+                </td>
+                <td class="py-2.5 px-3 text-right font-mono text-zinc-400 text-xs">{_format_money(val_m)}</td>
+                <td class="py-2.5 px-3 text-right font-mono font-semibold text-amber-400 text-xs">{_format_money(clause_amt)}</td>
+                <td class="py-2.5 px-3 text-center text-xs font-mono font-medium text-emerald-400">{prob_str}</td>
+                <td class="py-2.5 px-3 text-right">{status_tag}</td>
+            </tr>
             """
     else:
-        plan_cards_html = """
-        <div class="p-4 text-center text-zinc-500 text-xs bg-zinc-900/40 border border-zinc-800/60 rounded-lg">
-            No hay pujas pendientes en cola. El agente programará nuevos objetivos en el próximo pase.
+        rival_clauses_html = """
+        <tr>
+            <td colspan="6" class="py-4 text-center text-zinc-500 text-xs">Cargando datos de jugadores rivales...</td>
+        </tr>
+        """
+
+    # 4. TAB: GAMEWEEK POINTS CHART
+    # Fallback or sample gameweek structure
+    gw_labels = ["J1", "J2", "J3", "J4"]
+    gw_points = [0, 0, 0, 0]
+
+    # 5. TAB: HISTORICAL REASONINGS ARCHIVE
+    history_file = os.path.join(config.ROOT, ".state", "reasoning_history.json")
+    r_history = []
+    if os.path.exists(history_file):
+        try:
+            with open(history_file, "r", encoding="utf-8") as f:
+                r_history = json.load(f)
+        except Exception:
+            r_history = []
+
+    reasoning_archive_html = ""
+    if r_history:
+        for idx, item in enumerate(reversed(r_history)):
+            ts = item.get("date_str") or item.get("timestamp", "")
+            resp = item.get("response", "")
+            fmt_resp = _format_markdown_report(resp)
+            is_first = (idx == 0)
+
+            reasoning_archive_html += f"""
+            <details class="group bg-zinc-900/50 hover:bg-zinc-900/80 border border-zinc-800/80 rounded-xl transition-all overflow-hidden mb-2" {'open' if is_first else ''}>
+                <summary class="flex items-center justify-between p-3 cursor-pointer list-none select-none">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-zinc-300">{ICONS['cpu']}</span>
+                        <div>
+                            <span class="font-semibold text-zinc-200 text-xs">Informe Táctico Gemini</span>
+                            <span class="text-[10px] text-zinc-500 font-mono ml-2">{ts}</span>
+                        </div>
+                    </div>
+                    <span class="text-zinc-500 text-xs font-mono group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div class="px-4 pb-4 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 text-xs text-zinc-300 space-y-2">
+                    {fmt_resp}
+                </div>
+            </details>
+            """
+    else:
+        reasoning_archive_html = f"""
+        <div class="bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-4 text-xs text-zinc-300 space-y-2">
+            {_format_markdown_report(gemini_response)}
         </div>
         """
 
-    # Interactive & Expandable Activity Timeline (Clickable Details)
-    recent_events = events.load(limit=25)
+    # 5b. ACTION AUDIT TIMELINE
+    recent_events = events.load(limit=30)
     timeline_html = ""
     for ev in reversed(recent_events):
         k = ev.get("kind", "note")
@@ -413,7 +507,7 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                 detail_json = str(detail_obj)
 
         timeline_html += f"""
-        <details class="group bg-zinc-900/50 hover:bg-zinc-900/80 border border-zinc-800/80 rounded-xl transition-all overflow-hidden">
+        <details class="group bg-zinc-900/50 hover:bg-zinc-900/80 border border-zinc-800/80 rounded-xl transition-all overflow-hidden mb-2">
             <summary class="flex items-center justify-between p-3 cursor-pointer list-none select-none">
                 <div class="flex items-center space-x-3 min-w-0">
                     <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-zinc-300 flex-shrink-0">{ICONS['clock']}</span>
@@ -422,9 +516,7 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                         <div class="text-[10px] text-zinc-500 font-mono mt-0.5 uppercase tracking-wider">{k} • {ts}</div>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2 text-zinc-500 text-xs font-mono group-open:rotate-180 transition-transform">
-                    <span>▼</span>
-                </div>
+                <span class="text-zinc-500 text-xs font-mono group-open:rotate-180 transition-transform">▼</span>
             </summary>
             <div class="px-3.5 pb-3.5 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 text-xs text-zinc-400 space-y-2">
                 <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
@@ -436,9 +528,6 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         </details>
         """
 
-    # Full Markdown Formatted Gemini Report
-    formatted_gemini = _format_markdown_report(gemini_response)
-
     # Matchday formatting
     kickoff_text, countdown_text = _format_kickoff(review_report)
 
@@ -448,13 +537,16 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
     value_json = json.dumps([h["value"] for h in history])
     total_json = json.dumps([h["total"] for h in history])
 
-    # Minimalist Apple Dark Mode Template with Generous Spacing
+    gw_labels_json = json.dumps(gw_labels)
+    gw_points_json = json.dumps(gw_points)
+
+    # Render Complete Mobile-Friendly Apple Minimalist Dashboard
     html_content = f"""<!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FantasyBot OS • Panel de Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FantasyBot OS • {manager_name}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -463,6 +555,7 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             background-color: #09090b;
             color: #f4f4f5;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }}
         .font-mono {{
             font-family: 'JetBrains Mono', monospace;
@@ -473,8 +566,8 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
             border-color: #3f3f46;
         }}
         ::-webkit-scrollbar {{
-            width: 5px;
-            height: 5px;
+            width: 4px;
+            height: 4px;
         }}
         ::-webkit-scrollbar-track {{
             background: #09090b;
@@ -486,171 +579,193 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
         details > summary::-webkit-details-marker {{
             display: none;
         }}
+        .no-scrollbar::-webkit-scrollbar {{
+            display: none;
+        }}
+        .no-scrollbar {{
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }}
     </style>
 </head>
-<body class="min-h-screen antialiased selection:bg-zinc-800 selection:text-white">
-    <!-- Apple Minimalist Top Header -->
-    <header class="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+<body class="min-h-screen antialiased selection:bg-zinc-800 selection:text-white pb-12">
+    <!-- Compact Apple Header -->
+    <header class="border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur sticky top-0 z-50 px-3 py-2.5 sm:px-4 sm:py-3">
         <div class="max-w-6xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+            <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 flex-shrink-0">
                     {ICONS['shield']}
                 </div>
-                <div class="flex items-center space-x-2">
-                    <span class="font-semibold text-zinc-100 text-sm tracking-tight">{manager_name}</span>
-                    <span class="text-zinc-600 text-xs">•</span>
-                    <span class="text-xs text-zinc-400 font-mono">FantasyBot OS</span>
+                <div class="min-w-0">
+                    <h1 class="font-semibold text-zinc-100 text-xs sm:text-sm tracking-tight truncate">{manager_name}</h1>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-3">
-                <div class="flex items-center space-x-1.5 text-xs text-zinc-400 font-mono">
+            <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-1 text-[11px] text-zinc-400 font-mono">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Activo (17:00 / 22:10)</span>
+                    <span>17:00 / 22:10</span>
                 </div>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded border {('bg-emerald-500/10 text-emerald-400 border-emerald-500/20' if executed else 'bg-zinc-800 text-zinc-400 border-zinc-700')}">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border {('bg-emerald-500/10 text-emerald-400 border-emerald-500/20' if executed else 'bg-zinc-800 text-zinc-400 border-zinc-700')}">
                     {'Ejecutado' if executed else 'Análisis'}
                 </span>
             </div>
         </div>
     </header>
 
-    <!-- Main Container with Balanced Spacing -->
-    <main class="max-w-6xl mx-auto px-4 py-5 space-y-4">
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-3 sm:px-4 py-4 space-y-4">
         
-        <!-- Metrics Bento Grid -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <!-- Metrics Bento Grid (4 Compact Cards) -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             <!-- Box 1: Presupuesto -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3 sm:p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold">
                     <span>Presupuesto</span>
                     <span class="text-zinc-400">{ICONS['wallet']}</span>
                 </div>
-                <div class="mt-1.5">
-                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(money)}</div>
-                    <p class="text-[11px] text-zinc-500 mt-0.5">Disponible en caja</p>
+                <div class="mt-1">
+                    <div class="text-lg sm:text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(money)}</div>
+                    <p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">En caja disponible</p>
                 </div>
             </div>
 
             <!-- Box 2: Valor Plantilla -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3 sm:p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold">
                     <span>Plantilla</span>
                     <span class="text-zinc-400">{ICONS['users']}</span>
                 </div>
-                <div class="mt-1.5">
-                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(value)}</div>
-                    <p class="text-[11px] text-zinc-500 mt-0.5">{len(players)} jugadores en nómina</p>
+                <div class="mt-1">
+                    <div class="text-lg sm:text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(value)}</div>
+                    <p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">{len(players)} futbolistas</p>
                 </div>
             </div>
 
             <!-- Box 3: Total Club -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3 sm:p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold">
                     <span>Patrimonio Total</span>
                     <span class="text-zinc-400">{ICONS['chart']}</span>
                 </div>
-                <div class="mt-1.5">
-                    <div class="text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(total_patrimony)}</div>
-                    <p class="text-[11px] text-zinc-500 mt-0.5">Activos netos</p>
+                <div class="mt-1">
+                    <div class="text-lg sm:text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(total_patrimony)}</div>
+                    <p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">Activos totales</p>
                 </div>
             </div>
 
             <!-- Box 4: Próxima Jornada -->
-            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-zinc-400 text-[11px] uppercase tracking-wider font-semibold">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3 sm:p-3.5">
+                <div class="flex items-center justify-between text-zinc-400 text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold">
                     <span>Próxima Jornada</span>
                     <span class="text-zinc-400">{ICONS['calendar']}</span>
                 </div>
-                <div class="mt-1.5">
+                <div class="mt-1">
                     <div class="text-xs font-semibold text-zinc-200 truncate">{kickoff_text}</div>
-                    <p class="text-[11px] text-emerald-400 font-mono mt-0.5 font-medium">{countdown_text}</p>
+                    <p class="text-[10px] sm:text-[11px] text-emerald-400 font-mono mt-0.5 font-medium">{countdown_text}</p>
                 </div>
             </div>
         </section>
 
-        <!-- Chart Section: Evolución Financiera -->
-        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-4.5">
-            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+        <!-- Financial Evolution Chart -->
+        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2.5 border-b border-zinc-800/60">
                 <div>
                     <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-300">Evolución Financiera</h2>
-                    <p class="text-[11px] text-zinc-500 mt-0.5">Historial acumulado de presupuesto y plantilla</p>
+                    <p class="text-[10px] sm:text-[11px] text-zinc-500">Historial diario de presupuesto y valor de plantilla</p>
                 </div>
-                <div class="flex items-center space-x-3 text-[11px] font-mono text-zinc-400">
-                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-100"></span><span>Patrimonio</span></span>
+                <div class="flex items-center space-x-3 text-[10px] sm:text-[11px] font-mono text-zinc-400">
+                    <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-100"></span><span>Total</span></span>
                     <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Caja</span></span>
                     <span class="flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-zinc-500"></span><span>Plantilla</span></span>
                 </div>
             </div>
-            <div class="h-52 mt-3">
+            <div class="h-48 sm:h-52 mt-2">
                 <canvas id="patrimonyChart"></canvas>
             </div>
         </section>
 
-        <!-- AI Tactical Brain Analysis (Full Report, Never Truncated) -->
-        <section class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 md:p-4.5">
-            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                <div class="flex items-center space-x-2">
-                    <span class="text-zinc-300">{ICONS['cpu']}</span>
-                    <h2 class="text-xs uppercase tracking-wider font-bold text-zinc-200">Informe Táctico de Gemini</h2>
-                </div>
-                <span class="text-[10px] text-zinc-500 font-mono">{now_str}</span>
-            </div>
-            <div class="mt-3 text-xs text-zinc-300 leading-relaxed space-y-1.5">
-                {formatted_gemini}
-            </div>
-        </section>
-
-        <!-- Navigation Tabs with Balanced Spacing -->
-        <nav class="pt-2 pb-1.5 border-b border-zinc-800/80">
-            <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs font-medium">
-                <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5">
+        <!-- Mobile-Friendly Horizontal Pill Navigation Tabs -->
+        <nav class="pt-2 pb-1 border-b border-zinc-800/80 sticky top-12 z-40 bg-zinc-950/95 backdrop-blur -mx-3 px-3 sm:mx-0 sm:px-0">
+            <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pb-1 text-xs font-medium">
+                <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0">
                     <span>{ICONS['users']}</span>
                     <span>Plantilla ({len(players)})</span>
                 </button>
-                <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <button onclick="switchTab('tab-market')" id="btn-tab-market" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0">
                     <span>{ICONS['market']}</span>
-                    <span>Mercado ({len(market)})</span>
+                    <span>Mercado Libre</span>
                 </button>
-                <button onclick="switchTab('tab-trends')" id="btn-tab-trends" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
-                    <span>{ICONS['chart']}</span>
-                    <span>Tendencias</span>
+                <button onclick="switchTab('tab-rivals')" id="btn-tab-rivals" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0">
+                    <span>{ICONS['zap']}</span>
+                    <span>Rivales & Cláusulas</span>
                 </button>
-                <button onclick="switchTab('tab-plan')" id="btn-tab-plan" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
-                    <span>{ICONS['clock']}</span>
-                    <span>Plan de Pujas</span>
+                <button onclick="switchTab('tab-points')" id="btn-tab-points" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0">
+                    <span>{ICONS['trophy']}</span>
+                    <span>Puntos ({total_points})</span>
                 </button>
-                <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5">
+                <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0">
                     <span>{ICONS['history']}</span>
                     <span>Historial</span>
                 </button>
             </div>
         </nav>
 
-        <!-- Tab Content Container -->
+        <!-- TAB CONTENT CONTAINER -->
         <div class="pt-2">
-            <!-- TAB 1: SQUAD -->
+            
+            <!-- TAB 1: SQUAD & RECEIVED OFFERS -->
             <section id="tab-squad" class="tab-content space-y-4">
-                <div class="flex items-center justify-between pb-1">
-                    <span class="text-xs text-zinc-400">Todos los futbolistas están a la venta para recibir ofertas diarias.</span>
-                    <span class="text-[11px] text-zinc-500 font-mono">Huecos: {', '.join(gaps) if gaps else 'Ninguno'}</span>
+                <!-- Squad Grid -->
+                <div>
+                    <div class="flex items-center justify-between pb-2">
+                        <span class="text-xs text-zinc-400">Todos los futbolistas se listan automáticamente para capturar ofertas diarias.</span>
+                        <span class="text-[11px] text-zinc-500 font-mono">Huecos: {', '.join(gaps) if gaps else 'Cubiertos'}</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                        {squad_cards_html or '<div class="col-span-4 p-6 text-center text-zinc-500 text-xs">Plantilla vacía</div>'}
+                    </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                    {squad_cards_html or '<div class="col-span-4 p-6 text-center text-zinc-500 text-xs">Plantilla vacía</div>'}
+
+                <!-- Received Offers Table -->
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4 mt-4">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-zinc-400">{ICONS['tag']}</span>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Ofertas Recibidas por mis Jugadores</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">{len(my_received_offers or [])} activa(s)</span>
+                    </div>
+                    <div class="overflow-x-auto mt-2">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
+                                    <th class="py-2.5 px-3">Futbolista</th>
+                                    <th class="py-2.5 px-3">Comprador</th>
+                                    <th class="py-2.5 px-3 text-right">Valor Mercado</th>
+                                    <th class="py-2.5 px-3 text-right">Oferta Recibida</th>
+                                    <th class="py-2.5 px-3 text-right">Diferencia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {offers_rows_html}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
-            <!-- TAB 2: MARKET -->
-            <section id="tab-market" class="tab-content hidden space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
-                    <span class="text-xs text-zinc-400">Listado en tiempo real de jugadores disponibles.</span>
+            <!-- TAB 2: SYSTEM FREE AGENTS MARKET -->
+            <section id="tab-market" class="tab-content hidden space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
+                    <span class="text-xs text-zinc-400">Jugadores libres sacados por el sistema de la liga.</span>
                     <div class="flex items-center space-x-2">
-                        <div class="relative">
+                        <div class="relative flex-1 sm:flex-none">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">{ICONS['search']}</span>
-                            <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs pl-7 pr-3 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700 w-48">
+                            <input type="text" id="marketSearch" onkeyup="filterMarket()" placeholder="Buscar jugador..." class="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs pl-7 pr-3 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700 w-full sm:w-44">
                         </div>
-                        <select id="posFilter" onchange="filterMarket()" class="bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700">
-                            <option value="ALL">Todas las pos.</option>
+                        <select id="posFilter" onchange="filterMarket()" class="bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-zinc-700">
+                            <option value="ALL">Todas pos.</option>
                             <option value="POR">POR</option>
                             <option value="DEF">DEF</option>
                             <option value="MED">MED</option>
@@ -664,12 +779,12 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                         <table class="w-full text-left text-xs" id="marketTable">
                             <thead>
                                 <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
-                                    <th class="py-3 px-3.5">Jugador</th>
-                                    <th class="py-3 px-3.5">Pos</th>
-                                    <th class="py-3 px-3.5">Origen</th>
-                                    <th class="py-3 px-3.5 text-right">Precio Salida</th>
-                                    <th class="py-3 px-3.5 text-center">Pujas</th>
-                                    <th class="py-3 px-3.5 text-right">Cierre</th>
+                                    <th class="py-2.5 px-3">Jugador</th>
+                                    <th class="py-2.5 px-3">Pos</th>
+                                    <th class="py-2.5 px-3 text-right">Precio Salida</th>
+                                    <th class="py-2.5 px-3 text-center">Titular</th>
+                                    <th class="py-2.5 px-3 text-center">Pujas</th>
+                                    <th class="py-2.5 px-3 text-right">Cierre</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -680,124 +795,161 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                 </div>
             </section>
 
-            <!-- TAB 3: TRENDS -->
-            <section id="tab-trends" class="tab-content hidden space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Top Gainers -->
-                    <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
-                            <div class="flex items-center space-x-1.5">
-                                {ICONS['trending_up']}
-                                <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Subidas</h3>
-                            </div>
-                            <span class="text-[10px] text-zinc-500 font-mono">En alza</span>
+            <!-- TAB 3: LEAGUE RANKING & RIVAL BUYOUT CLAUSES RADAR -->
+            <section id="tab-rivals" class="tab-content hidden space-y-4">
+                <!-- League Classification Table -->
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-zinc-400">{ICONS['trophy']}</span>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Clasificación de la Liga</h3>
                         </div>
-                        <div class="space-y-2">
-                            {top_up_html}
-                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">{len(league_teams or [])} equipos</span>
                     </div>
+                    <div class="overflow-x-auto mt-2">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
+                                    <th class="py-2.5 px-3 text-center">Pos</th>
+                                    <th class="py-2.5 px-3">Mánager / Equipo</th>
+                                    <th class="py-2.5 px-3 text-right">Puntos</th>
+                                    <th class="py-2.5 px-3 text-right">Valor Plantilla</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {league_table_html}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                    <!-- Top Losers -->
-                    <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-zinc-800/60">
-                            <div class="flex items-center space-x-1.5">
-                                {ICONS['trending_down']}
-                                <h3 class="text-xs uppercase font-bold text-zinc-200">Mayores Caídas</h3>
-                            </div>
-                            <span class="text-[10px] text-zinc-500 font-mono">Depreciación</span>
+                <!-- Rival Buyout Clauses Radar -->
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-zinc-400">{ICONS['zap']}</span>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Radar de Clausulazos a Rivales</h3>
                         </div>
-                        <div class="space-y-2">
-                            {top_down_html}
-                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">Cláusulas abiertas y escudos</span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 mt-2 mb-3 leading-relaxed">
+                        Lista completa de futbolistas de rivales. Si una cláusula está abierta y es rentable, la IA la ejecuta directamente. Si está blindada por el escudo de 14 días, se muestra el tiempo exacto restante para su apertura.
+                    </p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-zinc-400 border-b border-zinc-800/80 bg-zinc-950/40 text-[10px] uppercase font-mono tracking-wider">
+                                    <th class="py-2.5 px-3">Jugador / Rival</th>
+                                    <th class="py-2.5 px-3">Pos</th>
+                                    <th class="py-2.5 px-3 text-right">Valor</th>
+                                    <th class="py-2.5 px-3 text-right">Cláusula</th>
+                                    <th class="py-2.5 px-3 text-center">Titular</th>
+                                    <th class="py-2.5 px-3 text-right">Estado Escudo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rival_clauses_html}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
-            <!-- TAB 4: SCHEDULED PLAN -->
-            <section id="tab-plan" class="tab-content hidden space-y-4">
-                <div>
-                    <h3 class="text-xs uppercase font-bold text-zinc-200">Plan de Sniping de Último Minuto</h3>
-                    <p class="text-[11px] text-zinc-500 mt-0.5">Pujas programadas para ejecutarse a 25 segundos del cierre.</p>
-                </div>
-                <div class="space-y-2.5">
-                    {plan_cards_html}
-                </div>
-
-                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 mt-6">
-                    <h4 class="text-xs uppercase font-bold text-zinc-300 mb-2.5">Horarios de Automatización</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-400">
-                        <div class="bg-zinc-950/60 p-3.5 rounded-lg border border-zinc-800/60">
-                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">17:00 (Hora España) • Tarde</span>
-                            Escaneo de nuevos jugadores, detección de ofertas entrantes y planificación del día.
+            <!-- TAB 4: POINTS BREAKDOWN -->
+            <section id="tab-points" class="tab-content hidden space-y-4">
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">
+                        <div>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Puntuación por Jornada</h3>
+                            <p class="text-[11px] text-zinc-500 mt-0.5">Rendimiento acumulado de tu equipo</p>
                         </div>
-                        <div class="bg-zinc-950/60 p-3.5 rounded-lg border border-zinc-800/60">
-                            <span class="font-semibold text-zinc-200 block text-xs mb-0.5 font-mono">22:10 (Hora España) • Cierre</span>
-                            Disparo de pujas de último minuto (+210€ o competitivas) 8 minutos antes del cierre de mercado (22:18).
+                        <div class="text-right">
+                            <span class="text-[10px] text-zinc-500 block uppercase font-mono">Total</span>
+                            <span class="font-bold text-emerald-400 text-sm font-mono">{total_points} Pts</span>
                         </div>
+                    </div>
+                    <div class="h-48 mt-3">
+                        <canvas id="pointsChart"></canvas>
                     </div>
                 </div>
             </section>
 
-            <!-- TAB 5: TIMELINE / AUDIT (Clickable & Expandable) -->
+            <!-- TAB 5: REASONING ARCHIVE & AUDIT TIMELINE -->
             <section id="tab-history" class="tab-content hidden space-y-4">
-                <div>
-                    <h3 class="text-xs uppercase font-bold text-zinc-200">Registro de Actividad</h3>
-                    <p class="text-[11px] text-zinc-500 mt-0.5">Haz clic en cualquier evento para desplegar sus detalles completos y datos técnicos.</p>
+                <!-- Gemini Reasoning Archive -->
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-zinc-400">{ICONS['cpu']}</span>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Historial de Razonamientos de Gemini</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">Archivo permanente</span>
+                    </div>
+                    <div class="mt-3">
+                        {reasoning_archive_html}
+                    </div>
                 </div>
-                <div class="space-y-2">
-                    {timeline_html or '<div class="p-6 text-center text-zinc-500 text-xs">Sin eventos registrados</div>'}
+
+                <!-- Action Audit Timeline -->
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-zinc-400">{ICONS['history']}</span>
+                            <h3 class="text-xs uppercase font-bold text-zinc-200">Registro Completo de Acciones</h3>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono">Auditoría del bot</span>
+                    </div>
+                    <div class="mt-3">
+                        {timeline_html or '<div class="p-4 text-center text-zinc-500 text-xs">Sin acciones registradas</div>'}
+                    </div>
                 </div>
             </section>
         </div>
 
         <!-- Footer -->
-        <footer class="pt-8 pb-4 border-t border-zinc-800/60 text-center text-[11px] text-zinc-600 font-mono">
+        <footer class="pt-6 pb-4 border-t border-zinc-800/60 text-center text-[10px] sm:text-[11px] text-zinc-600 font-mono">
             FantasyBot OS • Gemini 3.5 Flash Lite • GitHub Pages
         </footer>
     </main>
 
     <!-- Scripts for Chart.js and Interactivity -->
     <script>
+        // Financial Line Chart
         const ctx = document.getElementById('patrimonyChart').getContext('2d');
-        const labels = {labels_json};
-        const moneyData = {money_json};
-        const valueData = {value_json};
-        const totalData = {total_json};
-
         new Chart(ctx, {{
             type: 'line',
             data: {{
-                labels: labels,
+                labels: {labels_json},
                 datasets: [
                     {{
-                        label: 'Total Patrimonio',
-                        data: totalData,
+                        label: 'Patrimonio Total',
+                        data: {total_json},
                         borderColor: '#fafafa',
-                        backgroundColor: 'rgba(250, 250, 250, 0.03)',
+                        backgroundColor: 'rgba(250, 250, 250, 0.02)',
                         borderWidth: 1.8,
                         tension: 0.3,
-                        pointRadius: 2.5,
-                        pointHoverRadius: 5,
+                        pointRadius: 2,
+                        pointHoverRadius: 4,
                     }},
                     {{
-                        label: 'Caja / Presupuesto',
-                        data: moneyData,
+                        label: 'Caja',
+                        data: {money_json},
                         borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.03)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.02)',
                         borderWidth: 1.5,
                         tension: 0.3,
-                        pointRadius: 2.5,
-                        pointHoverRadius: 5,
+                        pointRadius: 2,
+                        pointHoverRadius: 4,
                     }},
                     {{
-                        label: 'Valor Plantilla',
-                        data: valueData,
+                        label: 'Plantilla',
+                        data: {value_json},
                         borderColor: '#71717a',
-                        backgroundColor: 'rgba(113, 113, 122, 0.03)',
+                        backgroundColor: 'rgba(113, 113, 122, 0.02)',
                         borderWidth: 1.5,
                         tension: 0.3,
-                        pointRadius: 2.5,
-                        pointHoverRadius: 5,
+                        pointRadius: 2,
+                        pointHoverRadius: 4,
                     }}
                 ]
             }},
@@ -805,12 +957,7 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                 responsive: true,
                 maintainAspectRatio: false,
                 layout: {{
-                    padding: {{
-                        left: 5,
-                        right: 15,
-                        top: 5,
-                        bottom: 5
-                    }}
+                    padding: {{ left: 5, right: 10, top: 5, bottom: 5 }}
                 }},
                 plugins: {{
                     legend: {{ display: false }},
@@ -838,19 +985,52 @@ def generate_apple_dashboard(team, market, best_lineup, flips, gaps, review_repo
                         ticks: {{
                             color: '#71717a',
                             font: {{ size: 9, family: 'JetBrains Mono' }},
-                            padding: 8,
+                            padding: 6,
                             callback: function(value) {{
                                 let m = value / 1000000;
                                 return (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)) + 'M €';
                             }}
                         }},
                         afterFit: function(axis) {{
-                            axis.width = 65;
+                            axis.width = 60;
                         }}
                     }}
                 }}
             }}
         }});
+
+        // Points Bar Chart
+        const ptsCtx = document.getElementById('pointsChart');
+        if (ptsCtx) {{
+            new Chart(ptsCtx.getContext('2d'), {{
+                type: 'bar',
+                data: {{
+                    labels: {gw_labels_json},
+                    datasets: [{{
+                        label: 'Puntos',
+                        data: {gw_points_json},
+                        backgroundColor: '#10b981',
+                        borderRadius: 6,
+                        barThickness: 24,
+                    }}]
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {{ legend: {{ display: false }} }},
+                    scales: {{
+                        x: {{
+                            grid: {{ display: false }},
+                            ticks: {{ color: '#71717a', font: {{ size: 10, family: 'JetBrains Mono' }} }}
+                        }},
+                        y: {{
+                            grid: {{ color: 'rgba(255, 255, 255, 0.03)' }},
+                            ticks: {{ color: '#71717a', font: {{ size: 10, family: 'JetBrains Mono' }} }}
+                        }}
+                    }}
+                }}
+            }});
+        }}
 
         function switchTab(tabId) {{
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));

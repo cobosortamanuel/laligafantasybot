@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: 2026-08-31 18:22
+Última actualización: 2026-09-01 02:42
 
-Jornada inminente (<24h). Clausulazos cerrados. Enfocados en asegurar portería (Germán y Dmitrovic) y defensas (Arnau y Arguibide) en el mercado libre para poder presentar alineación válida.
+Urgencia de portero atendida con puja ajustada por D. Cárdenas. Reforzando defensa con Yoel Lago para cubrir huecos y mantener valor al alza sin comprometer la caja.

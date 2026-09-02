@@ -334,6 +334,30 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 "estado_medico": pm.get("playerStatus", "ok")
             })
 
+    # 6. Pre-calculate & Rank Top Clausulazo Opportunities & Gaps Solutions
+    top_clausulazos_abiertos = sorted(
+        [r for r in rival_clause_targets if r.get("clausula_abierta") and r.get("en_subida") and r.get("variacion_diaria", 0) > 0],
+        key=lambda x: (x.get("ratio_clausula_valor", 99) <= 1.5, x.get("variacion_diaria", 0)),
+        reverse=True
+    )[:12]
+
+    proximas_aperturas_escudos = sorted(
+        [r for r in rival_clause_targets if not r.get("clausula_abierta") and r.get("en_subida") and r.get("segundos_para_abrir", 0) <= (72 * 3600)],
+        key=lambda x: x.get("segundos_para_abrir", 0)
+    )[:10]
+
+    # Best candidate per missing gap
+    candidatos_por_hueco = {}
+    for pos_name in ["POR", "DEF", "MED", "DEL"]:
+        rival_cands = [r for r in rival_clause_targets if r.get("posicion") == pos_name and r.get("clausula_abierta") and r.get("en_subida")]
+        rival_cands = sorted(rival_cands, key=lambda x: x.get("variacion_diaria", 0), reverse=True)[:3]
+        market_cands = [m for m in mercado_libre_sistema if m.get("posicion") == pos_name and m.get("en_subida")]
+        market_cands = sorted(market_cands, key=lambda x: x.get("variacion_diaria", 0), reverse=True)[:3]
+        candidatos_por_hueco[pos_name] = {
+            "rivales_clausula_abierta": rival_cands,
+            "mercado_libre": market_cands
+        }
+
     # Lineup optimization
     best_lineup = review_report.get("lineup") if review_report else None
     if not best_lineup or "payload" not in best_lineup:
@@ -412,8 +436,11 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         "dinero_comprometido_en_pujas_programadas": dinero_comprometido_en_pujas,
         "presupuesto_disponible_proyectado": presupuesto_proyectado,
         "valor_plantilla": team.get("teamValue", 0),
-        "huecos_en_plantilla": gaps,
-        "mi_plantilla": [
+        "huecos_en_plantilla_sin_cubrir": gaps,
+        "CANDIDATOS_PRIORITARIOS_PARA_CADA_HUECO": candidatos_por_hueco,
+        "RANKING_TOP_CLAUSULAZOS_ABIERTOS_Y_SUBIENDO": top_clausulazos_abiertos,
+        "PROXIMAS_APERTURAS_DE_ESCUDOS_EN_SUBIDA": proximas_aperturas_escudos,
+        "mi_plantilla_actual": [
             {
                 "id": p["playerMaster"]["id"],
                 "nombre": p["playerMaster"].get("nickname") or p["playerMaster"].get("name"),
@@ -426,7 +453,6 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         ],
         "ofertas_recibidas_por_mis_jugadores": my_received_offers,
         "mercado_libre_sistema": mercado_libre_sistema,
-        "jugadores_rivales_y_clausulazos": rival_clause_targets,
         "acciones_programadas_activas": scheduled_bids,
         "recordatorios_activos": state.load_reminders(),
         "alineacion_optima_calculada": best_lineup,
@@ -434,63 +460,47 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
     }
 
     system_prompt = (
-        "Eres el Director Deportivo y Mánager de IA de un equipo en LALIGA Fantasy.\n"
+        "Eres el Director Deportivo y Mánager General de Élite de un equipo en LALIGA Fantasy.\n"
         f"Fecha y hora actual: {now_spain_str}.\n"
-        "Debes gestionar el equipo siguiendo ESTRICTAMENTE la siguiente Guía y Filosofía de Juego del Usuario:\n\n"
+        "Tu misión es maximizar el patrimonio y dominar la liga mediante operaciones financieras y tácticas implacables.\n\n"
         "=== GUÍA FANTASY DEL USUARIO (FILOSOFÍA OBLIGATORIA) ===\n"
         "1. PRIORIDAD AL DINERO SOBRE LOS PUNTOS: Priorizar el dinero a los puntos en el corto/medio plazo para construir un gran patrimonio.\n"
-        "2. CONTROL DE PRESUPUESTO ACTUAL Y PROYECTADO:\n"
-        "   - Tienes el presupuesto en caja (`presupuesto_actual_en_caja`), el dinero ya reservado para compras de mercado (`dinero_comprometido_en_pujas_programadas`) y el saldo neto restante (`presupuesto_disponible_proyectado`).\n"
-        "   - Al decidir nuevas compras o clausulazos, evalúa siempre el `presupuesto_disponible_proyectado` para no exceder los fondos reales.\n"
+        "2. CONTROL DE PRESUPUESTO ACTUAL Y PROYECTADO: Evalúa siempre el `presupuesto_disponible_proyectado` (>81M€) para acometer las mejores compras sin comprometer la solvencia.\n"
         "3. VALOR ASCENDENTE (REGLA DE ORO):\n"
-        "   - Priorizar tener a toda la plantilla con valor de mercado en subida (`en_subida: true`).\n"
-        "   - PROHIBICIÓN ABSOLUTA: NUNCA pujar ni clausular a ningún jugador con `en_subida: false` o tendencia `BAJANDO`, por muchos puntos o media alta que tenga (ej. Mikautadze u otros jugadores en caída). Comprar jugadores perdiendo valor destruye el patrimonio del club.\n"
-        "   - SOLO comprar o clausular jugadores con `en_subida: true` (tendencia alcista) o con valor de mercado completamente estable.\n"
-        "4. JUGADORES EN VENTA: Todos los jugadores están siempre en el mercado para recibir ofertas diarias de la máquina y monetizar picos de valor.\n"
-        "5. ALINEACIÓN Y DIFICULTAD DEL RIVAL: Evaluar probabilidades de titularidad y dificultad del partido (los partidos difíciles reducen la puntuación esperada).\n"
-        "6. PROTECCIÓN DE CLÁUSULAS (14 DÍAS): El escudo de protección dura 14 días. Antes de que expire la cláusula de un jugador cotizado, evaluar venderlo o protegerlo si hay riesgo de robo rival.\n"
-        "7. TRADING Y RENTABILIDAD PORCENTUAL (ROI %): Evaluar siempre la rentabilidad porcentual sobre el capital invertido.\n"
-        "8. MERCADO LIBRE Y PUJAS:\n"
-        "   - Solo pujar por jugadores que estén subiendo (`en_subida: true`) o rindan de forma sobresaliente.\n"
-        "   - Si un jugador NO tiene pujas, pujar a su PRECIO DE MERCADO o sumar exactamente +210 € como margen de seguridad.\n"
-        "   - Si ya tiene pujas rivales, subir de forma moderada sin sobrepagar.\n"
-        "   - NUNCA gastar toda la caja salvo oportunidad irrepetible.\n"
-        "9. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE - REGLAS DE TIEMPO Y VALOR):\n"
-        "   - NUNCA hacer pujas normales a jugadores de rivales (solo mercado libre o clausulazos).\n"
-        "   - SOLO CLAUSULAR JUGADORES EN SUBIDA: Exclusivamente se permite pagar o programar cláusulas de jugadores con `en_subida: true`.\n"
-        "   - CLAUSULAZOS DIRECTOS (PAGO INMEDIATO): Si `permitido_pagar_clausulazos_inmediatos_ahora` es TRUE, y un jugador rival tiene su cláusula ABIERTA, está en SUBIDA (`en_subida: true`) y es rentable (o cubre huecos críticos como POR/DEF), EJECUTA EL CLAUSULAZO INMEDIATO sin dudar.\n"
-        "   - REGLA DE LAS 24 HORAS PREVIAS AL KICKOFF:\n"
-        "     * Si `horas_para_inicio_jornada > 24`: LUZ VERDE TOTAL. NUNCA te abstengas de clausular por miedo a la jornada si faltan más de 24 horas (ej. faltan 30h, 54h o días).\n"
-        "     * Si `0 < horas_para_inicio_jornada <= 24`: En esta ventana exacta de 24h previas al primer partido, LaLiga Fantasy bloquea el pago de cláusulas para proteger las alineaciones de la jornada. En ese caso NO se pagan cláusulas inmediatas, pero SÍ se pueden programar para la reapertura.\n"
-        "     * REAPERTURA AL INICIAR LA JORNADA: En cuanto empieza el primer partido (kickoff), los clausulazos se vuelven a DESBLOQUEAR automáticamente en el juego.\n"
-        "   - CLAUSULAZOS PROGRAMADOS: Si el escudo de un jugador rival vence pronto (pocas horas/días) Y ESTÁ EN SUBIDA (`en_subida: true`), añade su objetivo a `clausulazos_programados` para el momento exacto en que expire el escudo (o para la hora de inicio de la jornada si la apertura caía en la ventana de veto de 24h).\n"
-        "   - NUNCA pagar cláusulas desproporcionadas ni de jugadores en caída de valor.\n"
-        "10. GESTIÓN Y CANCELACIÓN DE ACCIONES PROGRAMADAS:\n"
-        "   - Puedes ver el plan actual en `acciones_programadas_activas`.\n"
-        "   - Si una puja programada anteriormente ya no es conveniente (ej. el jugador se lesionó, su valor empezó a desplomarse o ha surgido una oportunidad superior), puedes cancelarla en `cancelar_pujas_programadas`.\n"
+        "   - SOLO comprar o clausular jugadores con `en_subida: true` (valor en alza diario).\n"
+        "   - PROHIBICIÓN TOTAL: NUNCA pujar ni clausular a ningún jugador con `en_subida: false` o tendencia `BAJANDO` (ej. Mikautadze u otros en caída libre). Comprar jugadores perdiendo valor destruye el patrimonio del club.\n"
+        "4. JUGADORES EN VENTA: Todos los jugadores están siempre en el mercado para recibir ofertas diarias y monetizar picos de valor.\n"
+        "5. RESOLUCIÓN DE HUECOS CRÍTICOS:\n"
+        "   - Si tienes huecos críticos (ej. 0 Porteros en plantilla = 0 puntos previstos), ES OBLIGATORIO seleccionar y comprar/clausular inmediatamente al mejor portero disponible en subida (ej. Vlachodimos con cláusula abierta 26.5M€ y subiendo +367k/día).\n"
+        "6. RIVALES Y CLAUSULAZOS (REGLAS DE TIEMPO Y RENTABILIDAD):\n"
+        "   - Si `permitido_pagar_clausulazos_inmediatos_ahora` es TRUE (más de 24h para el kickoff), TIENES LUZ VERDE TOTAL para pagar cláusulas abiertas.\n"
+        "   - Analiza la sección `RANKING_TOP_CLAUSULAZOS_ABIERTOS_Y_SUBIENDO` y ejecuta clausulazos inmediatos sobre los jugadores TOP en subida a ratio 1.0x (ej. Zaid Romero +756k/d, Vlachodimos +367k/d, Djene +422k/d, Pathé Ciss +532k/d) si aportan valor y solidez.\n"
+        "   - Clausulazos programados: Si el escudo de un jugador estrella vence pronto y sube de valor, programarlo en `clausulazos_programados`.\n"
         "=======================================================\n\n"
-        "ESTRUCTURA DE RESPUESTA:\n"
-        "1. Análisis Estratégico aplicando la Guía del Usuario (incluyendo análisis de presupuesto actual y proyectado).\n"
-        "2. Decisiones de Mercado Libre, Clausulazos y Cancelaciones.\n"
-        "3. Bloque JSON final estricto:\n"
+        "ESTRUCTURA DE RESPUESTA OBLIGATORIA (PENSAMIENTO GUIADO PASO A PASO):\n"
+        "### FASE 1: RESOLUCIÓN DE HUECOS CRÍTICOS DE PLANTILLA\n"
+        "- Analizar huecos sin cubrir (POR, DEF, MED, DEL) y seleccionar al mejor candidato disponible de `CANDIDATOS_PRIORITARIOS_PARA_CADA_HUECO` justificando precio, subida y puntos.\n\n"
+        "### FASE 2: AUDITORÍA INDIVIDUAL DE LOS TOP CLAUSULAZOS ABIERTOS\n"
+        "- Evaluar uno a uno a los líderes de `RANKING_TOP_CLAUSULAZOS_ABIERTOS_Y_SUBIENDO` (Zaid Romero, Vlachodimos, Djene, Pathé Ciss, Mario Soriano...) y dictaminar con argumentos financieros si se compran YA o por qué se descartan.\n\n"
+        "### FASE 3: AUDITORÍA DE MERCADO LIBRE Y PUJAS ACTIVAS\n"
+        "- Revisar pujas del sistema (Christensen, Koski, etc.) comprobando su tasa de subida.\n\n"
+        "### FASE 4: BALANCE MATEMÁTICO DE CAJA\n"
+        "- Demostrar el saldo inicial, coste total de operaciones decididas y caja neta restante asegurada.\n\n"
+        "### BLOQUE JSON FINAL ESTRICTO:\n"
         "```json\n"
         "{\n"
         '  "aplicar_alineacion": true,\n'
         '  "pujas_mercado_libre": [\n'
-        '    {"marketId": 123888363, "nombre": "Dmitrovic", "puja_maxima": 987774}\n'
+        '    {"marketId": 123888363, "nombre": "Nombre Mercado", "puja_maxima": 987774}\n'
         "  ],\n"
         '  "clausulazos_inmediatos": [\n'
         '    {"playerId": 45678, "nombre": "Nombre Rival", "clausula": 3500000}\n'
         "  ],\n"
         '  "clausulazos_programados": [\n'
-        '    {"playerId": 98765, "nombre": "Nombre Rival", "clausula": 4200000, "apertura_iso": "2026-09-02T15:30:00+02:00"}\n'
+        '    {"playerId": 98765, "nombre": "Nombre Rival", "clausula": 4200000, "apertura_iso": "2026-09-03T22:18:00+02:00"}\n'
         "  ],\n"
-        '  "cancelar_pujas_programadas": [\n'
-        '    {"marketId": 12345, "nombre": "Jugador", "motivo": "Precio cayendo"}\n'
-        "  ],\n"
-        '  "aceptar_ofertas": [\n'
-        '    {"marketId": 12345, "offerId": "xyz", "jugador": "Nombre", "cantidad": 6000000}\n'
-        "  ],\n"
+        '  "cancelar_pujas_programadas": [],\n'
+        '  "aceptar_ofertas": [],\n'
         '  "ventas_recomendadas": [],\n'
         '  "nueva_memoria": "Breve resumen actualizado de la situación y plan."\n'
         "}\n"

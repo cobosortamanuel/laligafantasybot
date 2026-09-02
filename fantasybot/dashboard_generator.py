@@ -275,7 +275,7 @@ def generate_apple_dashboard(
         elif status in ("sancionado", "suspended"):
             status_badge = '<span class="text-[10px] font-medium text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">Sancionado</span>'
 
-        in_market = str(p_id) in market_player_ids
+        in_market = bool(p.get("playerMarket")) or (str(p_id) in market_player_ids)
         market_badge = '<span class="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">En Mercado</span>' if in_market else '<span class="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">No listado</span>'
 
         squad_cards_html += f"""

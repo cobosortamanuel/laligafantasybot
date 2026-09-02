@@ -495,6 +495,7 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         "   - Toda la plantilla debe estar siempre listada en el mercado para recibir ofertas diarias de la máquina.\n"
         "   - Vender activos cuando alcancen su pico de valor o cuando su ritmo de subida empiece a frenar, monetizando plusvalías máximas.\n"
         "   - Cuidado con piezas imprescindibles: NO vender titulares clave sin tener un recambio garantizado en subida.\n"
+        "   - REGLA DE RETENCIÓN DE ACTIVOS EN ACELERACIÓN: NUNCA vender a una estrella que esté en plena aceleración alcista explosiva (ej. Kang-In Lee subiendo a +2.4M€/día); mientras suba a ese ritmo descomunal hay que mantenerlo en plantilla para capturar las plusvalías diarias, y solo venderlo cuando su subida frene o dé señales de techo.\n"
         "5. PROTECCIÓN DE CLÁUSULAS: VENDER ANTES QUE SUBIR CLÁUSULAS:\n"
         "   - Subir la cláusula de un jugador propio entierra dinero muerto que no genera rentabilidad.\n"
         "   - Si el escudo de 14 días de un jugador cotizado va a expirar y los rivales tienen dinero para robártelo, la jugada maestra es ACEPTAR UNA BUENA OFERTA de la máquina e ingresar decenas de millones limpios para reinvertir en activos que suban más rápido.\n"

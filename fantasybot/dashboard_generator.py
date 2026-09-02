@@ -259,7 +259,7 @@ def generate_apple_dashboard(
         points = pm.get("points", 0)
         avg = pm.get("averagePoints", 0)
         status = pm.get("playerStatus", "ok")
-        clause = pt.get("buyoutClause") or (p_val * 1.67)
+        clause = p.get("buyoutClause") or pt.get("buyoutClause") or p_val
 
         # Real starting probability
         prob_str = "- %"
@@ -445,7 +445,7 @@ def generate_apple_dashboard(
                 pos_id = pm.get("positionId")
                 pos_str = pos_map.get(pos_id, "JUG")
                 val = pm.get("marketValue") or 0
-                clause = p.get("buyoutClause") or (val * 1.67)
+                clause = p.get("buyoutClause") or p.get("playerTeam", {}).get("buyoutClause") or val
                 locked_until = p.get("buyoutClauseLockedEndTime")
                 
                 is_open = True

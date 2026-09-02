@@ -247,7 +247,7 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
             pos_id = pm.get("positionId")
             pos_str = pos_map.get(pos_id, "JUG")
             val = pm.get("marketValue") or 0
-            clause = p.get("buyoutClause") or (val * 1.67)
+            clause = p.get("buyoutClause") or p.get("playerTeam", {}).get("buyoutClause") or val
             locked_until = p.get("buyoutClauseLockedEndTime")
             
             is_open = True

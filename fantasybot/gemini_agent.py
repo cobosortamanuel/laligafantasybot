@@ -334,6 +334,12 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 "estado_medico": pm.get("playerStatus", "ok")
             })
 
+    # Calculate projected budget taking into account scheduled last-minute bids
+    current_money = team.get("teamMoney", 0)
+    scheduled_bids = state.load_bid_plan()
+    dinero_comprometido_en_pujas = sum(int(t.get("max_bid", 0)) for t in scheduled_bids)
+    presupuesto_proyectado = current_money - dinero_comprometido_en_pujas
+
     # Calculate buyout clause premium and days to amortize
     for r in rival_clause_targets:
         val = r.get("valor_mercado", 0)
@@ -344,27 +350,34 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         r["dias_para_amortizar_sobrecoste"] = round(sobrecoste / subida, 1) if (sobrecoste > 0 and subida > 0) else (0 if sobrecoste == 0 else 999)
 
     # 6. Pre-calculate & Rank Top Clausulazo Opportunities & Gaps Solutions
-    top_clausulazos_abiertos = sorted(
-        [r for r in rival_clause_targets if r.get("clausula_abierta") and r.get("en_subida") and r.get("variacion_diaria", 0) > 0],
+    # CRITICAL: Separate players we can actually afford TODAY from unaffordable ones!
+    clausulazos_accesibles = sorted(
+        [r for r in rival_clause_targets if r.get("clausula_abierta") and r.get("en_subida") and r.get("variacion_diaria", 0) > 0 and r.get("clausula", 0) <= current_money],
         key=lambda x: (x.get("ratio_clausula_valor", 99) <= 1.5, x.get("variacion_diaria", 0)),
         reverse=True
     )[:15]
+
+    clausulazos_fuera_de_presupuesto = sorted(
+        [r for r in rival_clause_targets if r.get("clausula_abierta") and r.get("en_subida") and r.get("variacion_diaria", 0) > 0 and r.get("clausula", 0) > current_money],
+        key=lambda x: x.get("variacion_diaria", 0),
+        reverse=True
+    )[:6]
 
     proximas_aperturas_escudos = sorted(
         [r for r in rival_clause_targets if not r.get("clausula_abierta") and r.get("en_subida") and r.get("segundos_para_abrir", 0) <= (72 * 3600)],
         key=lambda x: x.get("segundos_para_abrir", 0)
     )[:10]
 
-    # Best candidate per missing gap
+    # Best candidate per missing gap (only within budget)
     candidatos_por_hueco = {}
     for pos_name in ["POR", "DEF", "MED", "DEL"]:
-        rival_cands = [r for r in rival_clause_targets if r.get("posicion") == pos_name and r.get("clausula_abierta") and r.get("en_subida")]
+        rival_cands = [r for r in rival_clause_targets if r.get("posicion") == pos_name and r.get("clausula_abierta") and r.get("en_subida") and r.get("clausula", 0) <= current_money]
         rival_cands = sorted(rival_cands, key=lambda x: x.get("variacion_diaria", 0), reverse=True)[:3]
-        market_cands = [m for m in mercado_libre_sistema if m.get("posicion") == pos_name and m.get("en_subida")]
+        market_cands = [m for m in mercado_libre_sistema if m.get("posicion") == pos_name and m.get("en_subida") and m.get("precio", 0) <= current_money]
         market_cands = sorted(market_cands, key=lambda x: x.get("variacion_diaria", 0), reverse=True)[:3]
         candidatos_por_hueco[pos_name] = {
-            "rivales_clausula_abierta": rival_cands,
-            "mercado_libre": market_cands
+            "rivales_clausula_pagable_hoy": rival_cands,
+            "mercado_libre_pagable_hoy": market_cands
         }
 
     # Lineup optimization
@@ -392,12 +405,6 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
     if os.path.exists(memory_path):
         with open(memory_path, "r", encoding="utf-8") as f:
             existing_memory = f.read()
-
-    # Calculate projected budget taking into account scheduled last-minute bids
-    current_money = team.get("teamMoney", 0)
-    scheduled_bids = state.load_bid_plan()
-    dinero_comprometido_en_pujas = sum(int(t.get("max_bid", 0)) for t in scheduled_bids)
-    presupuesto_proyectado = current_money - dinero_comprometido_en_pujas
 
     # Matchday timing & Buyout restriction status
     matchday_info = review_report.get("matchday", {})
@@ -441,13 +448,17 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
             "diagnostico": estado_regla_clausulas,
             "reapertura_clausulas": "Al arrancar el primer partido de la jornada (kickoff), las cláusulas se desbloquean nuevamente."
         },
-        "presupuesto_actual_en_caja": current_money,
+        "PRESUPUESTO_TOTAL_EN_CAJA": current_money,
         "dinero_comprometido_en_pujas_programadas": dinero_comprometido_en_pujas,
         "presupuesto_disponible_proyectado": presupuesto_proyectado,
         "valor_plantilla": team.get("teamValue", 0),
         "huecos_en_plantilla_sin_cubrir": gaps,
-        "CANDIDATOS_PRIORITARIOS_PARA_CADA_HUECO": candidatos_por_hueco,
-        "RANKING_TOP_CLAUSULAZOS_ABIERTOS_Y_SUBIENDO": top_clausulazos_abiertos,
+        "CANDIDATOS_PAGABLES_PARA_CADA_HUECO": candidatos_por_hueco,
+        "CLAUSULAZOS_ACCESIBLES_QUE_PODEMOS_PAGAR_HOY": clausulazos_accesibles,
+        "OBJETIVOS_PROHIBIDOS_POR_FALTA_DE_FONDOS": [
+            f"{r.get('nombre')} (Cláusula {int(r.get('clausula', 0)):,} € > Saldo en caja {int(current_money):,} €) - PROHIBIDO COMPRAR HOY"
+            for r in clausulazos_fuera_de_presupuesto
+        ],
         "PROXIMAS_APERTURAS_DE_ESCUDOS_EN_SUBIDA": proximas_aperturas_escudos,
         "mi_plantilla_actual": [
             {
@@ -503,18 +514,23 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         "   - Mantener siempre saldo positivo tras las operaciones y preservar liquidez proyectada para imprevistos y pujas.\n"
         "=======================================================\n\n"
         "PROTOCOLO DE RAZONAMIENTO OBLIGATORIO (ANÁLISIS PROFUNDO POR FASES):\n\n"
-        "### FASE 1: AUDITORÍA DE PLANTILLA PROPIA Y OFERTAS ENTRANTES (TRADING & MONETIZACIÓN)\n"
-        "- Evaluar ofertas recibidas del sistema o rivales: calcular el beneficio neto y decidir si se aceptan para capturar picos de valor.\n"
+        "### FASE 1: TECHO PRESUPUESTARIO Y LÍMITE DE GASTO EN CAJA (ARITMÉTICA OBLIGATORIA)\n"
+        "- Consultar `PRESUPUESTO_TOTAL_EN_CAJA` y `presupuesto_disponible_proyectado`.\n"
+        "- Declarar explícitamente el LÍMITE MÁXIMO DE GASTO: 'Presupuesto disponible en caja: X €'.\n"
+        "- REGLA DE ORO DE SOLVENCIA: La suma total de compras decididas (pujas_mercado_libre + clausulazos_inmediatos) NUNCA puede exceder este saldo disponible. Queda terminantemente PROHIBIDO incluir cualquier jugador cuya cláusula o precio individual supere el saldo en caja (ej. los listados en `OBJETIVOS_PROHIBIDOS_POR_FALTA_DE_FONDOS`, como Mario Soriano a 27.2M€ o Djene a 14.2M€).\n\n"
+        "### FASE 2: AUDITORÍA DE PLANTILLA PROPIA Y OFERTAS ENTRANTES (TRADING & MONETIZACIÓN)\n"
+        "- Evaluar ofertas recibidas del sistema o rivales: calcular el beneficio neto y decidir si se aceptan para capturar picos de valor. Si se acepta alguna venta, sumar los ingresos al saldo disponible.\n"
         "- Revisar activos propios caros: estado de subida/bajada diaria, amortización y posibles riesgos de devaluación.\n"
         "- Evaluar escudos propios por vencer: ante riesgo de robo rival, planificar venta lucrativa antes que subir cláusulas.\n\n"
-        "### FASE 2: RADAR DE MERCADO LIBRE Y SNIPING\n"
-        "- Analizar futbolistas libres del sistema, priorizando activos de alto valor en plena subida diaria.\n"
-        "- Justificar pujas: aplicar la regla de +210 € si está solo, o margen competitivo moderado sin sobrepagar si hay rivales pujando.\n\n"
-        "### FASE 3: RADAR DE CLAUSULAZOS Y OFENSIVA A RIVALES\n"
-        "- Comprobación rápida de ventana de 24h antes del primer partido.\n"
-        "- Auditoría exhaustiva de objetivos: evaluar ratio de cláusula vs valor, subida diaria (+€/día) y días necesarios para amortizar la prima. Dictaminar con argumentos matemáticos qué compras son rentables a futuro (para el once o para flipping) y cuáles se descartan.\n\n"
-        "### FASE 4: BALANCE MATEMÁTICO DE TESORERÍA Y CAJA\n"
-        "- Desglosar números: Presupuesto inicial en caja, dinero ingresado por ventas, coste total de clausulazos y pujas decididas, y saldo restante de seguridad asegurado.\n\n"
+        "### FASE 3: SELECCIÓN DE FICHAJES ACCESIBLES DENTRO DE PRESUPUESTO (MERCADO LIBRE Y CLAUSULAZOS)\n"
+        "- Evaluar exclusivamente candidatos de `CLAUSULAZOS_ACCESIBLES_QUE_PODEMOS_PAGAR_HOY` y mercado libre.\n"
+        "- Comprobar de forma acumulada: Fichaje 1 (coste) + Fichaje 2 (coste) <= Saldo disponible. Si no hay dinero suficiente para dos, elegir ÚNICAMENTE al más rentable y descartar el resto.\n"
+        "- Comprobación de ventana 24h antes del primer partido.\n\n"
+        "### FASE 4: BALANCE MATEMÁTICO FINAL Y RESTA DE CAJA\n"
+        "- Desglose aritmético obligatorio:\n"
+        "  * Presupuesto inicial en caja: X €\n"
+        "  * Total gastado en compras decididas: Y €\n"
+        "  * Saldo final restante en caja (X - Y): Z € (DEBE SER ESTRICTAMENTE >= 0 €)\n\n"
         "### BLOQUE JSON FINAL ESTRICTO:\n"
         "```json\n"
         "{\n"
@@ -549,15 +565,29 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         print("🧠 DECISIÓN DEL MÁNAGER GEMINI:")
         print("=" * 60)
         print(response)
-        print("=" * 60)
+        print("=" * 60 + "\n")
 
-        events.emit("note", "🧠 Gemini Manager: Análisis estratégico y decisiones", detail={"analisis": response})
-
-        # Parse JSON decision
+        # Parse JSON
         decision = {}
         if "```json" in response:
             json_str = response.split("```json")[1].split("```")[0].strip()
             decision = json.loads(json_str)
+        executed = False
+
+        if decision:
+            # Save reasoning to history
+            try:
+                r_history = state.load_reasoning_history()
+                r_history.insert(0, {
+                    "timestamp": now_spain_str,
+                    "reasoning": response,
+                    "decision": decision
+                })
+                r_history = r_history[:30]
+                with open(os.path.join(config.ROOT, ".state", "reasoning_history.json"), "w", encoding="utf-8") as f:
+                    json.dump(r_history, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
 
             # Update memory
             if decision.get("nueva_memoria"):
@@ -565,31 +595,6 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 with open(memory_path, "w", encoding="utf-8") as f:
                     f.write(f"# MEMORY\n\nÚltima actualización: {now_spain_str}\n\n{decision['nueva_memoria']}\n")
                 print("\n[OK] Memoria persistente actualizada en hermes/MEMORY.md")
-
-            # Save full multi-turn reasoning history permanently (Never overwrite)
-            history_file = os.path.join(config.ROOT, ".state", "reasoning_history.json")
-            os.makedirs(os.path.dirname(history_file), exist_ok=True)
-            r_history = []
-            if os.path.exists(history_file):
-                try:
-                    with open(history_file, "r", encoding="utf-8") as f:
-                        r_history = json.load(f)
-                except Exception:
-                    r_history = []
-            
-            r_history.append({
-                "timestamp": now_spain.isoformat(),
-                "date_str": now_spain.strftime("%d/%m/%Y %H:%M"),
-                "response": response,
-                "decision": decision,
-                "executed": execute
-            })
-            r_history = r_history[-50:]
-            try:
-                with open(history_file, "w", encoding="utf-8") as f:
-                    json.dump(r_history, f, ensure_ascii=False, indent=2)
-            except Exception:
-                pass
 
             # Execute actions if requested
             if execute:
@@ -604,12 +609,20 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                     except Exception as e:
                         print(f"  ✗ No se pudo aplicar alineación: {e}")
 
+                # Budget validation guardrail in Python
+                disponible_en_caja = team.get("teamMoney", 0)
+
                 # 1. Execute Immediate Buyouts (Clausulazos directos)
                 for c_item in decision.get("clausulazos_inmediatos", []):
                     raw_id = c_item.get("playerId")
-                    clause_amt = c_item.get("clausula")
+                    clause_amt = int(c_item.get("clausula", 0))
                     p_name = c_item.get("nombre") or f"Jugador #{raw_id}"
                     resolved_id = player_to_team_id.get(str(raw_id), raw_id)
+
+                    # Hard Safety check on budget
+                    if clause_amt > disponible_en_caja:
+                        print(f"  ⛔ Clausulazo CANCELADO por falta de fondos: {p_name} cuesta {clause_amt:,} € y solo dispones de {disponible_en_caja:,} €.")
+                        continue
 
                     # Safety check on trend
                     t_check = match_name(p_name, p_name, t_index) if t_index else None
@@ -621,7 +634,8 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                     if resolved_id and clause_amt:
                         try:
                             fc.pay_buyout_clause(lid, resolved_id, int(clause_amt))
-                            print(f"  ⚡ ¡CLAUSULAZO PAGADO! Fichado {p_name} por {int(clause_amt):,} €")
+                            disponible_en_caja -= clause_amt
+                            print(f"  ⚡ ¡CLAUSULAZO PAGADO! Fichado {p_name} por {int(clause_amt):,} € (Saldo en caja restante: {disponible_en_caja:,} €)")
                             events.emit("buyout", f"¡Clausulazo pagado! Fichado {p_name} ({int(clause_amt):,} €)")
                         except Exception as e:
                             print(f"  ✗ Error al pagar cláusula de {p_name}: {e}")
@@ -653,11 +667,15 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 free_bids = decision.get("pujas_mercado_libre") or decision.get("pujas_recomendadas") or []
                 for bid_item in free_bids:
                     m_id = bid_item.get("marketId")
-                    max_bid = bid_item.get("puja_maxima")
+                    max_bid = int(bid_item.get("puja_maxima", 0))
                     nombre = bid_item.get("nombre", str(m_id))
+                    if max_bid > disponible_en_caja:
+                        print(f"  ⛔ Puja CANCELADA por falta de fondos: {nombre} requiere {max_bid:,} € y solo dispones de {disponible_en_caja:,} €.")
+                        continue
                     if m_id and max_bid:
                         state.add_bid_target(str(m_id), int(max_bid), nombre=nombre)
-                        print(f"  🎯 Objetivo añadido al Plan de Pujas de Último Minuto: {nombre} (Tope: {int(max_bid):,} €)")
+                        disponible_en_caja -= max_bid
+                        print(f"  🎯 Objetivo añadido al Plan de Pujas de Último Minuto: {nombre} (Tope: {int(max_bid):,} € | Saldo restante: {disponible_en_caja:,} €)")
                 
                 # 3. Execute last-minute bids using bidding engine
                 try:

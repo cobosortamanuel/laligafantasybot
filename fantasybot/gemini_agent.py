@@ -651,6 +651,29 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                         except Exception as e:
                             print(f"  ✗ Error al aceptar oferta por {j_name}: {e}")
 
+                # Refresh team, market, and league_teams after real operations
+                try:
+                    team = fc.team(lid, tid)
+                    market = fc.market(lid)
+                    league_teams = fc.league_teams(lid)
+                    # Auto list newly bought players on the market
+                    for p in team.get("players", []):
+                        pm = p.get("playerMaster", {})
+                        p_name = pm.get("nickname") or pm.get("name")
+                        ptid = p.get("playerTeamId")
+                        m_val = pm.get("marketValue") or 0
+                        is_on_market = bool(p.get("playerMarket"))
+                        if ptid and not is_on_market and m_val > 0:
+                            try:
+                                fc.sell_player(lid, ptid, int(m_val))
+                                print(f"  ✓ Nuevo fichaje puesto en venta: {p_name} ({int(m_val):,} €)")
+                            except Exception:
+                                pass
+                    team = fc.team(lid, tid)
+                    market = fc.market(lid)
+                except Exception as e:
+                    print(f"  ✗ Aviso al refrescar estado del equipo: {e}")
+
             # Generate Updated Minimalist Apple Dashboard
             from .dashboard_generator import generate_apple_dashboard
             generate_apple_dashboard(

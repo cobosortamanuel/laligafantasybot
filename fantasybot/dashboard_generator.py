@@ -260,6 +260,35 @@ def generate_apple_dashboard(
         else:
             return '<span class="text-[10px] font-mono font-semibold text-zinc-400 bg-zinc-800/60 px-1.5 py-0.5 rounded border border-zinc-700/40">─ 0.0%</span>'
 
+    # Calculate total squad trend & daily variation
+    players = team.get("players", [])
+    total_squad_daily_diff = 0
+    total_squad_prev_value = 0
+    if t_index and players:
+        from .matching import match_name
+        for p in players:
+            pm = p.get("playerMaster", {})
+            p_name = pm.get("nickname") or pm.get("name")
+            p_val = p.get("playerTeam", {}).get("marketValue") or pm.get("marketValue") or 0
+            t = match_name(p_name, p_name, t_index)
+            if t:
+                v_today = t.get("valor", 0)
+                v_prev = t.get("valor1", 0)
+                diff = v_today - v_prev
+                total_squad_daily_diff += diff
+                total_squad_prev_value += v_prev if v_prev > 0 else p_val
+            else:
+                total_squad_prev_value += p_val
+
+    total_squad_pct = (total_squad_daily_diff / total_squad_prev_value) * 100.0 if total_squad_prev_value > 0 else 0.0
+    
+    if total_squad_daily_diff > 0:
+        squad_total_trend_badge = f'<span class="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">▲ +{total_squad_pct:.1f}% (+{_format_money(total_squad_daily_diff)}/d)</span>'
+    elif total_squad_daily_diff < 0:
+        squad_total_trend_badge = f'<span class="text-[10px] font-mono font-semibold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">▼ {total_squad_pct:.1f}% ({_format_money(total_squad_daily_diff)}/d)</span>'
+    else:
+        squad_total_trend_badge = '<span class="text-[10px] font-mono font-semibold text-zinc-400 bg-zinc-800/60 px-1.5 py-0.5 rounded border border-zinc-700/40">─ 0.0%</span>'
+
     # Extract market player IDs to mark owned players with 'En Mercado' badge
     market_player_ids = set()
     for m in (market or []):
@@ -849,7 +878,10 @@ def generate_apple_dashboard(
                 </div>
                 <div class="mt-1">
                     <div class="text-lg sm:text-xl font-bold text-zinc-100 font-mono tracking-tight">{_format_money(value)}</div>
-                    <p class="text-[10px] sm:text-[11px] text-zinc-500 mt-0.5">{len(players)} futbolistas</p>
+                    <div class="flex items-center space-x-1.5 mt-0.5">
+                        <span class="text-[10px] sm:text-[11px] text-zinc-500">{len(players)} futbolistas</span>
+                        {squad_total_trend_badge}
+                    </div>
                 </div>
             </div>
 
@@ -929,9 +961,12 @@ def generate_apple_dashboard(
             <section id="tab-squad" class="tab-content space-y-4">
                 <!-- Squad Grid -->
                 <div>
-                    <div class="flex items-center justify-between pb-2">
-                        <span class="text-xs text-zinc-400">Todos los futbolistas se listan automáticamente para capturar ofertas diarias.</span>
-                        <span class="text-[11px] text-zinc-500 font-mono">Huecos: {', '.join(gaps) if gaps else 'Cubiertos'}</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-semibold text-zinc-200">Jugadores ({len(players)})</span>
+                            {squad_total_trend_badge}
+                        </div>
+                        <span class="text-[11px] text-zinc-400 font-mono">Huecos: {', '.join(gaps) if gaps else 'Cubiertos'}</span>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
                         {squad_cards_html or '<div class="col-span-4 p-6 text-center text-zinc-500 text-xs">Plantilla vacía</div>'}

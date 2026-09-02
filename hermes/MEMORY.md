@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: Wednesday, 02 de September de 2026 a las 15:11:45 (Hora España)
+Última actualización: Wednesday, 02 de September de 2026 a las 17:12:31 (Hora España)
 
-Manteniendo la puja activa por Koski para cerrar el hueco defensivo y asegurar su plusvalía (+454k/día). Caja proyectada protegida por encima de 6M€ a la espera del cierre de mercado de hoy.
+Reforzando la defensa con la puja activa por Koski en mercado libre (+454k/día) para cubrir hueco crítico y maximizar plusvalías. Caja proyectada estable por encima de 8M€.

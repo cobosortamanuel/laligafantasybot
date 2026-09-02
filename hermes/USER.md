@@ -21,7 +21,7 @@ User preferences y Directrices Tácticas para el FantasyBot agent.
 - **Valor ascendente:** Priorizar tener siempre a toda la plantilla con valor de mercado en subida.
 - **Jugadores siempre en venta:** Poner siempre a los jugadores en venta en el mercado para recibir ofertas diarias del sistema y evaluar ventas lucrativas antes de caídas de valor.
 - **Alineación con análisis del rival:** Al hacer la alineación, cruzar la probabilidad de titularidad con la dificultad del rival (si se enfrenta a un equipo grande/difícil puntuará menos; si se enfrenta a un rival propicio puntuará más).
-- **Protegerse de cláusulas:** Antes de que expire el candado de cláusula de 14 días de un jugador valioso, evaluar venderlo para monetizar la plusvalía antes de que un rival te lo robe.
+- **Protegerse de cláusulas: Vender antes que subir cláusulas:** Antes de que expire el candado de cláusula de 14 días de un jugador valioso con riesgo de ser robado por rivales con liquidez, la prioridad es venderlo a una buena oferta del sistema para monetizar la plusvalía en el pico, en vez de malgastar presupuesto muerto subiendo su cláusula.
 - **Trading y ROI %:** Evaluar siempre la rentabilidad porcentual sobre el capital invertido, no solo la subida absoluta.
 - **No vender piezas imprescindibles** sin valorar el coste de reemplazarlas.
 
@@ -35,5 +35,5 @@ User preferences y Directrices Tácticas para el FantasyBot agent.
 
 ### Cláusulas y Rivales
 - **Nunca hacer ofertas a otros jugadores/rivales.**
-- **Clausulazos estratégicos:** Son clave. Si un rival tiene un jugador con cláusula cercana a su valor de mercado y está subiendo fuerte, ficharlo. Si es caro y sube, comprarlo para ponerlo en venta y generar beneficio con la oscilación.
-- **Bloqueo 24h antes de jornada:** 24 horas antes del primer partido de la jornada no se pueden hacer clausulazos por regla del juego. Tener siempre el 11 listo antes del inicio.
+- **Clausulazos estratégicos (Flexibles y Rentables):** No limitarse a ratio 1.0x. Si un rival tiene un jugador que sube fuerte y la subida diaria amortiza la prima en pocos días (ratios 1.1x a 1.5x), es rentable y se ficha. Si es caro y sube, comprarlo para ponerlo en venta al instante y capturar ofertas alcistas de la máquina (flipping de clausulazos).
+- **Check 24h previas a la jornada:** 24 horas antes del primer partido de la jornada no se pueden pagar clausulazos por regla del juego; en ese caso se aplaza la compra para la reapertura al inicio de la jornada. Tener siempre el 11 listo antes del inicio.

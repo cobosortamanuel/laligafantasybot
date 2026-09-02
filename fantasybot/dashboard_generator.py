@@ -237,6 +237,29 @@ def generate_apple_dashboard(
         "JUG": "bg-zinc-800/90 text-zinc-300 border-zinc-700/60"
     }
 
+    # Load trends index for price variation and percentage
+    from .sources.market_trends import trends_index
+    t_index = trends_index()
+
+    def _format_trend_badge(p_name):
+        if not t_index:
+            return '<span class="text-[10px] font-mono font-semibold text-zinc-500 bg-zinc-800/40 px-1.5 py-0.5 rounded border border-zinc-800">─ 0.0%</span>'
+        from .matching import match_name
+        t = match_name(p_name, p_name, t_index)
+        if not t:
+            return '<span class="text-[10px] font-mono font-semibold text-zinc-500 bg-zinc-800/40 px-1.5 py-0.5 rounded border border-zinc-800">─ 0.0%</span>'
+        v_today = t.get("valor", 0)
+        v_prev = t.get("valor1", 0)
+        diff_val = v_today - v_prev
+        diff_pct = (diff_val / v_prev) * 100.0 if v_prev > 0 else 0.0
+        
+        if diff_val > 0:
+            return f'<span class="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">▲ +{diff_pct:.1f}% (+{_format_money(diff_val)}/d)</span>'
+        elif diff_val < 0:
+            return f'<span class="text-[10px] font-mono font-semibold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">▼ {diff_pct:.1f}% ({_format_money(diff_val)}/d)</span>'
+        else:
+            return '<span class="text-[10px] font-mono font-semibold text-zinc-400 bg-zinc-800/60 px-1.5 py-0.5 rounded border border-zinc-700/40">─ 0.0%</span>'
+
     # Extract market player IDs to mark owned players with 'En Mercado' badge
     market_player_ids = set()
     for m in (market or []):
@@ -277,6 +300,7 @@ def generate_apple_dashboard(
 
         in_market = bool(p.get("playerMarket")) or (str(p_id) in market_player_ids)
         market_badge = '<span class="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">En Mercado</span>' if in_market else '<span class="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">No listado</span>'
+        trend_badge = _format_trend_badge(p_name)
 
         squad_cards_html += f"""
         <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 hover:border-zinc-700 transition-all">
@@ -292,7 +316,10 @@ def generate_apple_dashboard(
                 <div class="min-w-0 flex-1">
                     <h4 class="font-semibold text-zinc-100 text-sm truncate">{p_name}</h4>
                     <p class="text-[11px] text-zinc-400 mt-0.5">Cláusula: {_format_money(int(clause))}</p>
-                    <p class="text-xs font-semibold text-zinc-200 mt-0.5">{_format_money(p_val)}</p>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <span class="text-xs font-semibold text-zinc-200">{_format_money(p_val)}</span>
+                        {trend_badge}
+                    </div>
                 </div>
             </div>
             <div class="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-zinc-800/60 text-center text-xs">
@@ -387,6 +414,8 @@ def generate_apple_dashboard(
         if bids_count > 0:
             bids_badge = f'<span class="text-xs font-semibold text-zinc-100 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">{bids_count} puja(s)</span>'
 
+        trend_badge = _format_trend_badge(p_name)
+
         market_rows_html += f"""
         <tr class="market-row border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors" data-pos="{pos_str}" data-name="{p_name.lower()}">
             <td class="py-2.5 px-3">
@@ -402,6 +431,7 @@ def generate_apple_dashboard(
                 <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border {pos_badge.get(pos_str, pos_badge['JUG'])}">{pos_str}</span>
             </td>
             <td class="py-2.5 px-3 text-right font-semibold text-zinc-200 text-xs font-mono">{_format_money(sale_price)}</td>
+            <td class="py-2.5 px-3 text-center">{trend_badge}</td>
             <td class="py-2.5 px-3 text-center text-xs font-mono font-medium text-emerald-400">{prob_str}</td>
             <td class="py-2.5 px-3 text-center">{bids_badge}</td>
             <td class="py-2.5 px-3 text-right text-[11px] text-zinc-400 font-mono">{time_left_str}</td>
@@ -507,6 +537,7 @@ def generate_apple_dashboard(
             prob_str = f"{prob}%" if prob is not None else "- %"
 
             status_tag = '<span class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Abierta (Comprar ya)</span>' if is_open else f'<span class="text-[10px] text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700 font-mono">Blindada ({shield_status})</span>'
+            trend_badge = _format_trend_badge(p_name)
 
             rival_clauses_html += f"""
             <tr class="border-b border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
@@ -518,6 +549,7 @@ def generate_apple_dashboard(
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border {pos_badge.get(pos_str, pos_badge['JUG'])}">{pos_str}</span>
                 </td>
                 <td class="py-2.5 px-3 text-right font-mono text-zinc-400 text-xs">{_format_money(val_m)}</td>
+                <td class="py-2.5 px-3 text-center">{trend_badge}</td>
                 <td class="py-2.5 px-3 text-right font-mono font-semibold text-amber-400 text-xs">{_format_money(clause_amt)}</td>
                 <td class="py-2.5 px-3 text-center text-xs font-mono font-medium text-emerald-400">{prob_str}</td>
                 <td class="py-2.5 px-3 text-right">{status_tag}</td>
@@ -961,6 +993,7 @@ def generate_apple_dashboard(
                                     <th class="py-2.5 px-3">Jugador</th>
                                     <th class="py-2.5 px-3">Pos</th>
                                     <th class="py-2.5 px-3 text-right">Precio Salida</th>
+                                    <th class="py-2.5 px-3 text-center">Tendencia</th>
                                     <th class="py-2.5 px-3 text-center">Titular</th>
                                     <th class="py-2.5 px-3 text-center">Pujas</th>
                                     <th class="py-2.5 px-3 text-right">Cierre</th>
@@ -1021,6 +1054,7 @@ def generate_apple_dashboard(
                                     <th class="py-2.5 px-3">Jugador / Rival</th>
                                     <th class="py-2.5 px-3">Pos</th>
                                     <th class="py-2.5 px-3 text-right">Valor</th>
+                                    <th class="py-2.5 px-3 text-center">Tendencia</th>
                                     <th class="py-2.5 px-3 text-right">Cláusula</th>
                                     <th class="py-2.5 px-3 text-center">Titular</th>
                                     <th class="py-2.5 px-3 text-right">Estado Escudo</th>

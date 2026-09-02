@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: Wednesday, 02 de September de 2026 a las 14:15:02 (Hora España)
+Última actualización: Wednesday, 02 de September de 2026 a las 14:21:19 (Hora España)
 
-Caja muy sólida con más de 81M€ proyectados. Mantenemos las pujas de especulación y cobertura (Koski, Yoel Lago, D. Cárdenas) respetando el veto de las 24h previas a la jornada para clausulazos y preparando las próximas aperturas de escudos.
+Caja sobresaliente con más de 81M€ proyectados disponibles. Mantenemos las pujas de especulación activas (Koski, Yoel Lago, Cárdenas) y programamos el clausulazo de Mikautadze para su apertura el 3 de septiembre, aprovechando el margen de más de 24h antes de la jornada.

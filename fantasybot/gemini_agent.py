@@ -324,10 +324,48 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
     dinero_comprometido_en_pujas = sum(int(t.get("max_bid", 0)) for t in scheduled_bids)
     presupuesto_proyectado = current_money - dinero_comprometido_en_pujas
 
+    # Matchday timing & Buyout restriction status
+    matchday_info = review_report.get("matchday", {})
+    kickoff_iso = matchday_info.get("kickoff")
+    hours_to_kickoff = None
+    veto_24h_activo = False
+    permitido_clausulazo_inmediato = True
+    estado_regla_clausulas = "PERMITIDO (Faltan más de 24h para el inicio de la jornada)"
+
+    if kickoff_iso:
+        try:
+            k_dt = datetime.fromisoformat(kickoff_iso)
+            if k_dt.tzinfo is None:
+                k_dt = k_dt.replace(tzinfo=timezone.utc)
+            seconds_to_k = (k_dt - now_utc).total_seconds()
+            hours_to_kickoff = round(seconds_to_k / 3600.0, 1)
+
+            if 0 < seconds_to_k <= (24 * 3600):
+                veto_24h_activo = True
+                permitido_clausulazo_inmediato = False
+                estado_regla_clausulas = f"BLOQUEADO POR REGLA 24H (Faltan solo {hours_to_kickoff}h para el kickoff). Las cláusulas se reabrirán al arrancar la jornada."
+            elif seconds_to_k <= 0:
+                veto_24h_activo = False
+                permitido_clausulazo_inmediato = True
+                estado_regla_clausulas = "PERMITIDO (La jornada ya ha comenzado / en curso. Cláusulas desbloqueadas para la siguiente fecha)."
+            else:
+                veto_24h_activo = False
+                permitido_clausulazo_inmediato = True
+                estado_regla_clausulas = f"TOTALMENTE PERMITIDO (Margen amplio de {hours_to_kickoff}h antes del kickoff; fuera de la restricción de 24h)."
+        except Exception:
+            pass
+
     # Build prompt situation
     situation = {
         "fecha_hora_actual_espana": now_spain_str,
-        "proxima_jornada": review_report.get("matchday", {}),
+        "proxima_jornada": matchday_info,
+        "normativa_clausulazos": {
+            "horas_para_inicio_jornada": hours_to_kickoff,
+            "veto_24h_activo_ahora": veto_24h_activo,
+            "permitido_pagar_clausulazos_inmediatos_ahora": permitido_clausulazo_inmediato,
+            "diagnostico": estado_regla_clausulas,
+            "reapertura_clausulas": "Al arrancar el primer partido de la jornada (kickoff), las cláusulas se desbloquean nuevamente."
+        },
         "presupuesto_actual_en_caja": current_money,
         "dinero_comprometido_en_pujas_programadas": dinero_comprometido_en_pujas,
         "presupuesto_disponible_proyectado": presupuesto_proyectado,
@@ -370,12 +408,15 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         "   - Si un jugador NO tiene pujas, pujar a su PRECIO DE MERCADO o sumar exactamente +210 € como margen de seguridad.\n"
         "   - Si ya tiene pujas rivales, subir de forma moderada sin sobrepagar.\n"
         "   - NUNCA gastar toda la caja salvo oportunidad irrepetible.\n"
-        "9. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE):\n"
-        "   - NUNCA hacer pujas normales a jugadores de rivales.\n"
-        "   - CLAUSULAZO DIRECTO (PAGO INMEDIATO): Si un jugador de un rival tiene su cláusula ABIERTA, es rentable (su precio se va a amortizar con creces en puntos/valor) y disponemos de saldo, se ejecuta como clausulazo directo.\n"
-        "   - CLAUSULAZO PROGRAMADO: Si la cláusula de un jugador estrella rival vence su escudo pronto (pocas horas/días), planificar su compra en el segundo exacto de apertura.\n"
-        "   - NUNCA pagar cláusulas desproporcionadas que no se amorticen.\n"
-        "   - REGLA DE LAS 24H: 24 horas antes del inicio de la jornada NO se pueden pagar cláusulas.\n"
+        "9. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE - REGLAS DE TIEMPO):\n"
+        "   - NUNCA hacer pujas normales a jugadores de rivales (solo mercado libre o clausulazos).\n"
+        "   - CLAUSULAZOS DIRECTOS (PAGO INMEDIATO): Si `permitido_pagar_clausulazos_inmediatos_ahora` es TRUE (como cuando faltan más de 24h para la jornada, o la jornada ya comenzó), y un jugador rival tiene su cláusula ABIERTA y es rentable (o cubre huecos críticos como POR/DEF), EJECUTA EL CLAUSULAZO INMEDIATO sin dudar.\n"
+        "   - REGLA DE LAS 24 HORAS PREVIAS AL KICKOFF:\n"
+        "     * Si `horas_para_inicio_jornada > 24`: LUZ VERDE TOTAL. NUNCA te abstengas de clausular por miedo a la jornada si faltan más de 24 horas (ej. faltan 30h, 54h o días).\n"
+        "     * Si `0 < horas_para_inicio_jornada <= 24`: En esta ventana exacta de 24h previas al primer partido, LaLiga Fantasy bloquea el pago de cláusulas para proteger las alineaciones de la jornada. En ese caso NO se pagan cláusulas inmediatas, pero SÍ se pueden programar para la reapertura.\n"
+        "     * REAPERTURA AL INICIAR LA JORNADA: En cuanto empieza el primer partido (kickoff), los clausulazos se vuelven a DESBLOQUEAR automáticamente en el juego.\n"
+        "   - CLAUSULAZOS PROGRAMADOS: Si el escudo de un jugador rival vence pronto (pocas horas/días), añade su objetivo a `clausulazos_programados` para el momento exacto en que expire el escudo (o para la hora de inicio de la jornada si la apertura caía en la ventana de veto de 24h).\n"
+        "   - NUNCA pagar cláusulas desproporcionadas que no se amorticen en valor o puntos.\n"
         "10. GESTIÓN Y CANCELACIÓN DE ACCIONES PROGRAMADAS:\n"
         "   - Puedes ver el plan actual en `acciones_programadas_activas`.\n"
         "   - Si una puja programada anteriormente ya no es conveniente (ej. el jugador se lesionó, su valor empezó a desplomarse o ha surgido una oportunidad superior), puedes cancelarla en `cancelar_pujas_programadas`.\n"

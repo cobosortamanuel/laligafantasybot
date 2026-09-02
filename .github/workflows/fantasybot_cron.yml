@@ -69,8 +69,8 @@ jobs:
       - name: Commit updated memory
         continue-on-error: true
         run: |
-          git config --global user.name "FantasyBot Agent"
-          git config --global user.email "fantasybot@users.noreply.github.com"
+          git config --global user.name "cobosortamanuel"
+          git config --global user.email "cobosortamanuel@gmail.com"
           git stash || true
           git pull --rebase origin main || true
           git stash pop || true

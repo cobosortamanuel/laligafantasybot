@@ -147,12 +147,46 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
 
     pos_map = {1: "POR", 2: "DEF", 3: "MED", 4: "DEL", 5: "ENT"}
 
-    # 3. Probable lineups index
+    # 3. Probable lineups and Market trends indexes
     prob_index = {}
     try:
         prob_index = probable_lineups()
     except Exception:
         pass
+
+    t_index = {}
+    try:
+        from .sources.market_trends import trends_index
+        t_index = trends_index()
+    except Exception:
+        pass
+
+    from .matching import match_name
+
+    def get_player_trend(pm):
+        nick = pm.get("nickname") or ""
+        name = pm.get("name") or ""
+        if not t_index:
+            return {"en_subida": True, "tendencia": "ESTABLE", "variacion_diaria": 0}
+        t = match_name(nick, name, t_index)
+        if not t:
+            return {"en_subida": True, "tendencia": "ESTABLE (Sin datos)", "variacion_diaria": 0}
+        val = t.get("valor", 0)
+        val1 = t.get("valor1", val)
+        diff = val - val1
+        tend_num = t.get("tendencia", 0)
+        is_falling = (diff < 0) or (tend_num < 0)
+        if is_falling:
+            tend_str = f"BAJANDO ({diff:+,} €/día)"
+        elif diff > 0 or tend_num > 0:
+            tend_str = f"SUBIENDO ({diff:+,} €/día)"
+        else:
+            tend_str = "ESTABLE"
+        return {
+            "en_subida": not is_falling,
+            "tendencia": tend_str,
+            "variacion_diaria": diff
+        }
 
     # 4. Separate System Free Agent Market vs Received Offers
     mercado_libre_sistema = []
@@ -173,13 +207,14 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         )
         is_system = (m.get("discr") == "marketPlayerLeague")
 
-        # Starting probability
+        # Starting probability & trend
         prob = None
         if prob_index:
-            from .matching import match_name
             minfo = match_name(pm.get("nickname", ""), pm.get("name", ""), prob_index)
             if minfo:
                 prob = minfo.get("prob")
+
+        trend_info = get_player_trend(pm)
 
         if is_system:
             mercado_libre_sistema.append({
@@ -190,6 +225,9 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 "precio_salida": price,
                 "pujas_actuales": m.get("numberOfBids", 0),
                 "prob_titular": prob,
+                "en_subida": trend_info["en_subida"],
+                "tendencia": trend_info["tendencia"],
+                "variacion_diaria": trend_info["variacion_diaria"],
                 "puntos": pm.get("points", 0),
                 "media": pm.get("averagePoints", 0),
                 "cierre": m.get("expirationDate")
@@ -270,10 +308,11 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
 
             prob = None
             if prob_index:
-                from .matching import match_name
                 minfo = match_name(pm.get("nickname", ""), pm.get("name", ""), prob_index)
                 if minfo:
                     prob = minfo.get("prob")
+
+            trend_info = get_player_trend(pm)
 
             rival_clause_targets.append({
                 "playerId": p_id,
@@ -287,6 +326,9 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 "segundos_para_abrir": seconds_to_open,
                 "estado_escudo": locked_until_str,
                 "prob_titular": prob,
+                "en_subida": trend_info["en_subida"],
+                "tendencia": trend_info["tendencia"],
+                "variacion_diaria": trend_info["variacion_diaria"],
                 "puntos": pm.get("points", 0),
                 "media": pm.get("averagePoints", 0),
                 "estado_medico": pm.get("playerStatus", "ok")
@@ -377,7 +419,9 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 "nombre": p["playerMaster"].get("nickname") or p["playerMaster"].get("name"),
                 "posicion": pos_map.get(p["playerMaster"].get("positionId"), "-"),
                 "valor": p.get("playerTeam", {}).get("marketValue") or p["playerMaster"].get("marketValue"),
-                "puntos": p["playerMaster"].get("points", 0)
+                "puntos": p["playerMaster"].get("points", 0),
+                "en_subida": get_player_trend(p["playerMaster"])["en_subida"],
+                "tendencia": get_player_trend(p["playerMaster"])["tendencia"]
             } for p in team.get("players", [])
         ],
         "ofertas_recibidas_por_mis_jugadores": my_received_offers,
@@ -398,25 +442,29 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
         "2. CONTROL DE PRESUPUESTO ACTUAL Y PROYECTADO:\n"
         "   - Tienes el presupuesto en caja (`presupuesto_actual_en_caja`), el dinero ya reservado para compras de mercado (`dinero_comprometido_en_pujas_programadas`) y el saldo neto restante (`presupuesto_disponible_proyectado`).\n"
         "   - Al decidir nuevas compras o clausulazos, evalúa siempre el `presupuesto_disponible_proyectado` para no exceder los fondos reales.\n"
-        "3. VALOR ASCENDENTE: Priorizar tener a toda la plantilla con valor de mercado en subida.\n"
+        "3. VALOR ASCENDENTE (REGLA DE ORO):\n"
+        "   - Priorizar tener a toda la plantilla con valor de mercado en subida (`en_subida: true`).\n"
+        "   - PROHIBICIÓN ABSOLUTA: NUNCA pujar ni clausular a ningún jugador con `en_subida: false` o tendencia `BAJANDO`, por muchos puntos o media alta que tenga (ej. Mikautadze u otros jugadores en caída). Comprar jugadores perdiendo valor destruye el patrimonio del club.\n"
+        "   - SOLO comprar o clausular jugadores con `en_subida: true` (tendencia alcista) o con valor de mercado completamente estable.\n"
         "4. JUGADORES EN VENTA: Todos los jugadores están siempre en el mercado para recibir ofertas diarias de la máquina y monetizar picos de valor.\n"
         "5. ALINEACIÓN Y DIFICULTAD DEL RIVAL: Evaluar probabilidades de titularidad y dificultad del partido (los partidos difíciles reducen la puntuación esperada).\n"
         "6. PROTECCIÓN DE CLÁUSULAS (14 DÍAS): El escudo de protección dura 14 días. Antes de que expire la cláusula de un jugador cotizado, evaluar venderlo o protegerlo si hay riesgo de robo rival.\n"
         "7. TRADING Y RENTABILIDAD PORCENTUAL (ROI %): Evaluar siempre la rentabilidad porcentual sobre el capital invertido.\n"
         "8. MERCADO LIBRE Y PUJAS:\n"
-        "   - Solo pujar por jugadores que estén subiendo o rindan de forma sobresaliente.\n"
+        "   - Solo pujar por jugadores que estén subiendo (`en_subida: true`) o rindan de forma sobresaliente.\n"
         "   - Si un jugador NO tiene pujas, pujar a su PRECIO DE MERCADO o sumar exactamente +210 € como margen de seguridad.\n"
         "   - Si ya tiene pujas rivales, subir de forma moderada sin sobrepagar.\n"
         "   - NUNCA gastar toda la caja salvo oportunidad irrepetible.\n"
-        "9. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE - REGLAS DE TIEMPO):\n"
+        "9. RIVALES Y CLAUSULAZOS (MUY IMPORTANTE - REGLAS DE TIEMPO Y VALOR):\n"
         "   - NUNCA hacer pujas normales a jugadores de rivales (solo mercado libre o clausulazos).\n"
-        "   - CLAUSULAZOS DIRECTOS (PAGO INMEDIATO): Si `permitido_pagar_clausulazos_inmediatos_ahora` es TRUE (como cuando faltan más de 24h para la jornada, o la jornada ya comenzó), y un jugador rival tiene su cláusula ABIERTA y es rentable (o cubre huecos críticos como POR/DEF), EJECUTA EL CLAUSULAZO INMEDIATO sin dudar.\n"
+        "   - SOLO CLAUSULAR JUGADORES EN SUBIDA: Exclusivamente se permite pagar o programar cláusulas de jugadores con `en_subida: true`.\n"
+        "   - CLAUSULAZOS DIRECTOS (PAGO INMEDIATO): Si `permitido_pagar_clausulazos_inmediatos_ahora` es TRUE, y un jugador rival tiene su cláusula ABIERTA, está en SUBIDA (`en_subida: true`) y es rentable (o cubre huecos críticos como POR/DEF), EJECUTA EL CLAUSULAZO INMEDIATO sin dudar.\n"
         "   - REGLA DE LAS 24 HORAS PREVIAS AL KICKOFF:\n"
         "     * Si `horas_para_inicio_jornada > 24`: LUZ VERDE TOTAL. NUNCA te abstengas de clausular por miedo a la jornada si faltan más de 24 horas (ej. faltan 30h, 54h o días).\n"
         "     * Si `0 < horas_para_inicio_jornada <= 24`: En esta ventana exacta de 24h previas al primer partido, LaLiga Fantasy bloquea el pago de cláusulas para proteger las alineaciones de la jornada. En ese caso NO se pagan cláusulas inmediatas, pero SÍ se pueden programar para la reapertura.\n"
         "     * REAPERTURA AL INICIAR LA JORNADA: En cuanto empieza el primer partido (kickoff), los clausulazos se vuelven a DESBLOQUEAR automáticamente en el juego.\n"
-        "   - CLAUSULAZOS PROGRAMADOS: Si el escudo de un jugador rival vence pronto (pocas horas/días), añade su objetivo a `clausulazos_programados` para el momento exacto en que expire el escudo (o para la hora de inicio de la jornada si la apertura caía en la ventana de veto de 24h).\n"
-        "   - NUNCA pagar cláusulas desproporcionadas que no se amorticen en valor o puntos.\n"
+        "   - CLAUSULAZOS PROGRAMADOS: Si el escudo de un jugador rival vence pronto (pocas horas/días) Y ESTÁ EN SUBIDA (`en_subida: true`), añade su objetivo a `clausulazos_programados` para el momento exacto en que expire el escudo (o para la hora de inicio de la jornada si la apertura caía en la ventana de veto de 24h).\n"
+        "   - NUNCA pagar cláusulas desproporcionadas ni de jugadores en caída de valor.\n"
         "10. GESTIÓN Y CANCELACIÓN DE ACCIONES PROGRAMADAS:\n"
         "   - Puedes ver el plan actual en `acciones_programadas_activas`.\n"
         "   - Si una puja programada anteriormente ya no es conveniente (ej. el jugador se lesionó, su valor empezó a desplomarse o ha surgido una oportunidad superior), puedes cancelarla en `cancelar_pujas_programadas`.\n"
@@ -523,6 +571,14 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                     clause_amt = c_item.get("clausula")
                     p_name = c_item.get("nombre") or f"Jugador #{raw_id}"
                     resolved_id = player_to_team_id.get(str(raw_id), raw_id)
+
+                    # Safety check on trend
+                    t_check = match_name(p_name, p_name, t_index) if t_index else None
+                    if t_check and ((t_check.get("valor", 0) - t_check.get("valor1", 0)) < 0 or t_check.get("tendencia", 0) < 0):
+                        diff_val = t_check.get("valor", 0) - t_check.get("valor1", 0)
+                        print(f"  ⛔ Clausulazo INMEDIATO bloqueado por regla de valor ascendente: {p_name} está en bajada ({diff_val:+,} €/día)")
+                        continue
+
                     if resolved_id and clause_amt:
                         try:
                             fc.pay_buyout_clause(lid, resolved_id, int(clause_amt))
@@ -530,6 +586,19 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                             events.emit("buyout", f"¡Clausulazo pagado! Fichado {p_name} ({int(clause_amt):,} €)")
                         except Exception as e:
                             print(f"  ✗ Error al pagar cláusula de {p_name}: {e}")
+
+                # Register and validate scheduled buyout targets
+                for sch_buyout in decision.get("clausulazos_programados", []):
+                    sb_name = sch_buyout.get("nombre", "Desconocido")
+                    sb_clause = sch_buyout.get("clausula", 0)
+                    sb_iso = sch_buyout.get("apertura_iso")
+                    t_check = match_name(sb_name, sb_name, t_index) if t_index else None
+                    if t_check and ((t_check.get("valor", 0) - t_check.get("valor1", 0)) < 0 or t_check.get("tendencia", 0) < 0):
+                        diff_val = t_check.get("valor", 0) - t_check.get("valor1", 0)
+                        print(f"  ⛔ Clausulazo PROGRAMADO descartado por regla de valor ascendente: {sb_name} está en bajada ({diff_val:+,} €/día)")
+                        continue
+                    if sb_iso and sb_name:
+                        state.add_reminder(f"buyout_{sch_buyout.get('playerId')}", f"Clausulazo programado sobre {sb_name} ({int(sb_clause):,} €)", sb_iso)
 
                 # 2. Cancel requested scheduled bids
                 for canc in decision.get("cancelar_pujas_programadas", []):

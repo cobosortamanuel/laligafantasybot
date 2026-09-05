@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: Saturday, 05 de September de 2026 a las 00:19:13 (Hora España)
+Última actualización: Saturday, 05 de September de 2026 a las 19:04:20 (Hora España)
 
-Jornada en vísperas de inicio (veto de 24h activo para cláusulas). Se aceptan las ofertas de la máquina por Mikel Rodriguez y Guruzeta para monetizar plusvalías y soltar activos en tendencia bajista, elevando la liquidez del club. Se rechazan las ofertas por Vlachodimos, Zaid Romero y el estelar Kang-In Lee para proteger la competitividad y capturar su subida diaria masiva. Caja intacta en 381.325 € a la espera de la apertura de mercado y desbloqueo de cláusulas post-kickoff.
+Jornada en vísperas inmediatas del kickoff (menos de 2 horas). Se acepta la oferta de la máquina por Mikel Rodriguez (+3.1M€) para monetizar su tendencia bajista y elevar nuestra liquidez. Se rechazan las ofertas a la baja por Quagliata y R. Terrats para proteger nuestros activos en subida. Las cláusulas siguen temporalmente bloqueadas por el veto de 24h hasta el inicio del primer partido. Sin liquidez suficiente para los costosos jugadores en subida del mercado libre, mantenemos la caja blindada en más de 3.48M€ tras la venta para afrontar con solvencia los clausulazos estratégicos en cuanto se reabra el mercado.

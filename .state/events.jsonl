@@ -30,3 +30,10 @@
 {"ts": 1788384483.899043, "iso": "2026-09-02T23:28:03.899043+02:00", "run": "run_20260902_212803", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Quagliata (3,297,999 €)", "status": "ok"}
 {"ts": 1788388513.5791018, "iso": "2026-09-03T00:35:13.579104+02:00", "run": "run_20260902_223513", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado R. Terrats (5,699,658 €)", "status": "ok"}
 {"ts": 1788459585.4763606, "iso": "2026-09-03T20:19:45.476363+02:00", "run": "run_20260903_181945", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Mikel Rodriguez (2,822,853 €)", "status": "ok"}
+{"ts": 1788627864.5792875, "iso": "2026-09-05T19:04:24.579291+02:00", "run": "run_20260905_170424", "kind": "sell", "title": "Puesto a la venta: Vlachodimos (27,126,563 €)", "status": "ok"}
+{"ts": 1788627864.8722017, "iso": "2026-09-05T19:04:24.872205+02:00", "run": "run_20260905_170424", "kind": "sell", "title": "Puesto a la venta: Zaid Romero (31,036,440 €)", "status": "ok"}
+{"ts": 1788627865.1643186, "iso": "2026-09-05T19:04:25.164321+02:00", "run": "run_20260905_170424", "kind": "sell", "title": "Puesto a la venta: Arguibide (2,044,979 €)", "status": "ok"}
+{"ts": 1788627865.4746983, "iso": "2026-09-05T19:04:25.474700+02:00", "run": "run_20260905_170424", "kind": "sell", "title": "Puesto a la venta: Kang-In Lee (65,923,720 €)", "status": "ok"}
+{"ts": 1788627865.7543623, "iso": "2026-09-05T19:04:25.754365+02:00", "run": "run_20260905_170424", "kind": "sell", "title": "Puesto a la venta: Pathé I. Ciss (20,951,262 €)", "status": "ok"}
+{"ts": 1788627866.0469277, "iso": "2026-09-05T19:04:26.046931+02:00", "run": "run_20260905_170424", "kind": "sell", "title": "Puesto a la venta: Antony (64,703,351 €)", "status": "ok"}
+{"ts": 1788627866.3391058, "iso": "2026-09-05T19:04:26.339109+02:00", "run": "run_20260905_170424", "kind": "sell", "title": "Puesto a la venta: Guruzeta (11,514,092 €)", "status": "ok"}

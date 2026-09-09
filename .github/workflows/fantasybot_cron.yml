@@ -64,6 +64,14 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LALIGA_TOKENS: ${{ secrets.LALIGA_TOKENS }}
         run: |
+          python -c "
+          from datetime import datetime, timezone
+          now = datetime.now(timezone.utc)
+          # Skip 17:00 Spain (15:00 UTC) specifically on 2026-09-09 since it was executed manually
+          if now.strftime('%Y-%m-%d') == '2026-09-09' and now.hour == 15:
+              print('⏸️ Pase de las 17:00 del 09/09/2026 omitido a petición del usuario (ya ejecutado previamente).')
+              exit(0)
+          "
           python -m fantasybot gemini --execute
 
       - name: Commit updated memory

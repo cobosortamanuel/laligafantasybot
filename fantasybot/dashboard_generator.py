@@ -204,7 +204,8 @@ ICONS = {
 
 def generate_apple_dashboard(
     team, market, best_lineup, flips, gaps, review_report, gemini_response, decision, executed,
-    prob_index=None, league_teams=None, my_received_offers=None, rival_clause_targets=None
+    prob_index=None, league_teams=None, my_received_offers=None, rival_clause_targets=None,
+    agentic_steps=None
 ):
     """Builds the comprehensive, mobile-friendly Apple dark mode HTML dashboard."""
     now = datetime.now()
@@ -706,7 +707,8 @@ def generate_apple_dashboard(
         current_entry = {
             "timestamp": now_str,
             "reasoning": gemini_response,
-            "decision": decision
+            "decision": decision,
+            "steps": agentic_steps or []
         }
         filtered_history = [
             h for h in r_history
@@ -714,11 +716,66 @@ def generate_apple_dashboard(
         ]
         r_history = [current_entry] + filtered_history
 
+    def _render_steps_visualizer(steps):
+        if not steps:
+            return ""
+        steps_html = "<div class='mb-4 space-y-2.5'>"
+        steps_html += "<div class='text-[11px] uppercase tracking-wider font-bold text-zinc-400 font-mono mb-2 flex items-center justify-between'><span>Proceso Agéntico Interactivo (" + str(len(steps)) + " pasos)</span><span class='text-emerald-400'>ReAct Function Calling</span></div>"
+        tool_icons = {
+            "consultar_caja_y_plantilla": ICONS['wallet'],
+            "evaluar_ofertas_recibidas": ICONS['tag'],
+            "aceptar_oferta_mercado": ICONS['wallet'],
+            "buscar_clausulazos_viables": ICONS['zap'],
+            "buscar_mercado_libre": ICONS['market'],
+            "ejecutar_clausulazo": ICONS['zap'],
+            "programar_puja_mercado": ICONS['clock'],
+            "alinear_equipo": ICONS['shield'],
+            "finalizar_sesion": ICONS['trophy'],
+            "razonamiento_textual": ICONS['cpu']
+        }
+        for s in steps:
+            step_num = s.get("step", 1)
+            t_name = s.get("tool", "Acción")
+            t_args = s.get("args", {})
+            t_res = s.get("result", {})
+            t_thought = s.get("thought", "")
+            icon = tool_icons.get(t_name, ICONS['cpu'])
+            args_str = json.dumps(t_args, ensure_ascii=False) if t_args else ""
+            res_str = json.dumps(t_res, ensure_ascii=False) if t_res else ""
+
+            badge_col = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+            if "clausulazo" in t_name:
+                badge_col = "bg-amber-500/10 text-amber-400 border-amber-500/20"
+            elif "oferta" in t_name:
+                badge_col = "bg-blue-500/10 text-blue-400 border-blue-500/20"
+            elif "alinear" in t_name:
+                badge_col = "bg-purple-500/10 text-purple-400 border-purple-500/20"
+
+            steps_html += f"""
+            <div class="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 text-xs">
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-5 h-5 rounded flex items-center justify-center bg-zinc-800 border border-zinc-700 text-[10px] font-mono text-zinc-300 font-bold">{step_num}</span>
+                        <span class="p-1 rounded bg-zinc-800 text-zinc-300">{icon}</span>
+                        <span class="font-semibold text-zinc-200 font-mono text-[11px]">{t_name}</span>
+                    </div>
+                    <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border {badge_col}">Paso {step_num}/7</span>
+                </div>
+                {f'<div class="text-[11px] text-zinc-400 italic mb-1.5 pl-7 border-l border-zinc-800">{html_lib.escape(t_thought)}</div>' if t_thought else ''}
+                {f'<div class="text-[10px] font-mono text-zinc-500 bg-zinc-950 p-1.5 rounded border border-zinc-800/60 overflow-x-auto"><span class="text-zinc-400 font-bold">Args:</span> {html_lib.escape(args_str)}</div>' if args_str else ''}
+                {f'<div class="text-[10px] font-mono text-emerald-400/90 bg-zinc-950 p-1.5 rounded border border-zinc-800/60 mt-1 overflow-x-auto"><span class="text-zinc-400 font-bold">Resultado:</span> {html_lib.escape(res_str[:300])}</div>' if res_str else ''}
+            </div>
+            """
+        steps_html += "</div>"
+        return steps_html
+
     reasoning_archive_html = ""
     if r_history:
         for idx, item in enumerate(r_history):
             ts = _format_spain_time(item.get("timestamp") or item.get("date_str"))
             resp = item.get("reasoning") or item.get("response", "")
+            steps = item.get("steps") or (agentic_steps if idx == 0 else [])
+            steps_vis = _render_steps_visualizer(steps)
             fmt_resp = _format_markdown_report(resp)
             is_first = (idx == 0)
 
@@ -728,14 +785,17 @@ def generate_apple_dashboard(
                     <div class="flex items-center space-x-2.5">
                         <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-zinc-300">{ICONS['cpu']}</span>
                         <div>
-                            <span class="font-semibold text-zinc-200 text-xs">Informe Táctico Gemini</span>
+                            <span class="font-semibold text-zinc-200 text-xs">Informe Táctico Agéntico Gemini</span>
                             <span class="text-[10px] text-zinc-500 font-mono ml-2">{ts} (Hora España)</span>
                         </div>
                     </div>
                     <span class="text-zinc-500 text-xs font-mono group-open:rotate-180 transition-transform">▼</span>
                 </summary>
-                <div class="px-4 pb-4 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 text-xs text-zinc-300 space-y-2">
-                    {fmt_resp}
+                <div class="px-4 pb-4 pt-3 border-t border-zinc-800/60 bg-zinc-950/40 text-xs text-zinc-300 space-y-3">
+                    {steps_vis}
+                    <div class="pt-2 border-t border-zinc-800/60">
+                        {fmt_resp}
+                    </div>
                 </div>
             </details>
             """
@@ -946,7 +1006,11 @@ def generate_apple_dashboard(
         <!-- Mobile-Friendly Horizontal Pill Navigation Tabs -->
         <nav class="pt-2 pb-1 border-b border-zinc-800/80 sticky top-12 z-40 bg-zinc-950/95 backdrop-blur -mx-3 px-3 sm:mx-0 sm:px-0">
             <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pb-1 text-xs font-medium">
-                <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0">
+                <button onclick="switchTab('tab-agent')" id="btn-tab-agent" class="tab-btn tab-active px-3 py-1.5 rounded-lg border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-semibold">
+                    <span>{ICONS['cpu']}</span>
+                    <span>Modo Agéntico</span>
+                </button>
+                <button onclick="switchTab('tab-squad')" id="btn-tab-squad" class="tab-btn px-3 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 border border-transparent transition-all flex items-center space-x-1.5 flex-shrink-0">
                     <span>{ICONS['users']}</span>
                     <span>Plantilla ({len(players)})</span>
                 </button>
@@ -972,8 +1036,38 @@ def generate_apple_dashboard(
         <!-- TAB CONTENT CONTAINER -->
         <div class="pt-2">
             
+            <!-- TAB 0: AGENTIC LIVE SESSION TIMELINE & REPORT -->
+            <section id="tab-agent" class="tab-content space-y-4">
+                <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="p-1.5 bg-zinc-800 rounded-lg border border-zinc-700 text-emerald-400">{ICONS['cpu']}</span>
+                            <div>
+                                <h3 class="text-xs uppercase font-bold text-zinc-100 flex items-center space-x-2">
+                                    <span>Sesión Agéntica Autónoma • Gemini 3.5 Flash Lite</span>
+                                    <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Interactivo</span>
+                                </h3>
+                                <p class="text-[10px] text-zinc-400 mt-0.5">Ciclo multi-paso autónomo con herramientas reales (LaLiga API & Market)</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-zinc-500 font-mono hidden sm:inline">Límite: 7 pasos</span>
+                    </div>
+
+                    <div class="mt-4">
+                        {_render_steps_visualizer(agentic_steps or (r_history[0].get("steps") if r_history else []))}
+                    </div>
+
+                    <div class="pt-4 mt-2 border-t border-zinc-800/60">
+                        <h4 class="text-xs uppercase tracking-wider font-bold text-zinc-300 font-mono mb-2">Informe Táctico Final de la Sesión</h4>
+                        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-4 text-xs text-zinc-300 space-y-2">
+                            {_format_markdown_report(gemini_response or (r_history[0].get("reasoning") if r_history else ""))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB 1: SQUAD & RECEIVED OFFERS -->
-            <section id="tab-squad" class="tab-content space-y-4">
+            <section id="tab-squad" class="tab-content hidden space-y-4">
                 <!-- Squad Grid -->
                 <div>
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2.5">

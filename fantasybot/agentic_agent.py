@@ -5,12 +5,21 @@ where Gemini dynamically queries finances, accepts sales, verifies updated cash,
 executes buyouts, optimizes tactical formations, and produces verified reports.
 """
 
+import sys
 import json
 import os
 import time
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone, timedelta
+
+# Fix Windows console UTF-8 emoji encoding
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 from . import config, events, execute as execute_mod, state
 from .strategy import flip, lineup as lineup_opt, needs as needs_mod
@@ -374,11 +383,13 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
 
         amt = matched["oferta_recibida"]
         ptid = matched["playerTeamId"]
+        mid = matched.get("marketId")
         pname = matched["jugador"]
+        target_endpoint_id = mid or ptid
 
         if execute:
             try:
-                fc.accept_offer(lid, ptid, matched["offerId"], int(amt))
+                fc.accept_offer(lid, target_endpoint_id, matched["offerId"], int(amt))
                 events.emit("sell", f"Oferta ACEPTADA por {pname}: {int(amt):,} €")
                 print(f"  ⚡ [EJECUCIÓN REAL] Oferta ACEPTADA por {pname}: {int(amt):,} €")
                 team = fc.team(lid, tid)
@@ -604,8 +615,8 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
         "TU OBJETIVO ES MAXIMIZAR EL PATRIMONIO DEL CLUB Y COMPETIR CON SOLVENCIA.\n\n"
         "FILOSOFÍA OBLIGATORIA DEL USUARIO:\n"
         "1. PRIORIDAD ABSOLUTA AL DINERO SOBRE LOS PUNTOS: A más dinero, mejores jugadores y más puntos.\n"
-        "2. NUNCA vender a estrellas en aceleración alcista violenta (ej. Kang-In Lee subiendo millones/día).\n"
-        "3. MONETIZAR EN EL PICO: Vender a jugadores que muestren tendencia bajista o cuando la máquina ofrezca primas sustanciales para capturar plusvalías.\n"
+        "2. PROTEGER ACTIVOS ALCISTAS: NUNCA vender a futbolistas que estén en aceleración alcista subiendo con fuerza cada día.\n"
+        "3. MONETIZAR EN EL PICO O EN BAJADA: Vender a jugadores que muestren tendencia bajista confirmada (subida diaria negativa) o cuando la máquina ofrezca primas sustanciales para capturar plusvalías antes de que sigan devaluándose.\n"
         "4. CLAUSULAZOS RENTABLES: Evaluar amortización (Cláusula - Valor) / Subida Diaria. Si se amortiza rápido, fichar y poner en venta.\n"
         "5. FLEXIBILIDAD TÁCTICA: La alineación NO tiene por qué ser 3-4-3. Usa alinear_equipo() para probar todas las formaciones y elegir la mejor.\n"
         "6. SOLVENCIA ABSOLUTA: Prohibido gastar lo que no tienes en caja. Si necesitas dinero para fichar, primero vende a activos bajistas con aceptar_oferta_mercado(), comprueba tu nueva caja y luego ficha.\n"
@@ -637,6 +648,7 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
     final_report = ""
     final_memory = ""
     turns_executed = 0
+    agent_steps_recorded = []
 
     # -------------------------------------------------------------
     # Agentic Execution Loop
@@ -673,6 +685,13 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
         if not function_call:
             print("· El modelo ha finalizado su razonamiento textual.")
             final_report = text_content.strip()
+            agent_steps_recorded.append({
+                "step": step,
+                "tool": "razonamiento_textual",
+                "args": {},
+                "thought": text_content.strip(),
+                "result": {"mensaje": "Conclusión de sesión"}
+            })
             break
 
         func_name = function_call.get("name")
@@ -705,6 +724,14 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
 
         resp_dict = tool_result if isinstance(tool_result, dict) else {"resultado": tool_result}
         print(f"📥 Resultado enviado a Gemini: {json.dumps(resp_dict, ensure_ascii=False)[:200]}...")
+
+        agent_steps_recorded.append({
+            "step": step,
+            "tool": func_name,
+            "args": func_args,
+            "thought": text_content.strip(),
+            "result": resp_dict
+        })
 
         user_parts = [
             {
@@ -790,7 +817,8 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
             "date_str": now_spain_str,
             "reasoning": full_report_text,
             "response": full_report_text,
-            "decision": {"modo": "agentico", "pasos": turns_executed, "nueva_memoria": final_memory}
+            "decision": {"modo": "agentico", "pasos": turns_executed, "nueva_memoria": final_memory},
+            "steps": agent_steps_recorded
         }
         r_history = [entry] + [h for h in r_history if (h.get("reasoning") or h.get("response")) != full_report_text]
         state.save_reasoning_history(r_history)
@@ -823,7 +851,8 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
             decision={"nueva_memoria": final_memory},
             executed=execute,
             prob_index=prob_index,
-            league_teams=league_teams
+            league_teams=league_teams,
+            agentic_steps=agent_steps_recorded
         )
         print("[OK] Dashboard Web generado exitosamente con el informe del Modo Agéntico.")
     except Exception as e:

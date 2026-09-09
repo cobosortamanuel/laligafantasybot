@@ -1,5 +1,5 @@
 # MEMORY
 
-Última actualización: Wednesday, 09 de September de 2026 a las 14:22:42 (Hora España)
+Última actualización: Wednesday, 09 de September de 2026 a las 20:15:52 (Hora España)
 
-Sesión agéntica completada con saldo final de 76,500,808 €.
+Tesorería sólida tras venta de Vlachodimos (+1.86%). Fichaje de Miguel Sierra vía clausulazo. Quedan huecos en plantilla para cubrir antes de la jornada.

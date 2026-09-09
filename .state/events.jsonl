@@ -54,3 +54,5 @@
 {"ts": 1788956577.9541676, "iso": "2026-09-09T14:22:57.954167+02:00", "run": "run_20260909_122253", "kind": "sell", "title": "Oferta ACEPTADA por Zaid Romero: 28,213,644 €", "status": "ok"}
 {"ts": 1788956584.1623, "iso": "2026-09-09T14:23:04.162300+02:00", "run": "run_20260909_122253", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Laporte (55,000,000 €)", "status": "ok"}
 {"ts": 1788956587.9271793, "iso": "2026-09-09T14:23:07.927179+02:00", "run": "run_20260909_122253", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Iñaki Williams (42,681,055 €)", "status": "ok"}
+{"ts": 1788977757.6612437, "iso": "2026-09-09T20:15:57.661246+02:00", "run": "run_20260909_181557", "kind": "sell", "title": "Puesto a la venta: R. Terrats (7,051,198 €)", "status": "ok"}
+{"ts": 1788977806.7835636, "iso": "2026-09-09T20:16:46.783566+02:00", "run": "run_20260909_181557", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Miguel Sierra (3,635,544 €)", "status": "ok"}

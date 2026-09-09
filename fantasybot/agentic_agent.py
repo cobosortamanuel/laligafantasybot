@@ -203,7 +203,7 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
                 },
                 {
                     "name": "aceptar_oferta_mercado",
-                    "description": "Acepta la oferta de la máquina o rival por un jugador propio, monetizando plusvalías en picos altos o vendiendo activos en tendencia bajista. Ingresa dinero fresco de inmediato en caja.",
+                    "description": "Acepta la oferta de la máquina o rival por un jugador propio. Prioridad total a ofertas que estén por encima de su valor de mercado (+0% a +5%). Si un jugador lleva bajando con fuerza y hay que liquidarlo en 2-3 días, se puede aceptar con descuento leve, pero nunca si la oferta es un robo abusivo (descuento excesivo inferior a -3%).",
                     "parameters": {
                         "type": "OBJECT",
                         "properties": {
@@ -215,7 +215,7 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
                 },
                 {
                     "name": "buscar_clausulazos_viables",
-                    "description": "Busca jugadores en equipos rivales cuya cláusula sea asumible con el saldo actual en caja, que estén en subida de valor diaria y cuyo escudo esté abierto o próximo a abrirse.",
+                    "description": "Busca auténticas gangas y oportunidades en equipos rivales: jugadores en subida de valor diaria, con escudo abierto, ratio cláusula/valor bajo (máx 1.10x) y amortización del sobrecoste en menos de 3-4 días. Se pueden realizar todos los clausulazos que se quieran siempre que sean gangas rentables.",
                     "parameters": {
                         "type": "OBJECT",
                         "properties": {
@@ -237,7 +237,7 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
                 },
                 {
                     "name": "ejecutar_clausulazo",
-                    "description": "Paga la cláusula de rescisión de un jugador rival de forma inmediata en LaLiga Fantasy. El jugador pasa a nuestro equipo y se pone inmediatamente en venta en el mercado para recibir ofertas.",
+                    "description": "Paga la cláusula de rescisión de una ganga rival en LaLiga Fantasy. Solo permitido si el ratio cláusula/valor es razonable (máx 1.15x) y se amortiza rápidamente.",
                     "parameters": {
                         "type": "OBJECT",
                         "properties": {
@@ -385,6 +385,31 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
         ptid = matched["playerTeamId"]
         mid = matched.get("marketId")
         pname = matched["jugador"]
+        val = matched.get("valor_mercado", 0)
+        diff_val = 0
+        if t_index:
+            tc = match_name(pname, pname, t_index)
+            if tc:
+                diff_val = tc.get("valor", 0) - tc.get("valor1", 0)
+
+        diff_pct = ((amt - val) / val) * 100.0 if val else 0.0
+
+        # FILTROS DE SEGURIDAD EN VENTAS:
+        # 1. Si el jugador está subiendo con fuerza (> 50k€/día), PROHIBIDO vender
+        if diff_val > 50000:
+            return {
+                "status": "denegado",
+                "mensaje": f"Venta denegada por seguridad: {pname} está en plena subida alcista ({diff_val:+,} €/día). No se debe vender a un jugador que se revaloriza cada día."
+            }
+
+        # 2. Si la oferta es un robo abusivo (descuento excesivo inferior a -3.0% sobre su valor)
+        # Solo se permite un descuento leve (entre 0% y -3%) si el jugador está bajando con fuerza para liquidarlo en 2-3 días.
+        if diff_pct < -3.0:
+            return {
+                "status": "denegado",
+                "mensaje": f"Venta denegada: La oferta por {pname} ({int(amt):,} €) tiene un descuento abusivo del {diff_pct:.2f}% (por debajo del -3% permitido). Es mejor esperar a mañana a una oferta superior del mercado."
+            }
+
         target_endpoint_id = mid or ptid
 
         if execute:
@@ -457,22 +482,27 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
                         diff_val = tc.get("valor", 0) - tc.get("valor1", 0)
 
                 if clause <= max_p and is_open and diff_val > 0:
+                    ratio = round(clause / val, 2) if val else 1.0
                     overcost = max(0, clause - val)
                     amort_days = round(overcost / diff_val, 1) if diff_val > 0 else 999
-                    candidates.append({
-                        "playerId": str(pid),
-                        "nombre": name,
-                        "posicion": pos_str,
-                        "equipo_rival": m_name,
-                        "clausula": int(clause),
-                        "clausula_formateada": f"{int(clause):,} €",
-                        "valor_mercado": f"{int(val):,} €",
-                        "subida_diaria": f"{int(diff_val):+,} €/día",
-                        "dias_para_amortizar_sobrecoste": amort_days,
-                        "ratio_clausula_valor": round(clause / val, 2) if val else 1.0
-                    })
 
-        candidates.sort(key=lambda x: (x["dias_para_amortizar_sobrecoste"], -int(x["clausula"])))
+                    # Filtro de Sanidad Financiera: Solo gangas reales
+                    # Si tiene sobrecoste, el ratio no puede superar 1.10x y debe amortizarse en menos de 4 días
+                    if ratio <= 1.10 and amort_days <= 4.0:
+                        candidates.append({
+                            "playerId": str(pid),
+                            "nombre": name,
+                            "posicion": pos_str,
+                            "equipo_rival": m_name,
+                            "clausula": int(clause),
+                            "clausula_formateada": f"{int(clause):,} €",
+                            "valor_mercado": f"{int(val):,} €",
+                            "subida_diaria": f"{int(diff_val):+,} €/día",
+                            "dias_para_amortizar_sobrecoste": amort_days,
+                            "ratio_clausula_valor": ratio
+                        })
+
+        candidates.sort(key=lambda x: (x["ratio_clausula_valor"], x["dias_para_amortizar_sobrecoste"], -int(x["clausula"])))
         return candidates[:8]
 
     def handle_buscar_mercado_libre(args: dict) -> list:
@@ -524,6 +554,41 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
 
         if cost > caja:
             return {"status": "error_saldo", "mensaje": f"Saldo insuficiente. Cuesta {cost:,} € y dispones de {caja:,} €."}
+
+        # Guardrail estricto contra clausulazos inflados:
+        target_val = 0
+        target_diff = 0
+        for lt in league_teams:
+            for p in lt.get("players", []):
+                pm = p.get("playerMaster", {})
+                if str(pm.get("id")) == pid or (pm.get("nickname") or pm.get("name")) == name:
+                    target_val = pm.get("marketValue") or 0
+                    if t_index:
+                        tc = match_name(name, name, t_index)
+                        if tc:
+                            target_diff = tc.get("valor", 0) - tc.get("valor1", 0)
+                    break
+
+        if target_val > 0:
+            ratio = cost / target_val
+            if ratio > 1.10:
+                return {
+                    "status": "denegado",
+                    "mensaje": f"Operación denegada por seguridad: La cláusula de {name} ({cost:,} €) supera en más de un 10% su valor de mercado ({target_val:,} €, ratio {ratio:.2f}x). Solo se permiten gangas rentables (máximo 1.10x)."
+                }
+            overcost = max(0, cost - target_val)
+            if target_diff <= 0 and overcost > 0:
+                return {
+                    "status": "denegado",
+                    "mensaje": f"Operación denegada: {name} no está subiendo de valor diariamente para amortizar el sobrecoste."
+                }
+            if target_diff > 0 and overcost > 0:
+                days_to_amort = overcost / target_diff
+                if days_to_amort > 4.0:
+                    return {
+                        "status": "denegado",
+                        "mensaje": f"Operación denegada: El sobrecoste de {name} tardaría {days_to_amort:.1f} días en amortizarse (límite máximo permitido: 4 días)."
+                    }
 
         resolved_ptid = player_to_team_id.get(pid, pid)
 
@@ -616,8 +681,8 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
         "FILOSOFÍA OBLIGATORIA DEL USUARIO:\n"
         "1. PRIORIDAD ABSOLUTA AL DINERO SOBRE LOS PUNTOS: A más dinero, mejores jugadores y más puntos.\n"
         "2. PROTEGER ACTIVOS ALCISTAS: NUNCA vender a futbolistas que estén en aceleración alcista subiendo con fuerza cada día.\n"
-        "3. MONETIZAR EN EL PICO O EN BAJADA: Vender a jugadores que muestren tendencia bajista confirmada (subida diaria negativa) o cuando la máquina ofrezca primas sustanciales para capturar plusvalías antes de que sigan devaluándose.\n"
-        "4. CLAUSULAZOS RENTABLES: Evaluar amortización (Cláusula - Valor) / Subida Diaria. Si se amortiza rápido, fichar y poner en venta.\n"
+        "3. CRITERIO INTELIGENTE DE VENTA: Aceptar siempre ofertas por encima del valor de mercado (+0% a +5%). Si un jugador está bajando fuerte de valor, hay que liquidarlo en 2-3 días; se puede aceptar una oferta con descuento leve si es necesario, pero NUNCA aceptar ofertas que sean un robo abusivo (descuento excesivo inferior a -3%).\n"
+        "4. CLAUSULAZOS RENTABLES (GANGAS SIN LÍMITE): Si hay dinero en caja y un jugador rival es una ganga evidente (subida diaria fuerte, ratio cláusula/valor bajo ≤1.10x y amortización del sobrecoste en menos de 4 días), se pueden realizar todos los clausulazos que se quieran. Si el sobrecoste es alto o no es ganga, no se compra.\n"
         "5. FLEXIBILIDAD TÁCTICA: La alineación NO tiene por qué ser 3-4-3. Usa alinear_equipo() para probar todas las formaciones y elegir la mejor.\n"
         "6. SOLVENCIA ABSOLUTA: Prohibido gastar lo que no tienes en caja. Si necesitas dinero para fichar, primero vende a activos bajistas con aceptar_oferta_mercado(), comprueba tu nueva caja y luego ficha.\n"
         "7. VERACIDAD EN EL INFORME: En 'finalizar_sesion(resumen_tactico, nueva_memoria)', redacta el informe explicando ÚNICAMENTE las acciones que efectivamente llamaste y ejecutaste mediante las herramientas durante esta sesión. No inventes ventas ni fichajes que no hayas llamado con una función.\n\n"

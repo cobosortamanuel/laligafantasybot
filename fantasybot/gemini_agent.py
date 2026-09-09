@@ -579,16 +579,18 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
             # Save reasoning to history
             try:
                 r_history = state.load_reasoning_history()
-                r_history.insert(0, {
+                entry = {
                     "timestamp": now_spain_str,
+                    "date_str": now_spain_str,
                     "reasoning": response,
+                    "response": response,
                     "decision": decision
-                })
-                r_history = r_history[:30]
-                with open(os.path.join(config.ROOT, ".state", "reasoning_history.json"), "w", encoding="utf-8") as f:
-                    json.dump(r_history, f, ensure_ascii=False, indent=2)
-            except Exception:
-                pass
+                }
+                # Prepend and deduplicate
+                r_history = [entry] + [h for h in r_history if (h.get("reasoning") or h.get("response")) != response]
+                state.save_reasoning_history(r_history)
+            except Exception as e:
+                print(f"  ✗ Aviso al guardar historial de razonamiento: {e}")
 
             # Update memory
             if decision.get("nueva_memoria"):
@@ -684,20 +686,59 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 except Exception as e:
                     print(f"  ✗ Aviso en el motor de pujas de último minuto: {e}")
 
-                # 4. Accept profitable offers on own players
+                # 4. Accept profitable offers on own players (robust resolution of dicts, IDs, or player names)
+                offers_by_id = {}
+                offers_by_name = {}
+                offers_by_market_id = {}
+                offers_by_player_team_id = {}
+                for off in my_received_offers:
+                    if off.get("offerId"):
+                        offers_by_id[str(off["offerId"])] = off
+                    if off.get("marketId"):
+                        offers_by_market_id[str(off["marketId"])] = off
+                    if off.get("playerTeamId"):
+                        offers_by_player_team_id[str(off["playerTeamId"])] = off
+                    if off.get("jugador"):
+                        offers_by_name[off["jugador"].lower().strip()] = off
+
                 for accept_item in decision.get("aceptar_ofertas", []):
-                    m_id = accept_item.get("marketId")
-                    off_id = accept_item.get("offerId")
-                    money = accept_item.get("cantidad")
-                    ptid = accept_item.get("playerTeamId") or m_id
-                    j_name = accept_item.get("jugador", str(m_id))
-                    if (ptid or m_id) and off_id and money:
-                        try:
-                            fc.accept_offer(lid, ptid, off_id, int(money))
-                            events.emit("sell", f"Oferta ACEPTADA por {j_name}: {int(money):,} €")
-                            print(f"  ✓ Oferta ACEPTADA por {j_name}: {int(money):,} €")
-                        except Exception as e:
-                            print(f"  ✗ Error al aceptar oferta por {j_name}: {e}")
+                    matched_offer = None
+                    if isinstance(accept_item, dict):
+                        oid = str(accept_item.get("offerId") or "")
+                        mid = str(accept_item.get("marketId") or "")
+                        ptid = str(accept_item.get("playerTeamId") or "")
+                        jname = str(accept_item.get("jugador") or "").lower().strip()
+                        matched_offer = (
+                            offers_by_id.get(oid)
+                            or offers_by_market_id.get(mid)
+                            or offers_by_player_team_id.get(ptid)
+                            or offers_by_name.get(jname)
+                        )
+                        if not matched_offer and (ptid or mid) and oid and accept_item.get("cantidad"):
+                            matched_offer = accept_item
+                    elif isinstance(accept_item, (str, int)):
+                        val_str = str(accept_item).strip()
+                        matched_offer = (
+                            offers_by_id.get(val_str)
+                            or offers_by_market_id.get(val_str)
+                            or offers_by_player_team_id.get(val_str)
+                            or offers_by_name.get(val_str.lower())
+                        )
+
+                    if matched_offer:
+                        ptid = matched_offer.get("playerTeamId") or matched_offer.get("marketId")
+                        off_id = matched_offer.get("offerId")
+                        money = matched_offer.get("oferta_recibida") or matched_offer.get("cantidad")
+                        j_name = matched_offer.get("jugador", str(off_id))
+                        if ptid and off_id and money:
+                            try:
+                                fc.accept_offer(lid, ptid, off_id, int(money))
+                                events.emit("sell", f"Oferta ACEPTADA por {j_name}: {int(money):,} €")
+                                print(f"  ✓ Oferta ACEPTADA por {j_name}: {int(money):,} €")
+                            except Exception as e:
+                                print(f"  ✗ Error al aceptar oferta por {j_name}: {e}")
+                    else:
+                        print(f"  ✗ No se encontró oferta pendiente correspondiente a: {accept_item}")
 
                 # Refresh team, market, and league_teams after real operations
                 try:
@@ -722,7 +763,8 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 except Exception as e:
                     print(f"  ✗ Aviso al refrescar estado del equipo: {e}")
 
-            # Generate Updated Minimalist Apple Dashboard
+        # Always generate Updated Minimalist Apple Dashboard
+        try:
             from .dashboard_generator import generate_apple_dashboard
             generate_apple_dashboard(
                 team=team,
@@ -739,6 +781,8 @@ def run_gemini_agent(execute: bool = False, model: str = "gemini-flash-lite-late
                 my_received_offers=my_received_offers,
                 rival_clause_targets=rival_clause_targets
             )
+        except Exception as e:
+            print(f"  ✗ Error al generar dashboard: {e}")
 
     except Exception as e:
         print(f"[ERROR] Error al llamar a Gemini: {e}")

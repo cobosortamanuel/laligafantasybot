@@ -32,8 +32,10 @@ def _format_spain_time(iso_str):
     """Converts any ISO timestamp to clean DD/MM/YYYY HH:MM in Spain local time."""
     if not iso_str:
         return ""
+    if "a las" in str(iso_str):
+        return str(iso_str)
     try:
-        dt = datetime.fromisoformat(iso_str)
+        dt = datetime.fromisoformat(str(iso_str))
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         dt_spain = dt.astimezone(SPAIN_TZ)
@@ -91,7 +93,7 @@ def update_history_state(money, value):
 
 def _format_kickoff(review_report=None):
     """Formats matchday info cleanly without raw ISOs or negative countdowns."""
-    md = review_report.get("matchday", {}) if review_report else {}
+    md = review_report.get("matchday", {}) if isinstance(review_report, dict) else {}
     iso = md.get("kickoff")
 
     if not iso:
@@ -699,11 +701,24 @@ def generate_apple_dashboard(
         except Exception:
             r_history = []
 
+    # If current run has a gemini_response, ensure it's at the top of r_history
+    if gemini_response:
+        current_entry = {
+            "timestamp": now_str,
+            "reasoning": gemini_response,
+            "decision": decision
+        }
+        filtered_history = [
+            h for h in r_history
+            if (h.get("reasoning") or h.get("response")) != gemini_response
+        ]
+        r_history = [current_entry] + filtered_history
+
     reasoning_archive_html = ""
     if r_history:
-        for idx, item in enumerate(reversed(r_history)):
+        for idx, item in enumerate(r_history):
             ts = _format_spain_time(item.get("timestamp") or item.get("date_str"))
-            resp = item.get("response", "")
+            resp = item.get("reasoning") or item.get("response", "")
             fmt_resp = _format_markdown_report(resp)
             is_first = (idx == 0)
 

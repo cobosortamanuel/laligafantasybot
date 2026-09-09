@@ -27,6 +27,7 @@ ACTIVITY_HISTORY_PATH = os.path.join(STATE_DIR, "activity_history.json")
 VALUE_HISTORY_DIR = os.path.join(STATE_DIR, "value_history")
 SQUAD_HISTORY_PATH = os.path.join(STATE_DIR, "squad_history.json")
 PLAYERS_CACHE_PATH = os.path.join(STATE_DIR, "players_cache.json")
+REASONING_HISTORY_PATH = os.path.join(STATE_DIR, "reasoning_history.json")
 
 
 def load_players_cache() -> dict:
@@ -371,5 +372,15 @@ def save_squad_history(history: dict, league_id: str):
     raw = _read(SQUAD_HISTORY_PATH, {})
     raw[str(league_id)] = history
     _write(SQUAD_HISTORY_PATH, raw)
+
+
+def load_reasoning_history() -> list:
+    """Loads past Gemini manager reasonings."""
+    return _read(REASONING_HISTORY_PATH, [])
+
+
+def save_reasoning_history(history: list):
+    """Saves past Gemini manager reasonings capped at latest 50 entries."""
+    _write(REASONING_HISTORY_PATH, history[:50])
 
 

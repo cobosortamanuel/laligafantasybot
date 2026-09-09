@@ -320,8 +320,12 @@ def cmd_agent(args):
 
 
 def cmd_gemini(args):
-    from . import gemini_agent
-    gemini_agent.run_gemini_agent(execute=args.execute)
+    if getattr(args, "legacy", False):
+        from . import gemini_agent
+        gemini_agent.run_gemini_agent(execute=args.execute)
+    else:
+        from . import agentic_agent
+        agentic_agent.run_agentic_manager(execute=args.execute)
 
 
 def cmd_sell(args):
@@ -763,8 +767,9 @@ def build_parser():
     sr.add_argument("--dry-run", action="store_true")
     sr.set_defaults(func=cmd_bid_run)
 
-    gm = sub.add_parser("gemini", help="autonomous agent review powered by Gemini Flash Lite")
-    gm.add_argument("--execute", action="store_true", help="execute lineup and bids in LaLiga Fantasy")
+    gm = sub.add_parser("gemini", help="autonomous agent review powered by Gemini Flash Lite (Agentic Mode)")
+    gm.add_argument("--execute", action="store_true", help="execute lineup, buyouts, and offers in LaLiga Fantasy")
+    gm.add_argument("--legacy", action="store_true", help="run legacy single-shot mode instead of interactive agentic mode")
     gm.set_defaults(func=cmd_gemini)
 
     return p

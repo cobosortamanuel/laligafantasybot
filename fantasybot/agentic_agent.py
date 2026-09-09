@@ -781,8 +781,15 @@ def run_agentic_manager(execute: bool = False, model: str = "gemini-flash-lite-l
         elif func_name == "alinear_equipo":
             tool_result = handle_alinear_equipo()
         elif func_name == "finalizar_sesion":
-            final_report = func_args.get("resumen_tactico", "")
-            final_memory = func_args.get("nueva_memoria", "")
+            raw_report = func_args.get("resumen_tactico", "")
+            raw_mem = func_args.get("nueva_memoria", "")
+            # Si no hubo movimientos reales ejecutados, garantizar que el informe lo declare fielmente
+            if not executed_actions_log:
+                final_report = "Sesión de análisis completada sin movimientos directos de mercado. Se mantienen los activos y la disciplina financiera."
+                final_memory = "Sin operaciones de mercado en esta sesión. Se mantiene la plantilla actual y la liquidez intacta."
+            else:
+                final_report = raw_report
+                final_memory = raw_mem
             tool_result = {"status": "completado", "mensaje": "Sesión finalizada exitosamente."}
         else:
             tool_result = {"status": "error", "mensaje": f"Herramienta desconocida: {func_name}"}

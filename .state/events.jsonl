@@ -56,3 +56,7 @@
 {"ts": 1788956587.9271793, "iso": "2026-09-09T14:23:07.927179+02:00", "run": "run_20260909_122253", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Iñaki Williams (42,681,055 €)", "status": "ok"}
 {"ts": 1788977757.6612437, "iso": "2026-09-09T20:15:57.661246+02:00", "run": "run_20260909_181557", "kind": "sell", "title": "Puesto a la venta: R. Terrats (7,051,198 €)", "status": "ok"}
 {"ts": 1788977806.7835636, "iso": "2026-09-09T20:16:46.783566+02:00", "run": "run_20260909_181557", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Miguel Sierra (3,635,544 €)", "status": "ok"}
+{"ts": 1789165782.3335547, "iso": "2026-09-12T00:29:42.333557+02:00", "run": "run_20260911_222942", "kind": "sell", "title": "Puesto a la venta: Sivera (43,355,304 €)", "status": "ok"}
+{"ts": 1789165782.5854878, "iso": "2026-09-12T00:29:42.585490+02:00", "run": "run_20260911_222942", "kind": "sell", "title": "Puesto a la venta: Vlachodimos (28,354,030 €)", "status": "ok"}
+{"ts": 1789165782.8374507, "iso": "2026-09-12T00:29:42.837453+02:00", "run": "run_20260911_222942", "kind": "sell", "title": "Puesto a la venta: Arguibide (3,367,550 €)", "status": "ok"}
+{"ts": 1789165783.091157, "iso": "2026-09-12T00:29:43.091159+02:00", "run": "run_20260911_222942", "kind": "sell", "title": "Puesto a la venta: Pathé I. Ciss (23,331,860 €)", "status": "ok"}

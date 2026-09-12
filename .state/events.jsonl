@@ -61,3 +61,5 @@
 {"ts": 1789165782.8374507, "iso": "2026-09-12T00:29:42.837453+02:00", "run": "run_20260911_222942", "kind": "sell", "title": "Puesto a la venta: Arguibide (3,367,550 €)", "status": "ok"}
 {"ts": 1789165783.091157, "iso": "2026-09-12T00:29:43.091159+02:00", "run": "run_20260911_222942", "kind": "sell", "title": "Puesto a la venta: Pathé I. Ciss (23,331,860 €)", "status": "ok"}
 {"ts": 1789234769.245878, "iso": "2026-09-12T19:39:29.245880+02:00", "run": "run_20260912_173929", "kind": "sell", "title": "Puesto a la venta: Laporte (42,284,073 €)", "status": "ok"}
+{"ts": 1789251122.2789865, "iso": "2026-09-13T00:12:02.278989+02:00", "run": "run_20260912_221202", "kind": "sell", "title": "Puesto a la venta: R. Terrats (7,504,393 €)", "status": "ok"}
+{"ts": 1789251122.5504532, "iso": "2026-09-13T00:12:02.550455+02:00", "run": "run_20260912_221202", "kind": "sell", "title": "Puesto a la venta: Miguel Sierra (4,443,580 €)", "status": "ok"}

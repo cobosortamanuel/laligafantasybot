@@ -65,3 +65,6 @@
 {"ts": 1789251122.5504532, "iso": "2026-09-13T00:12:02.550455+02:00", "run": "run_20260912_221202", "kind": "sell", "title": "Puesto a la venta: Miguel Sierra (4,443,580 €)", "status": "ok"}
 {"ts": 1789321944.9858427, "iso": "2026-09-13T19:52:24.985845+02:00", "run": "run_20260913_175224", "kind": "sell", "title": "Puesto a la venta: Quagliata (3,707,830 €)", "status": "ok"}
 {"ts": 1789338126.1567204, "iso": "2026-09-14T00:22:06.156723+02:00", "run": "run_20260913_222206", "kind": "sell", "title": "Oferta ACEPTADA por Sivera: 44,094,603 €", "status": "ok"}
+{"ts": 1789427110.9937418, "iso": "2026-09-15T01:05:10.993744+02:00", "run": "run_20260914_230510", "kind": "sell", "title": "Puesto a la venta: Vlachodimos (29,607,162 €)", "status": "ok"}
+{"ts": 1789427111.2260537, "iso": "2026-09-15T01:05:11.226057+02:00", "run": "run_20260914_230510", "kind": "sell", "title": "Puesto a la venta: Arguibide (3,496,406 €)", "status": "ok"}
+{"ts": 1789427111.4621341, "iso": "2026-09-15T01:05:11.462136+02:00", "run": "run_20260914_230510", "kind": "sell", "title": "Puesto a la venta: Pathé I. Ciss (24,239,640 €)", "status": "ok"}

@@ -69,3 +69,7 @@
 {"ts": 1789427111.2260537, "iso": "2026-09-15T01:05:11.226057+02:00", "run": "run_20260914_230510", "kind": "sell", "title": "Puesto a la venta: Arguibide (3,496,406 €)", "status": "ok"}
 {"ts": 1789427111.4621341, "iso": "2026-09-15T01:05:11.462136+02:00", "run": "run_20260914_230510", "kind": "sell", "title": "Puesto a la venta: Pathé I. Ciss (24,239,640 €)", "status": "ok"}
 {"ts": 1789497639.4219038, "iso": "2026-09-15T20:40:39.421907+02:00", "run": "run_20260915_184039", "kind": "sell", "title": "Puesto a la venta: Laporte (43,109,861 €)", "status": "ok"}
+{"ts": 1789512700.366314, "iso": "2026-09-16T00:51:40.366317+02:00", "run": "run_20260915_225140", "kind": "sell", "title": "Puesto a la venta: R. Terrats (8,563,908 €)", "status": "ok"}
+{"ts": 1789512700.6662667, "iso": "2026-09-16T00:51:40.666269+02:00", "run": "run_20260915_225140", "kind": "sell", "title": "Puesto a la venta: Iñaki Williams (34,884,958 €)", "status": "ok"}
+{"ts": 1789512700.9540343, "iso": "2026-09-16T00:51:40.954037+02:00", "run": "run_20260915_225140", "kind": "sell", "title": "Puesto a la venta: Miguel Sierra (5,106,665 €)", "status": "ok"}
+{"ts": 1789512746.2376113, "iso": "2026-09-16T00:52:26.237614+02:00", "run": "run_20260915_225140", "kind": "sell", "title": "Oferta ACEPTADA por Laporte: 44,763,069 €", "status": "ok"}

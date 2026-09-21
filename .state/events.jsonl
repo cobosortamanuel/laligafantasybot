@@ -79,3 +79,4 @@
 {"ts": 1789839757.618072, "iso": "2026-09-19T19:42:37.618075+02:00", "run": "run_20260919_174237", "kind": "sell", "title": "Puesto a la venta: Miguel Sierra (6,217,148 €)", "status": "ok"}
 {"ts": 1789856315.9258194, "iso": "2026-09-20T00:18:35.925822+02:00", "run": "run_20260919_221835", "kind": "sell", "title": "Puesto a la venta: Quagliata (4,028,495 €)", "status": "ok"}
 {"ts": 1789943012.4739304, "iso": "2026-09-21T00:23:32.473932+02:00", "run": "run_20260920_222332", "kind": "sell", "title": "Oferta ACEPTADA por Arguibide: 3,534,940 €", "status": "ok"}
+{"ts": 1790020275.616082, "iso": "2026-09-21T21:51:15.616084+02:00", "run": "run_20260921_195115", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado T. Morente (2,917,124 €)", "status": "ok"}

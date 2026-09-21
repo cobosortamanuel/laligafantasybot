@@ -80,3 +80,5 @@
 {"ts": 1789856315.9258194, "iso": "2026-09-20T00:18:35.925822+02:00", "run": "run_20260919_221835", "kind": "sell", "title": "Puesto a la venta: Quagliata (4,028,495 €)", "status": "ok"}
 {"ts": 1789943012.4739304, "iso": "2026-09-21T00:23:32.473932+02:00", "run": "run_20260920_222332", "kind": "sell", "title": "Oferta ACEPTADA por Arguibide: 3,534,940 €", "status": "ok"}
 {"ts": 1790020275.616082, "iso": "2026-09-21T21:51:15.616084+02:00", "run": "run_20260921_195115", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado T. Morente (2,917,124 €)", "status": "ok"}
+{"ts": 1790032449.9552565, "iso": "2026-09-22T01:14:09.955260+02:00", "run": "run_20260921_231409", "kind": "sell", "title": "Oferta ACEPTADA por Iñaki Williams: 36,228,971 €", "status": "ok"}
+{"ts": 1790032455.8749456, "iso": "2026-09-22T01:14:15.874949+02:00", "run": "run_20260921_231409", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Unai Lopez (16,696,624 €)", "status": "ok"}

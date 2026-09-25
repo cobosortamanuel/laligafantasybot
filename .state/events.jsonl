@@ -90,3 +90,4 @@
 {"ts": 1790204153.6824121, "iso": "2026-09-24T00:55:53.682415+02:00", "run": "run_20260923_225553", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Djene (21,309,069 €)", "status": "ok"}
 {"ts": 1790275743.6190932, "iso": "2026-09-24T20:49:03.619097+02:00", "run": "run_20260924_184903", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Xavi Espart (41,539,282 €)", "status": "ok"}
 {"ts": 1790291445.4401627, "iso": "2026-09-25T01:10:45.440165+02:00", "run": "run_20260924_231045", "kind": "sell", "title": "Puesto a la venta: T. Morente (3,410,090 €)", "status": "ok"}
+{"ts": 1790363152.9969256, "iso": "2026-09-25T21:05:52.996928+02:00", "run": "run_20260925_190552", "kind": "sell", "title": "Puesto a la venta: Unai Lopez (17,624,724 €)", "status": "ok"}

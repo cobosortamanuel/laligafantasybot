@@ -91,3 +91,6 @@
 {"ts": 1790275743.6190932, "iso": "2026-09-24T20:49:03.619097+02:00", "run": "run_20260924_184903", "kind": "buyout", "title": "¡Clausulazo pagado! Fichado Xavi Espart (41,539,282 €)", "status": "ok"}
 {"ts": 1790291445.4401627, "iso": "2026-09-25T01:10:45.440165+02:00", "run": "run_20260924_231045", "kind": "sell", "title": "Puesto a la venta: T. Morente (3,410,090 €)", "status": "ok"}
 {"ts": 1790363152.9969256, "iso": "2026-09-25T21:05:52.996928+02:00", "run": "run_20260925_190552", "kind": "sell", "title": "Puesto a la venta: Unai Lopez (17,624,724 €)", "status": "ok"}
+{"ts": 1790462494.6954284, "iso": "2026-09-27T00:41:34.695432+02:00", "run": "run_20260926_224134", "kind": "sell", "title": "Puesto a la venta: Dotor (5,083,404 €)", "status": "ok"}
+{"ts": 1790462494.946264, "iso": "2026-09-27T00:41:34.946268+02:00", "run": "run_20260926_224134", "kind": "sell", "title": "Puesto a la venta: Agoumé (14,009,589 €)", "status": "ok"}
+{"ts": 1790462495.1998749, "iso": "2026-09-27T00:41:35.199878+02:00", "run": "run_20260926_224134", "kind": "sell", "title": "Puesto a la venta: Lucas Boyé (33,863,438 €)", "status": "ok"}
